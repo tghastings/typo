@@ -4,7 +4,7 @@ class Admin::ProfilesController < Admin::BaseController
   def index
     @user = current_user
     @profiles = Profile.find(:all, :order => 'id')
-    @user.attributes = params[:user]
+    @user.attributes = params[:user] if params[:user].present?
     if request.post? and @user.save
       current_user = @user
       flash[:notice] = _('User was successfully updated.')

@@ -32,7 +32,7 @@ describe Trackback, 'With the various trackback filters loaded and DNS mocked ou
   end
 
   it 'Trackbacks with a spammy link in the excerpt should be rejected' do
-    IPSocket.should_receive(:getaddress).with('chinaaircatering.com.bsb.empty.us').at_least(:once).and_return('127.0.0.2')
+    expect(IPSocket).to receive(:getaddress).with('chinaaircatering.com.bsb.empty.us').at_least(:once).and_return('127.0.0.2')
 
     tb = Trackback.new(ham_params.merge(:excerpt => '<a href="http://chinaaircatering.com">spam</a>'))
     tb.should be_spam
@@ -51,17 +51,17 @@ describe Trackback, 'With the various trackback filters loaded and DNS mocked ou
   end
 
   def add_spam_domain(domain = 'chinaircatering.com')
-    IPSocket.should_receive(:getaddress).with("#{domain}.bsb.empty.us").at_least(:once).and_return('127.0.0.2')
+    expect(IPSocket).to receive(:getaddress).with("#{domain}.bsb.empty.us").at_least(:once).and_return('127.0.0.2')
   end
 
   def add_spam_ip(addr = '212.42.230.206')
     rbl_domain = addr.split(/\./).reverse.join('.') + '.opm.blitzed.us'
-    IPSocket.should_receive(:getaddress).with(rbl_domain).at_least(:once).and_return('127.0.0.2')
+    expect(IPSocket).to receive(:getaddress).with(rbl_domain).at_least(:once).and_return('127.0.0.2')
   end
 
   def ham_params
     { :blog_name => 'Blog', :title => 'trackback', :excerpt => 'bland',
       :url => 'http://notaspammer.com', :ip => '212.42.230.206',
-      :blog => @blog }
+      :article_id => Factory(:article).id }
   end
 end

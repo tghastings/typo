@@ -6,7 +6,7 @@ describe Admin::SidebarController do
     #TODO Delete after removing fixtures
     Profile.delete_all
     henri = Factory(:user, :login => 'henri', :profile => Factory(:profile_admin, :label => Profile::ADMIN))
-    request.session = { :user => henri.id }
+    request.session = { :user_id => henri.id }
   end
 
   describe "rendering" do
@@ -14,9 +14,8 @@ describe Admin::SidebarController do
 
     it "test_index" do
       get :index
-      assert_template 'index'
-      assert_tag :tag => "div",
-        :attributes => { :id => "sidebar-config" }
+      expect(response).to render_template('index')
+      expect(response.body).to have_selector("div#sidebar-config")
     end
   end
 end

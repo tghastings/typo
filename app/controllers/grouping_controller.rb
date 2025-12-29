@@ -1,5 +1,5 @@
 class GroupingController < ContentController
-  before_filter :auto_discovery_feed, :only => [:show, :index]
+  before_action :auto_discovery_feed, :only => [:show, :index]
   layout :theme_layout
   cache_sweeper :blog_sweeper
 
@@ -49,6 +49,18 @@ class GroupingController < ContentController
 
   protected
 
+  def auto_discovery_feed(options = {})
+    # For groupings (tags/categories), set the feed URL to the specific grouping
+    if params[:id]
+      type_name = grouping_class.to_s.downcase
+      @auto_discovery_url_rss = "#{this_blog.base_url}/#{type_name}/#{params[:id]}.rss"
+      @auto_discovery_url_atom = "#{this_blog.base_url}/#{type_name}/#{params[:id]}.atom"
+    else
+      # For index pages, use the default articles feed
+      super
+    end
+  end
+
   def grouping_class
     self.class.grouping_class
   end
@@ -87,7 +99,10 @@ class GroupingController < ContentController
   def render_index(groupings)
     respond_to do |format|
       format.html do
-        unless template_exists? "#{self.class.to_s.sub(/Controller$/,'').downcase}/index"
+        controller_name = self.class.to_s.sub(/Controller$/,'').downcase
+        if template_exists?('index', controller_name, false)
+          render action: 'index'
+        else
           @grouping_class = self.class.grouping_class
           @groupings = groupings
           render 'articles/groupings'
@@ -100,12 +115,12 @@ class GroupingController < ContentController
     respond_to do |format|
       format.html do
         if @articles.empty?
-          redirect_to this_blog.base_url, :status => 301
+          redirect_to root_path, :status => 301
           return
         end
 
         render active_template
-        
+
       end
 
       format.atom { render_feed 'atom', @articles }
@@ -132,8 +147,19 @@ class GroupingController < ContentController
   end
   
   def active_template
-    return params[:id] if template_exists? "#{self.class.to_s.sub(/Controller$/,'').downcase}/#{params[:id]}"
-    return 'show' if template_exists? "#{self.class.to_s.sub(/Controller$/,'').downcase}/show"
+    controller_name = self.class.to_s.sub(/Controller$/,'').downcase
+
+    # Check if theme-specific template exists for this ID
+    if params[:id] && template_exists?(params[:id], controller_name, false)
+      return params[:id]
+    end
+
+    # Check if show template exists for this controller
+    if template_exists?('show', controller_name, false)
+      return 'show'
+    end
+
+    # Fall back to articles/index
     'articles/index'
   end
 end

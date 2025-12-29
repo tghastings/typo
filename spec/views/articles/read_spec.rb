@@ -34,20 +34,20 @@ describe "articles/read.html.erb" do
       end
 
       it "should not have too many paragraph marks around body" do
-        rendered.should have_selector("p", :content => "body")
-        rendered.should_not have_selector("p>p", :content => "body")
+        expect(rendered).to have_selector("p", :content => "body")
+        expect(rendered).not_to have_selector("p>p", :content => "body")
       end
 
       it "should not have too many paragraph marks around extended contents" do
-        rendered.should have_selector("p", :content => "extended content")
-        rendered.should_not have_selector("p>p", :content => "extended content")
+        expect(rendered).to have_selector("p", :content => "extended content")
+        expect(rendered).not_to have_selector("p>p", :content => "extended content")
       end
 
       # FIXME: Move comment partial specs to their own spec file.
       it "should not have too many paragraph marks around comment contents" do
-        rendered.should have_selector("p>em", :content => "italic")
-        rendered.should have_selector("p>strong", :content => "bold")
-        rendered.should_not have_selector("p>p>em", :content => "italic")
+        expect(rendered).to have_selector("p>em", :content => "italic")
+        expect(rendered).to have_selector("p>strong", :content => "bold")
+        expect(rendered).not_to have_selector("p>p>em", :content => "italic")
       end
 
       it "should automatically add links" do

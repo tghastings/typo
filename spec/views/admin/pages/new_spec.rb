@@ -2,10 +2,15 @@ require 'spec_helper'
 
 describe "admin/pages/new.html.erb" do
   before do
-    admin = stub_model(User, :settings => { :editor => 'simple' }, :admin? => true,
-                       :text_filter_name => "", :profile_label => "admin")
+    admin = stub_model(User, :settings => { :editor => 'simple' })
+    admin.stub(:admin?) { true }
+    admin.stub(:text_filter_name) { "" }
+    admin.stub(:profile_label) { "admin" }
     blog = mock_model(Blog, :base_url => "http://myblog.net/")
-    page = stub_model(Page).as_new_record
+    page = stub_model(Page)
+    page.stub(:new_record?) { true }
+    page.stub(:persisted?) { false }
+    page.stub(:id) { nil }
     text_filter = stub_model(TextFilter)
 
     page.stub(:text_filter) { text_filter }

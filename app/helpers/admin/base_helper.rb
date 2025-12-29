@@ -1,6 +1,30 @@
 module Admin::BaseHelper
   include ActionView::Helpers::DateHelper
 
+  # Stub for deprecated Prototype helper - draggable_element
+  # Returns an empty string since the Prototype library is no longer used
+  def draggable_element(element_id, options = {})
+    # Deprecated Prototype helper - functionality handled by modern JS
+    ''
+  end
+
+  # Stub for deprecated Prototype helper - sortable_element
+  # Returns an empty string since the Prototype library is no longer used
+  def sortable_element(element_id, options = {})
+    # Deprecated Prototype helper - functionality handled by modern JS
+    ''
+  end
+
+  # Convert menu URL hash to path string for Rails 7 compatibility
+  def menu_url_to_path(url)
+    return url unless url.is_a?(Hash)
+    controller = url[:controller].to_s.sub(/^\//, '').sub(/^admin\//, '')
+    path = "/admin/#{controller}"
+    path += "/#{url[:action]}" if url[:action] && url[:action].to_s != 'index'
+    path += "/#{url[:id]}" if url[:id]
+    path
+  end
+
   def subtabs_for(current_module)
     output = []
     AccessControl.project_module(current_user.profile_label, current_module).submenus.each_with_index do |m,i|
@@ -13,43 +37,52 @@ module Admin::BaseHelper
 
   def subtab(label, options = {})
     return content_tag :li, "<span class='subtabs'>#{label}</span>".html_safe if options.empty?
-    content_tag :li, link_to(label, options)
+    content_tag :li, link_to(label, menu_url_to_path(options))
   end
 
   def show_page_heading
-    return if @page_heading.nil? or @page_heading.blank? 
+    return if @page_heading.nil? or @page_heading.blank?
     heading = "<div class='page-header'>"
     heading << content_tag(:h2, @page_heading.html_safe)
     heading << "</div>"
+    heading.html_safe
   end
 
   def cancel(url = {:action => 'index'})
+    # Convert hash to path for Rails 7 compatibility
+    if url.is_a?(Hash) && url[:action]
+      url = url[:action] == 'index' ? request.path.sub(/\/[^\/]+$/, '') : "#{request.path.sub(/\/[^\/]+$/, '')}/#{url[:action]}"
+    end
     link_to _("Cancel"), url, :class => 'btn'
   end
 
   def save(val = _("Store"))
-    '<input type="submit" value="' + val + '" class="btn primary" />'
+    ('<input type="submit" value="' + val + '" class="btn primary" />').html_safe
   end
 
-  def link_to_edit(label, record, controller = controller.controller_name)
-    link_to label, {:controller => controller, :action => 'edit', :id => record.id}, :class => 'edit'
+  def link_to_edit(label, record, ctrl = nil)
+    ctrl ||= controller.controller_name rescue 'content'
+    link_to label, "/admin/#{ctrl}/edit/#{record.id}", :class => 'edit'
   end
 
-  def link_to_edit_with_profiles(label, record, controller = controller.controller_name)
+  def link_to_edit_with_profiles(label, record, ctrl = nil)
     if current_user.admin? || current_user.id == record.user_id
-      link_to label, {:controller => controller, :action => 'edit', :id => record.id}, :class => 'edit'
+      ctrl ||= controller.controller_name rescue 'content'
+      link_to label, "/admin/#{ctrl}/edit/#{record.id}", :class => 'edit'
     end
   end
 
-  def link_to_destroy(record, controller = controller.controller_name)
+  def link_to_destroy(record, ctrl = nil)
+    ctrl ||= controller.controller_name rescue 'content'
     link_to image_tag('admin/delete.png', :alt => _("delete"), :title => _("Delete content")),
-      :controller => controller, :action => 'destroy', :id => record.id
+      "/admin/#{ctrl}/destroy/#{record.id}"
   end
 
-  def link_to_destroy_with_profiles(record, controller = controller.controller_name)
+  def link_to_destroy_with_profiles(record, ctrl = nil)
     if current_user.admin? || current_user.id == record.user_id
+      ctrl ||= controller.controller_name rescue 'content'
       link_to(_("delete"),
-        { :controller => controller, :action => 'destroy', :id => record.id }, :confirm => _("Are you sure?"), :method => :post, :class => 'btn danger', :title => _("Delete content"))
+        "/admin/#{ctrl}/destroy/#{record.id}", data: { confirm: _("Are you sure?") }, method: :post, :class => 'btn danger', :title => _("Delete content"))
       end
   end
 
@@ -66,7 +99,8 @@ module Admin::BaseHelper
   end
 
   def plugin_options(kind, blank = true)
-    r = TypoPlugins::Keeper.available_plugins(kind).collect do |plugin|
+    plugins = TypoPlugins::Keeper.available_plugins(kind) || []
+    r = plugins.collect do |plugin|
       [ plugin.name, plugin.to_s ]
     end
     blank ? r << [_("none"),''] : r
@@ -77,7 +111,8 @@ module Admin::BaseHelper
   end
 
   def task_overview
-    content_tag :li, link_to(_('Back to list'), :action => 'index')
+    index_path = request.path.sub(/\/[^\/]+$/, '')
+    content_tag :li, link_to(_('Back to list'), index_path)
   end
 
   def class_tab
@@ -148,38 +183,40 @@ module Admin::BaseHelper
       end
     end
     result << "</select>\n"
-    return result
+    result.html_safe
   end
 
   def render_void_table(size, cols)
     if size == 0
-      "<tr>\n<td colspan=#{cols}>" + _("There are no %s yet. Why don't you start and create one?", _(controller.controller_name)) + "</td>\n</tr>\n"
+      ("<tr>\n<td colspan=#{cols}>" + _("There are no %s yet. Why don't you start and create one?", _(controller.controller_name)) + "</td>\n</tr>\n").html_safe
     end
   end
 
   def cancel_or_save(message=_("Save"))
-    result = cancel
+    result = cancel.to_s
     result << " "
     result << _("or")
     result << " "
     result << save(message)
-    return result
+    result.html_safe
   end
 
     def get_short_url(item)
       return "" if item.short_url.nil?
-      sprintf("<small>%s %s</small>", _("Short url:"), link_to(item.short_url, item.short_url))
+      sprintf("<small>%s %s</small>", _("Short url:"), link_to(item.short_url, item.short_url)).html_safe
     end
 
   def show_actions item
+    base_path = request.path.sub(/\/[^\/]*$/, '')
     html = <<-HTML
       <div class='action'>
         <small>#{link_to_published item}</small> |
-        <small>#{link_to _("Edit"), :action => 'edit', :id => item.id}</small> |
-        <small>#{link_to _("Delete"), :action => 'destroy', :id => item.id}</small> |
+        <small>#{link_to _("Edit"), "#{base_path}/edit/#{item.id}"}</small> |
+        <small>#{link_to _("Delete"), "#{base_path}/destroy/#{item.id}"}</small> |
         #{get_short_url item}
     </div>
     HTML
+    html.html_safe
   end
 
   def format_date(date)
@@ -192,24 +229,24 @@ module Admin::BaseHelper
 
   def link_to_published(item)
     return link_to_permalink(item,  _("Show"), nil, 'published') if item.published
-    link_to(_("Preview"), {:controller => '/articles', :action => 'preview', :id => item.id}, {:class => 'unpublished', :target => '_new'})
+    link_to(_("Preview"), "/articles/preview/#{item.id}", {:class => 'unpublished', :target => '_new'})
   end
 
   def published_or_not(item)
-    return "<span class='label success'>#{_("Published")}</span>" if item.state.to_s.downcase == 'published'
-    return "<span class='label notice'>#{_("Draft")}</span>" if item.state.to_s.downcase == 'draft'
-    return "<span class='label important'>#{_("Withdrawn")}</span>" if item.state.to_s.downcase == 'withdrawn'
-    return "<span class='label warning'>#{_("Publication pending")}</span>" if item.state.to_s.downcase == 'publicationpending'
+    return "<span class='label success'>#{_("Published")}</span>".html_safe if item.state.to_s.downcase == 'published'
+    return "<span class='label notice'>#{_("Draft")}</span>".html_safe if item.state.to_s.downcase == 'draft'
+    return "<span class='label important'>#{_("Withdrawn")}</span>".html_safe if item.state.to_s.downcase == 'withdrawn'
+    return "<span class='label warning'>#{_("Publication pending")}</span>".html_safe if item.state.to_s.downcase == 'publicationpending'
   end
 
   def macro_help_popup(macro, text)
     unless current_user.editor == 'visual'
-      "<a href=\"#{url_for :controller => 'textfilters', :action => 'macro_help', :id => macro.short_name}\" onclick=\"return popup(this, 'Typo Macro Help')\">#{text}</a>"
+      "<a href=\"/admin/textfilters/macro_help/#{macro.short_name}\" onclick=\"return popup(this, 'Typo Macro Help')\">#{text}</a>".html_safe
     end
   end
 
   def render_macros(macros)
-    result = link_to_function _("Show help on Typo macros") + " (+/-)",update_page { |page| page.visual_effect(:toggle_blind, "macros", :duration => 0.2) }
+    result = link_to(_("Show help on Typo macros") + " (+/-)", "#", onclick: "$('#macros').toggle(); return false;").to_s
     result << "<table id='macros' style='display: none;'>"
     result << "<tr>"
     result << "<th>#{_('Name')}</th>"
@@ -225,36 +262,33 @@ module Admin::BaseHelper
       result << "</tr>"
     end
     result << "</table>"
+    result.html_safe
   end
 
   def build_editor_link(label, action, id, update, editor)
-    link = link_to_remote(label,
-            :url => { :action => action, 'editor' => editor},
-            :class => 'ui-button-text',
-            :loading => "new Element.show('update_spinner_#{id}')",
-            :success => "new Element.toggle('update_spinner_#{id}')",
-            :update => "#{update}")
+    link = link_to(label, "/admin/content/#{action}?editor=#{editor}", class: 'ui-button-text')
     link << image_tag("spinner-blue.gif", :id => "update_spinner_#{id}", :style => 'display:none;')
+    link.html_safe
   end
 
   def display_pagination(collection, cols, first='', last='')
-    "<tr><td class='#{first} #{last}' colspan=#{cols} class='paginate'>#{paginate(collection)}</td></tr>"
+    "<tr><td class='#{first} #{last}' colspan=#{cols} class='paginate'>#{paginate(collection)}</td></tr>".html_safe
   end
 
   def show_thumbnail_for_editor(image)
     thumb = "#{::Rails.root.to_s}/public/files/thumb_#{image.filename}"
     picture = "#{this_blog.base_url}/files/#{image.filename}"
 
-    image.create_thumbnail unless File.exists? thumb
+    image.create_thumbnail unless File.exist? thumb
 
     # If something went wrong with thumbnail generation, we just display a place holder
-    thumbnail = (File.exists? thumb) ? "#{this_blog.base_url}/files/thumb_#{image.filename}" : "#{this_blog.base_url}/images/thumb_blank.jpg"
+    thumbnail = (File.exist? thumb) ? "#{this_blog.base_url}/files/thumb_#{image.filename}" : "#{this_blog.base_url}/images/thumb_blank.jpg"
 
     picture = "<a onclick=\"edInsertImageFromCarousel('article_body_and_extended', '#{this_blog.base_url}/files/#{image.filename}');\" />"
     picture << "<img class='tumb' src='#{thumbnail}' "
     picture << "alt='#{this_blog.base_url}/files/#{image.filename}' />"
     picture << "</a>"
-    return picture
+    picture.html_safe
   end
 
   def save_settings

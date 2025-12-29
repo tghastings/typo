@@ -11,7 +11,7 @@ module Migrator
   end
 
   def self.current_schema_version
-    ActiveRecord::Migrator.current_version rescue 0
+    ActiveRecord::Base.connection.migration_context.current_version rescue 0
   end
 
   def self.max_schema_version
@@ -19,10 +19,11 @@ module Migrator
   end
 
   def self.db_supports_migrations?
-    ActiveRecord::Base.connection.supports_migrations?
+    # All supported databases now support migrations in Rails 7+
+    true
   end
 
   def self.migrate(version = nil)
-    ActiveRecord::Migrator.migrate("#{migrations_path}/", version)
+    ActiveRecord::MigrationContext.new(migrations_path).migrate(version)
   end
 end

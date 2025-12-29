@@ -41,12 +41,12 @@ describe "articles/index_rss_feed.rss.builder" do
 
     it "has the correct guid" do
       render
-      rendered_entry.css("guid").first.content.should == "urn:uuid:#{@article.guid}"
+      rendered_entry.css("guid").first.content.should eq("urn:uuid:#{@article.guid}")
     end
 
     it "has a link to the article's comment section" do
       render
-      rendered_entry.css("comments").first.content.should == @article.permalink_url + "#comments"
+      rendered_entry.css("comments").first.content.should eq(@article.permalink_url + "#comments")
     end
 
     describe "with an author without email set" do
@@ -150,8 +150,7 @@ describe "articles/index_rss_feed.rss.builder" do
       end
 
       it "shows only a link to the article" do
-        rendered_entry.css("description").first.content.should ==
-          "<p>This article is password protected. Please <a href='#{@article.permalink_url}'>fill in your password</a> to read it</p>"
+        rendered_entry.css("description").first.content.should eq("<p>This article is password protected. Please <a href='#{@article.permalink_url}'>fill in your password</a> to read it</p>")
       end
 
       it "does not show any secret bits anywhere" do
@@ -166,8 +165,7 @@ describe "articles/index_rss_feed.rss.builder" do
       end
 
       it "shows only a link to the article" do
-        rendered_entry.css("description").first.content.should ==
-          "<p>This article is password protected. Please <a href='#{@article.permalink_url}'>fill in your password</a> to read it</p>"
+        rendered_entry.css("description").first.content.should eq("<p>This article is password protected. Please <a href='#{@article.permalink_url}'>fill in your password</a> to read it</p>")
       end
 
       it "does not show any secret bits anywhere" do

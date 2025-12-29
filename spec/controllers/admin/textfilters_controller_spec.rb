@@ -9,9 +9,9 @@ describe Admin::TextfiltersController do
       #TODO Delete after removing fixtures
       Profile.delete_all
       henri = Factory(:user, :login => 'henri', :profile => Factory(:profile_admin, :label => Profile::ADMIN))
-      request.session = { :user => henri.id }
+      request.session = { :user_id => henri.id }
       get 'macro_help', :id => 'code'
-      response.should be_success
+      expect(response).to be_success
     end
   end
 end

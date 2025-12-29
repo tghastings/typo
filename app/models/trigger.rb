@@ -1,5 +1,5 @@
 class Trigger < ActiveRecord::Base
-  belongs_to :pending_item, :polymorphic => true
+  belongs_to :pending_item, optional: true, polymorphic: true
 
   class << self
     def post_action(due_at, item, method='came_due')
@@ -9,30 +9,15 @@ class Trigger < ActiveRecord::Base
     end
 
     def fire
-      begin
-        destroy_all ['due_at <= ?', Time.now]
-        true
-      rescue
-        @current_version = Migrator.current_schema_version
-        @needed_version = Migrator.max_schema_version
-        @support = Migrator.db_supports_migrations?
-        @needed_migrations = Migrator.available_migrations[@current_version..@needed_version].collect do |mig|
-          mig.scan(/\d+\_([\w_]+)\.rb$/).flatten.first.humanize
-        end
-        if @needed_migrations
-          Migrator.migrate
-        end
-      end
+      where('due_at <= ?', Time.now).destroy_all
+      true
     end
 
     def remove(pending_item, conditions = { })
       return if pending_item.new_record?
-      conditions_string =
-        conditions.keys.collect{ |k| "(#{k} = :#{k})"}.join(' AND ')
-      with_scope(:find => { :conditions => [conditions_string, conditions]}) do
-        delete_all(["pending_item_id = ? AND pending_item_type = ?",
-                    pending_item.id, pending_item.class.to_s])
-      end
+      scope = where(pending_item_id: pending_item.id, pending_item_type: pending_item.class.to_s)
+      scope = scope.where(conditions) if conditions.present?
+      scope.delete_all
     end
   end
 

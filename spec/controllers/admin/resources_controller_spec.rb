@@ -8,7 +8,7 @@ describe Admin::ResourcesController do
     #TODO Delete after removing fixtures
     Profile.delete_all
     henri = Factory(:user, :login => 'henri', :profile => Factory(:profile_admin, :label => Profile::ADMIN))
-    @request.session = { :user => henri.id }
+    @request.session = { :user_id => henri.id }
   end
 
   describe "test_index" do
@@ -17,9 +17,9 @@ describe Admin::ResourcesController do
     end
     
     it "should render index template" do
-      assert_response :success
-      assert_template 'index'
-      assigns(:resources).should_not be_nil
+      expect(response).to be_successful
+      expect(response).to render_template('index')
+      expect(assigns(:resources)).not_to be_nil
     end    
   end
 
@@ -30,13 +30,13 @@ describe Admin::ResourcesController do
     end
     
     it "should render template destroy" do
-      assert_response :success
-      assert_template 'destroy'
+      expect(response).to be_successful
+      expect(response).to render_template('destroy')
     end
     
     it 'should have a valid file' do
-      assert_not_nil Resource.find(@res_id)
-      assert_not_nil assigns(:record)      
+      expect(Resource.find(@res_id)).not_to be_nil
+      expect(assigns(:record)      ).not_to be_nil
     end    
   end
     
@@ -44,7 +44,7 @@ describe Admin::ResourcesController do
     res_id = Factory(:resource).id
 
     post :destroy, :id => res_id
-    response.should redirect_to(:action => 'index')
+    expect(response).to redirect_to(:action => 'index')
   end
 
   it "test_upload" do

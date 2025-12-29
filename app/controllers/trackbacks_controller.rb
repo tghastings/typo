@@ -20,7 +20,7 @@ class TrackbacksController < FeedbackController
 
     respond_to do |format|
       format.xml { render 'trackback.xml.builder' }
-      format.html { render :nothing => true }
+      format.html { head :ok }
     end
   end
 

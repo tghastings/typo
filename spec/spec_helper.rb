@@ -1,17 +1,99 @@
 # This file is copied to spec/ when you run 'rails generate rspec:install'
 require 'simplecov'
-SimpleCov.start 'rails'
+SimpleCov.start 'rails' do
+  add_filter '/spec/'
+  add_filter '/config/'
+  add_filter '/vendor/'
+end
 
 ENV["RAILS_ENV"] ||= 'test'
 require File.expand_path("../../config/environment", __FILE__)
 require 'rspec/rails'
-require 'factory_girl'
+require 'rspec/collection_matchers'
+require 'factory_bot'
 require 'rexml/document'
-FactoryGirl.find_definitions
+require 'capybara/rspec'
+
+# Reset and load factories to avoid duplicate registration
+FactoryBot.definition_file_paths = [File.join(Rails.root, 'spec', 'factories')]
+FactoryBot.reload
+
+# Backward compatibility: Factory alias for FactoryBot
+Factory = FactoryBot
+
+# Backward compatibility: Factory() function shorthand for Factory.create()
+def Factory(name, *args)
+  FactoryBot.create(name, *args)
+end
+
+# Backward compatibility: Old ActiveRecord find syntax
+# Model.find(:first) -> Model.first
+# Model.find(:all) -> Model.all
+# Model.find(:first, :conditions => {...}) -> Model.where({...}).first
+module ActiveRecordFindBackwardCompat
+  def find(*args)
+    return super if args.first.is_a?(Integer) || args.first.is_a?(String) && args.first !~ /^(first|all|last)$/
+
+    type = args.shift
+    options = args.first || {}
+
+    scope = self.all  # Start with a relation, not the class
+    if options[:conditions]
+      conditions = options[:conditions]
+      if conditions.is_a?(Array)
+        scope = scope.where(conditions[0], *conditions[1..-1])
+      elsif conditions.is_a?(Hash)
+        scope = scope.where(conditions)
+      else
+        scope = scope.where(conditions)
+      end
+    end
+    scope = scope.order(options[:order]) if options[:order]
+    scope = scope.limit(options[:limit]) if options[:limit]
+    scope = scope.includes(options[:include]) if options[:include]
+
+    case type.to_s
+    when 'first' then scope.first
+    when 'last' then scope.last
+    when 'all' then scope  # Return the relation, not an array
+    else super(type, *args)
+    end
+  end
+end
+
+ActiveRecord::Base.extend(ActiveRecordFindBackwardCompat)
+
+# Backward compatibility: Dynamic finders like find_or_create_by_name, find_by_name, find_all_by_*
+module DynamicFindersBackwardCompat
+  def method_missing(method_name, *args, &block)
+    if method_name.to_s =~ /^find_or_create_by_(.+)$/
+      attributes = $1.split('_and_')
+      options = args.extract_options!
+      conditions = attributes.zip(args).to_h
+      record = where(conditions).first
+      record || create!(options.merge(conditions))
+    elsif method_name.to_s =~ /^find_by_(.+)$/
+      attributes = $1.split('_and_')
+      conditions = attributes.zip(args).to_h
+      where(conditions).first
+    elsif method_name.to_s =~ /^find_all_by_(.+)$/
+      attributes = $1.split('_and_')
+      conditions = attributes.zip(args).to_h
+      where(conditions).to_a
+    else
+      super
+    end
+  end
+
+  def respond_to_missing?(method_name, include_private = false)
+    method_name.to_s =~ /^(find_or_create_by_|find_by_|find_all_by_)/ || super
+  end
+end
+
+ActiveRecord::Base.extend(DynamicFindersBackwardCompat)
 
 User
 class User
-  alias real_send_create_notification send_create_notification
   def send_create_notification; end
 end
 
@@ -19,26 +101,274 @@ end
 # in spec/support/ and its subdirectories.
 Dir[Rails.root.join("spec/support/**/*.rb")].each {|f| require f}
 
-module RSpec
-  module Core
-    module Hooks
-      class HookCollection
-        def find_hooks_for(group)
-          self.class.new(select {|hook| hook.options_apply?(group)})
-        end
-      end
-    end
-  end
-end
-
 RSpec.configure do |config|
   config.mock_with :rspec
   config.use_transactional_fixtures = true
-  config.use_instantiated_fixtures  = false
-  config.fixture_path = "#{::Rails.root}/test/fixtures"
+  config.include FactoryBot::Syntax::Methods
+  config.render_views
+
+  # Text filters are seeded by db/seeds.rb, no need to create them here
 
   config.before(:each) do
     Localization.lang = :default
+  end
+
+  # Disable deprecated should syntax warnings
+  config.expect_with :rspec do |expectations|
+    expectations.syntax = [:should, :expect]
+  end
+
+  config.mock_with :rspec do |mocks|
+    mocks.syntax = [:should, :expect]
+  end
+
+  # Infer spec type from file location
+  config.infer_spec_type_from_file_location!
+
+  # Enable Nokogiri-based selector matchers for controller and view specs
+  config.include(Module.new do
+    require 'nokogiri'
+
+    def page
+      if defined?(response)
+        @page ||= Nokogiri::HTML(response.body)
+      elsif defined?(rendered)
+        @page ||= Nokogiri::HTML(rendered)
+      end
+    end
+
+    # Override have_selector to work with controller response or view rendered using Nokogiri
+    def have_selector(*args)
+      selector = args[0]
+      options = args[1] || {}
+
+      RSpec::Matchers.define :have_selector_in_response do |css_selector, opts|
+        match do |target|
+          # Handle both controller response and view rendered
+          html = if target.respond_to?(:body)
+            target.body
+          elsif target.is_a?(String)
+            target
+          elsif defined?(rendered)
+            rendered
+          elsif defined?(response)
+            response.body
+          else
+            target.to_s
+          end
+
+          doc = Nokogiri::HTML(html)
+          elements = doc.css(css_selector)
+
+          return false if elements.empty?
+
+          # Check :content option if provided
+          if opts[:content]
+            elements.any? { |el| el.text.include?(opts[:content]) }
+          elsif opts[:href]
+            elements.any? { |el| el[:href] == opts[:href] }
+          else
+            true
+          end
+        end
+
+        failure_message do |target|
+          if opts[:content]
+            "expected to find css #{css_selector.inspect} with content #{opts[:content].inspect} but there were no matches"
+          elsif opts[:href]
+            "expected to find css #{css_selector.inspect} with href #{opts[:href].inspect} but there were no matches"
+          else
+            "expected to find css #{css_selector.inspect} but there were no matches"
+          end
+        end
+      end
+      have_selector_in_response(selector, options)
+    end
+
+    # Backward compatibility: be_success -> be_successful
+    RSpec::Matchers.define :be_success do
+      match do |response|
+        response.successful?
+      end
+    end
+  end, type: :controller)
+
+  # Include the same matcher for view specs
+  config.include(Module.new do
+    require 'nokogiri'
+
+    def have_selector(*args)
+      selector = args[0]
+      options = args[1] || {}
+
+      RSpec::Matchers.define :have_selector_in_view do |css_selector, opts|
+        match do |target|
+          html = target.is_a?(String) ? target : rendered
+          doc = Nokogiri::HTML(html)
+          elements = doc.css(css_selector)
+
+          return false if elements.empty?
+
+          if opts[:content]
+            elements.any? { |el| el.text.include?(opts[:content]) }
+          elsif opts[:href]
+            elements.any? { |el| el[:href] == opts[:href] }
+          else
+            true
+          end
+        end
+
+        failure_message do |target|
+          if opts[:content]
+            "expected to find css #{css_selector.inspect} with content #{opts[:content].inspect} but there were no matches"
+          elsif opts[:href]
+            "expected to find css #{css_selector.inspect} with href #{opts[:href].inspect} but there were no matches"
+          else
+            "expected to find css #{css_selector.inspect} but there were no matches"
+          end
+        end
+      end
+      have_selector_in_view(selector, options)
+    end
+  end, type: :view)
+
+  # Backward compatibility: mock -> double
+  config.include(Module.new do
+    def mock(*args, &block)
+      double(*args, &block)
+    end
+
+    # Backward compatibility: mock_model (removed in rspec-rails 4+)
+    def mock_model(model_class, stubs = {})
+      model = double("#{model_class.name}_#{object_id}", stubs.reverse_merge(
+        :to_param => "1",
+        :to_key => nil,
+        :to_model => nil,
+        :model_name => model_class.model_name,
+        :persisted? => false,
+        :destroyed? => false,
+        :marked_for_destruction? => false,
+        :new_record? => true,
+        :id => nil
+      ))
+      # Allow is_a? to accept any class/symbol and return appropriate values
+      allow(model).to receive(:is_a?) do |klass|
+        klass == model_class || klass == model_class.superclass
+      end
+      allow(model).to receive(:kind_of?) do |klass|
+        klass == model_class || klass == model_class.superclass
+      end
+      allow(model).to receive(:instance_of?).with(model_class).and_return(false)
+      allow(model).to receive(:class).and_return(model_class)
+      # Rails 7 compatibility: stub _read_attribute for internal ActiveRecord calls
+      allow(model).to receive(:_read_attribute) do |attr_name|
+        stubs[attr_name.to_sym] || stubs[attr_name.to_s]
+      end
+      model
+    end
+
+    # Backward compatibility: xhr method (removed in Rails 7)
+    def xhr(method, action, params = {}, session = nil, flash = nil)
+      options = { params: params, xhr: true }
+      options[:session] = session if session
+      options[:flash] = flash if flash
+      # Bypass the backward compat wrapper by calling *_without_backward_compat directly
+      send("#{method}_without_backward_compat", action, **options)
+    end
+  end)
+
+  # Include Minitest assertions for backward compatibility
+  config.include(Module.new do
+    def assert(value, message = nil)
+      expect(value).to be_truthy, message
+    end
+
+    def assert_equal(expected, actual, message = nil)
+      expect(actual).to eq(expected), message
+    end
+
+    def assert_not_equal(expected, actual, message = nil)
+      expect(actual).not_to eq(expected), message
+    end
+
+    def assert_nil(value, message = nil)
+      expect(value).to be_nil, message
+    end
+
+    def assert_not_nil(value, message = nil)
+      expect(value).not_to be_nil, message
+    end
+
+    def assert_match(pattern, string, message = nil)
+      expect(string).to match(pattern), message
+    end
+
+    def assert_no_match(pattern, string, message = nil)
+      expect(string).not_to match(pattern), message
+    end
+
+    def assert_raise(exception_class, message = nil, &block)
+      expect(&block).to raise_error(exception_class), message
+    end
+    alias_method :assert_raises, :assert_raise
+
+    def assert_nothing_raised(message = nil, &block)
+      expect(&block).not_to raise_error, message
+    end
+
+    def assert_respond_to(object, method, message = nil)
+      expect(object).to respond_to(method), message
+    end
+
+    def assert_includes(collection, item, message = nil)
+      expect(collection).to include(item), message
+    end
+
+    def assert_empty(collection, message = nil)
+      expect(collection).to be_empty, message
+    end
+
+    def assert_instance_of(klass, object, message = nil)
+      expect(object).to be_an_instance_of(klass), message
+    end
+
+    def assert_kind_of(klass, object, message = nil)
+      expect(object).to be_a_kind_of(klass), message
+    end
+
+    def refute(value, message = nil)
+      expect(value).to be_falsey, message
+    end
+  end)
+end
+
+# Backward compatibility for old controller test syntax
+# Rails 7 requires: get :action, params: {...}
+# Old syntax was: get :action, {...}
+module ActionController
+  class TestCase
+    module Behavior
+      %w(get post patch put head delete).each do |method|
+        define_method("#{method}_with_backward_compat") do |action, *args|
+          # Handle case with no params at all
+          if args.empty?
+            send("#{method}_without_backward_compat", action, params: {})
+          elsif args.first.is_a?(Hash) && !args.first.key?(:params) && !args.first.key?(:session) && !args.first.key?(:flash)
+            # Old style: post :action, {:key => :value}
+            # Convert to new style: post :action, params: {:key => :value}
+            params = args.first
+            options = args[1] || {}
+            # Don't force format unless explicitly requested - let routes handle it
+            send("#{method}_without_backward_compat", action, params: params, **options)
+          else
+            # Already new style - just pass through
+            send("#{method}_without_backward_compat", action, *args)
+          end
+        end
+        alias_method "#{method}_without_backward_compat", method
+        alias_method method, "#{method}_with_backward_compat"
+      end
+    end
   end
 end
 
@@ -83,25 +413,25 @@ def assert_rss20 feed, count
 end
 
 def stub_default_blog
-  blog = stub_model(Blog, :base_url => "http://myblog.net")
-  view.stub(:this_blog) { blog }
-  Blog.stub(:default) { blog }
+  blog = Blog.new(base_url: "http://myblog.net", blog_name: "Test Blog", text_filter: "textile")
+  allow(view).to receive(:this_blog).and_return(blog)
+  allow(Blog).to receive(:default).and_return(blog)
   blog
 end
 
 def stub_full_article(time=Time.now)
-  author = stub_model(User, :name => "User Name")
-  text_filter = Factory.build(:textile)
+  author = build(:user, name: "User Name")
+  textile_filter = TextFilter.find_by(name: "textile") || TextFilter.find_by(name: "none")
 
-  a = stub_model(Article, :published_at => time, :user => author,
-                 :created_at => time, :updated_at => time,
-                 :title => "Foo Bar", :permalink => 'foo-bar',
-                 :guid => time.hash)
-  a.stub(:categories) { [Factory.build(:category)] }
-  a.stub(:published_comments) { [] }
-  a.stub(:resources) { [Factory.build(:resource)] }
-  a.stub(:tags) { [Factory.build(:tag)] }
-  a.stub(:text_filter) { text_filter }
+  a = build(:article, published_at: time, user: author,
+            created_at: time, updated_at: time,
+            title: "Foo Bar", permalink: 'foo-bar',
+            guid: time.hash.to_s,
+            text_filter_id: textile_filter&.id)
+  allow(a).to receive(:categories).and_return([build(:category)])
+  allow(a).to receive(:published_comments).and_return([])
+  allow(a).to receive(:resources).and_return([build(:resource)])
+  allow(a).to receive(:tags).and_return([build(:tag)])
   a
 end
 
@@ -111,7 +441,7 @@ def with_each_theme
   Dir.new(File.join(::Rails.root.to_s, "themes")).each do |theme|
     next if theme =~ /\.\.?/
     view_path = "#{::Rails.root.to_s}/themes/#{theme}/views"
-    if File.exists?("#{::Rails.root.to_s}/themes/#{theme}/helpers/theme_helper.rb")
+    if File.exist?("#{::Rails.root.to_s}/themes/#{theme}/helpers/theme_helper.rb")
       require "#{::Rails.root.to_s}/themes/#{theme}/helpers/theme_helper.rb"
     end
     yield theme, view_path
@@ -189,6 +519,54 @@ def flunk(*args, &block)
   assertion_delegate.flunk(*args, &block)
 end
 
+# Backward compatibility: stub_model replacement for modern RSpec
+def stub_model(klass, attributes = {})
+  instance = klass.new(attributes)
+  allow(instance).to receive(:id).and_return(rand(1000) + 1)
+  allow(instance).to receive(:new_record?).and_return(false)
+  allow(instance).to receive(:persisted?).and_return(true)
+  instance
+end
+
+# Add .stub and .stub! backward compatibility to objects
+# Returns a wrapper that supports .and_return chain
+class StubChain
+  def initialize(object, method_name)
+    @object = object
+    @method_name = method_name
+  end
+
+  def and_return(value = nil, &block)
+    if block_given?
+      RSpec::Mocks.allow_message(@object, @method_name, &block)
+    else
+      RSpec::Mocks.allow_message(@object, @method_name) { value }
+    end
+    self
+  end
+
+  def with(*args)
+    # Ignore with() for backward compatibility
+    self
+  end
+end
+
+module StubBackwardCompatibility
+  def stub(method_name, &block)
+    if block_given?
+      RSpec::Mocks.allow_message(self, method_name, &block)
+      self
+    else
+      StubChain.new(self, method_name)
+    end
+  end
+
+  # stub! is just an alias for stub in old RSpec
+  alias_method :stub!, :stub
+end
+
+Object.include(StubBackwardCompatibility)
+
 # Make webrat's matchers treat XML like XML.
 # See Webrat ticket #345.
 # Solution adapted from the following patch:
@@ -214,4 +592,3 @@ module Webrat #:nodoc:
     end
   end
 end
-

@@ -1,9 +1,9 @@
 class CommentsController < FeedbackController
-  before_filter :get_article, :only => [:create, :preview]
+  before_action :get_article, :only => [:create, :preview]
 
   def create
     @comment = @article.with_options(new_comment_defaults) do |art|
-      art.add_comment(params[:comment].symbolize_keys)
+      art.add_comment(params[:comment].to_unsafe_h.symbolize_keys)
     end
 
     unless current_user.nil? or session[:user_id].nil?
@@ -20,9 +20,9 @@ class CommentsController < FeedbackController
       partial = '/articles/comment'
     end
     if request.xhr?
-      render :partial => partial, :object => @comment 
+      render :partial => partial, :object => @comment
     else
-      redirect_to @article.permalink_url
+      redirect_to @article.permalink_url, allow_other_host: true
     end
   end
 
@@ -33,7 +33,7 @@ class CommentsController < FeedbackController
 
     comment_params = params[:comment]
     if (params_comment[:body].blank? rescue true)
-      render :nothing => true
+      head :ok
       return
     end
 
@@ -43,7 +43,7 @@ class CommentsController < FeedbackController
     unless @article.comments_closed?
       render 'articles/comment_preview', :locals => { :comment => @comment }
     else
-      render :text => 'Comment are closed'
+      render plain: 'Comment are closed'
     end
   end
 
@@ -57,9 +57,10 @@ class CommentsController < FeedbackController
   def get_feedback
     @comments = \
       if params[:article_id]
-        Article.find(params[:article_id]).published_comments
+        article = Article.find_by(id: params[:article_id])
+        article ? article.published_comments : []
       else
-        Comment.find_published(:all, this_blog.rss_limit_params.merge(:order => 'created_at DESC'))
+        Comment.where(published: true).order('created_at DESC').limit(this_blog.limit_rss_display)
       end
   end
 
@@ -86,6 +87,10 @@ class CommentsController < FeedbackController
   end
 
   def get_article
-    @article = Article.find(params[:article_id])
+    @article = Article.find_by(id: params[:article_id])
+    unless @article
+      render plain: 'Article not found', status: 404
+      throw(:abort)
+    end
   end
 end

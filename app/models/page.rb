@@ -1,5 +1,5 @@
 class Page < Content
-  belongs_to :user
+  belongs_to :user, optional: true
   validates_presence_of :title, :body
   validates_uniqueness_of :name
 
@@ -16,6 +16,10 @@ class Page < Content
   end
 
   def initialize(*args)
+    # Handle ActionController::Parameters for Rails 7 compatibility
+    if args.first.is_a?(ActionController::Parameters)
+      args[0] = args.first.to_unsafe_h
+    end
     super
     # Yes, this is weird - PDC
     begin

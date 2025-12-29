@@ -1,13 +1,17 @@
 require_dependency 'spam_protection'
 
 class Trackback < Feedback
-  belongs_to :article
+  self.table_name = "feedback"
+
+  belongs_to :article, optional: true
   content_fields :excerpt
   validates_presence_of :title, :excerpt, :url
 
-  attr_accessible :url, :blog_name, :title, :excerpt, :ip, :published, :article_id
-
   def initialize(*args, &block)
+    # Handle ActionController::Parameters for Rails 7 compatibility
+    if args.first.is_a?(ActionController::Parameters)
+      args[0] = args.first.to_unsafe_h
+    end
     super(*args, &block)
     self.title ||= self.url
     self.blog_name ||= ""

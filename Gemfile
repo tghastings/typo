@@ -1,60 +1,58 @@
-env = ENV["RAILS_ENV"] || 'development'
-dbfile = File.expand_path("../config/database.yml", __FILE__)
+source 'https://rubygems.org'
 
-#unless File.exists?(dbfile)
-#  raise "You need to configure config/database.yml first"
-#else
-#  conf = YAML.load(File.read(dbfile))
-#  adapter = conf[env]['adapter']
-#  raise "You need define an adapter in your database.yml" if adapter == '' || adapter.nil?
-#  case adapter
-#  when 'sqlite3'
-#    gem 'sqlite3'
-#  when 'postgresql'
-#    gem 'pg'
-#  when 'mysql'
-#    gem 'sam-mysql-ruby'
-#  else
-#    raise "Don't know what gem to use for adapter #{adapter}"
-#  end
-#end
+gem 'rails', '~> 7.0.8'
+
+# Web server
+gem 'puma'
+
+# Database
+gem 'sqlite3', '~> 1.4'
 
 group :production do
-  gem 'pg'
+  gem 'pg', '~> 1.5'
 end
 
-source 'https://rubygems.org'
-ruby "1.9.3"
-
-gem 'thin'
-gem 'rails', '~> 3.0.10'
-gem 'require_relative'
+# Core dependencies
+gem 'rexml'  # Required in Ruby 3+
 gem 'htmlentities'
-gem 'json'
-gem 'bluecloth', '~> 2.1'
-gem 'coderay', '~> 0.9'
+gem 'bluecloth', '~> 2.2'
+gem 'coderay', '~> 1.1'
 gem 'kaminari'
-gem 'RedCloth', '~> 4.2.8'
-gem 'addressable', '~> 2.1', :require => 'addressable/uri'
-gem 'mini_magick', '~> 1.3.3', :require => 'mini_magick'
-gem 'uuidtools', '~> 2.1.1'
+gem 'RedCloth', '~> 4.3'
+gem 'addressable', '~> 2.8', :require => 'addressable/uri'
+gem 'mini_magick', '~> 4.12', :require => 'mini_magick'
+gem 'uuidtools', '~> 2.2'
 gem 'flickraw-cached'
-gem 'rubypants', '~> 0.2.0'
-gem 'rake', '~> 0.9.2'
+gem 'rubypants', '~> 0.7'
+gem 'rake'
 gem 'acts_as_list'
-gem 'acts_as_tree_rails3'
-gem 'recaptcha', :require => 'recaptcha/rails', :branch => 'rails3'
+gem 'acts_as_tree'
+gem 'recaptcha', '~> 5.0'
+gem 'rails_autolink'  # Provides auto_link helper removed in Rails 4
+
+# Asset pipeline
+gem 'sprockets-rails'
+gem 'sassc-rails'
+
+# For observers (Rails 7 compatible)
+gem 'rails-observers'
+
+# Page caching (extracted from Rails 4+)
+gem 'actionpack-page_caching'
+gem 'actionpack-action_caching'
 
 group :development, :test do
-  gem 'ruby-debug19'
-  gem 'factory_girl', '~> 2.2'
-  gem 'webrat'
-  gem 'rspec-rails', '~> 2.0'
+  gem 'factory_bot_rails'
+  gem 'rspec-rails', '~> 6.0'
+  gem 'rspec-collection_matchers'  # For have(n).items syntax
+  gem 'rails-controller-testing'  # For render_template and assigns matchers
   gem 'simplecov', :require => false
-  gem 'sqlite3'
-  gem 'cucumber'
-  gem 'cucumber-rails', :require => false
-  gem 'cucumber-rails-training-wheels'
-  gem 'database_cleaner'
+  gem 'database_cleaner-active_record'
   gem 'capybara'
+  gem 'debug'
+  gem 'xmlrpc'  # Required for ping/XML-RPC tests in Ruby 3+
+end
+
+group :development do
+  gem 'listen'
 end

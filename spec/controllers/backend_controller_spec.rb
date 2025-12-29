@@ -198,7 +198,7 @@ describe BackendController do
                              :text_filter => TextFilter.find_by_name('textile'),
                              :published_at => Time.now.utc.midnight)
       @article.errors.add(:base, 'test error')
-      @article.should_receive(:save).and_return(false)
+      expect(@article).to receive(:save).and_return(false)
       Article.stub!(:new).and_return(@article)
       args = [1, 'henri', 'whatever', MetaWeblogService.new(@controller).article_dto_from(@article), 1]
       lambda { invoke_layered :metaWeblog , :newPost, *args }.should \

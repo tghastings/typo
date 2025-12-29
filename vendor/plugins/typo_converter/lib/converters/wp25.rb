@@ -96,12 +96,10 @@ class Wp25Converter < BaseConverter
   def old_articles
     if @options.has_key?(:categories)
       #TODO: understand the categories configuration
-      @old_article ||= WP25::Post.find(:all,
-                                           :include => :categorie,
-                                           :conditions => ["post_pub = ? AND cat_libelle IN (?)", true, @options[:categories]])
+      @old_article ||= WP25::Post.includes(:categorie)
+                                  .where("post_pub = ? AND cat_libelle IN (?)", true, @options[:categories])
     else
-      @old_article ||= WP25::Post.find :all,
-        :conditions => { :post_status => 'publish', :post_type => 'post' }
+      @old_article ||= WP25::Post.where(:post_status => 'publish', :post_type => 'post')
     end
     @old_article
   end
@@ -109,18 +107,16 @@ class Wp25Converter < BaseConverter
   def old_pages
     if @options.has_key?(:categories)
       #TODO: understand the categories configuration
-      @old_page ||= WP25::Post.find(:all,
-                                           :include => :categorie,
-                                           :conditions => ["post_pub = ? AND cat_libelle IN (?)", true, @options[:categories]])
+      @old_page ||= WP25::Post.includes(:categorie)
+                               .where("post_pub = ? AND cat_libelle IN (?)", true, @options[:categories])
     else
-      @old_page ||= WP25::Post.find :all,
-        :conditions => { :post_status => 'publish', :post_type => 'page' }
+      @old_page ||= WP25::Post.where(:post_status => 'publish', :post_type => 'page')
     end
     @old_page
   end
 
   def old_users
-    @old_users ||= WP25::User.find(:all).index_by &:ID
+    @old_users ||= WP25::User.all.index_by &:ID
   end
 
   def get_login(wp_user)

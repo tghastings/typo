@@ -49,7 +49,7 @@ class TextFilterPlugin
   end
 
   def self.sanitize(*args)
-    (@sanitizer ||= HTML::WhiteListSanitizer.new).sanitize(*args)
+    (@sanitizer ||= Rails::HTML4::SafeListSanitizer.new).sanitize(*args)
   end
 
   private

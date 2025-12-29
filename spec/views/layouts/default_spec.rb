@@ -5,6 +5,9 @@ describe "layouts/default.html.erb" do
     assign(:keywords, ["foo", "bar"])
     assign(:auto_discovery_url_atom, "")
     assign(:auto_discovery_url_rss, "")
+    # Stub asset pipeline for theme assets to avoid missing asset errors in tests
+    allow(view).to receive(:compute_asset_path).and_call_original
+    allow(view).to receive(:compute_asset_path).with("theme/rss.png", anything).and_return("/assets/theme/rss.png")
   end
 
   with_each_theme do |theme, view_path|
@@ -23,7 +26,7 @@ describe "layouts/default.html.erb" do
 
         it 'renders assigned keywords' do
           render
-          rendered.should have_selector('head>meta[name="keywords"]')
+          expect(rendered).to have_selector('head>meta[name="keywords"]')
         end
       end
 
@@ -34,7 +37,7 @@ describe "layouts/default.html.erb" do
 
         it 'does not render assigned keywords' do
           render
-          rendered.should_not have_selector('head>meta[name="keywords"]')
+          expect(rendered).not_to have_selector('head>meta[name="keywords"]')
         end
       end
     end

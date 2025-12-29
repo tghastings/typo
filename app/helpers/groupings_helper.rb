@@ -1,6 +1,6 @@
 module GroupingsHelper
   def ul_tag_for(grouping_class)
-    case
+    result = case
     when grouping_class == Tag
       %{<ul id="taglist" class="tags">}
     when grouping_class == Category
@@ -8,5 +8,6 @@ module GroupingsHelper
     else
       '<ul>'
     end
+    result.html_safe
   end
 end

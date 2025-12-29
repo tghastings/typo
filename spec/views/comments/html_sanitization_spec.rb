@@ -23,21 +23,21 @@ shared_examples_for "CommentSanitization" do
     it "Should sanitize content rendered with the #{value} textfilter" do
       @blog.comment_text_filter = value
 
-      render :file => 'comments/show'
-      rendered.should have_selector('.content')
-      rendered.should have_selector('.author')
+      render template: 'comments/show'
+      expect(rendered).to have_selector('.content')
+      expect(rendered).to have_selector('.author')
 
-      rendered.should_not have_selector('.content script')
-      rendered.should_not have_selector(".content a:not([rel=nofollow])")
+      expect(rendered).not_to have_selector('.content script')
+      expect(rendered).not_to have_selector(".content a:not([rel=nofollow])")
       # No links with javascript
-      rendered.should_not have_selector(".content a[onclick]")
-      rendered.should_not have_selector(".content a[href^=\"javascript:\"]")
+      expect(rendered).not_to have_selector(".content a[onclick]")
+      expect(rendered).not_to have_selector(".content a[href^=\"javascript:\"]")
 
-      rendered.should_not have_selector('.author script')
-      rendered.should_not have_selector(".author a:not([rel=nofollow])")
+      expect(rendered).not_to have_selector('.author script')
+      expect(rendered).not_to have_selector(".author a:not([rel=nofollow])")
       # No links with javascript
-      rendered.should_not have_selector(".author a[onclick]")
-      rendered.should_not have_selector(".author a[href^=\"javascript:\"]")
+      expect(rendered).not_to have_selector(".author a[onclick]")
+      expect(rendered).not_to have_selector(".author a[href^=\"javascript:\"]")
     end
   end
 end
@@ -140,21 +140,21 @@ shared_examples_for "CommentSanitizationWithDofollow" do
       @blog.comment_text_filter = value
       @blog.save
 
-      render :file => 'comments/show'
-      rendered.should have_selector('.content')
-      rendered.should have_selector('.author')
+      render template: 'comments/show'
+      expect(rendered).to have_selector('.content')
+      expect(rendered).to have_selector('.author')
 
-      rendered.should_not have_selector('.content script')
-      rendered.should_not have_selector(".content a[rel=nofollow]")
+      expect(rendered).not_to have_selector('.content script')
+      expect(rendered).not_to have_selector(".content a[rel=nofollow]")
       # No links with javascript
-      rendered.should_not have_selector(".content a[onclick]")
-      rendered.should_not have_selector(".content a[href^=\"javascript:\"]")
+      expect(rendered).not_to have_selector(".content a[onclick]")
+      expect(rendered).not_to have_selector(".content a[href^=\"javascript:\"]")
 
-      rendered.should_not have_selector('.author script')
-      rendered.should_not have_selector(".author a[rel=nofollow]")
+      expect(rendered).not_to have_selector('.author script')
+      expect(rendered).not_to have_selector(".author a[rel=nofollow]")
       # No links with javascript
-      rendered.should_not have_selector(".author a[onclick]")
-      rendered.should_not have_selector(".author a[href^=\"javascript:\"]")
+      expect(rendered).not_to have_selector(".author a[onclick]")
+      expect(rendered).not_to have_selector(".author a[href^=\"javascript:\"]")
     end
   end
 end

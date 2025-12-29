@@ -1,6 +1,6 @@
 require 'action_web_service'
 class BackendController < ContentController
-  skip_before_filter :verify_authenticity_token
+  skip_before_action :verify_authenticity_token
   cache_sweeper :blog_sweeper
 
   web_service_dispatching_mode :layered

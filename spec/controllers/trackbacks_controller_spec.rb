@@ -2,14 +2,14 @@ require 'spec_helper'
 
 describe TrackbacksController do
   before do
-    blog = stub_model(Blog, :base_url => "http://myblog.net")
-    Blog.stub(:default) { blog }
-    Trigger.stub(:fire) { }
+    Factory(:blog)
   end
 
   describe "#index" do
     before do
-      Trackback.stub(:find) { [ "some", "items" ] }
+      @article = Factory(:article)
+      @trackback1 = Factory(:trackback, :article => @article, :published => true, :published_at => Time.now - 1.day)
+      @trackback2 = Factory(:trackback, :article => @article, :published => true, :published_at => Time.now - 2.days)
     end
 
     describe "with :format => atom" do
@@ -18,15 +18,16 @@ describe TrackbacksController do
       end
 
       it "is succesful" do
-        response.should be_success
+        expect(response).to be_success
       end
 
       it "passes the trackbacks to the template" do
-        assigns(:trackbacks).should == ["some", "items"]
+        expect(assigns(:trackbacks)).not_to be_empty
+        expect(assigns(:trackbacks)).to include(@trackback1, @trackback2)
       end
 
       it "renders the atom template" do
-        response.should render_template("index_atom_feed")
+        expect(response).to render_template("index_atom_feed")
       end
     end
 
@@ -36,15 +37,16 @@ describe TrackbacksController do
       end
 
       it "is succesful" do
-        response.should be_success
+        expect(response).to be_success
       end
 
       it "passes the trackbacks to the template" do
-        assigns(:trackbacks).should == ["some", "items"]
+        expect(assigns(:trackbacks)).not_to be_empty
+        expect(assigns(:trackbacks)).to include(@trackback1, @trackback2)
       end
 
-      it "renders the atom template" do
-        response.should render_template("index_rss_feed")
+      it "renders the rss template" do
+        expect(response).to render_template("index_rss_feed")
       end
     end
   end

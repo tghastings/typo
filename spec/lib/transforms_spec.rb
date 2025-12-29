@@ -5,7 +5,7 @@ describe String do
   describe "#to_title" do
     it 'should handle the case where item.body is nil' do
       item = double("item")
-      item.should_receive(:body).and_return(nil)
+      expect(item).to receive(:body).and_return(nil)
 
       params = {}
 
@@ -20,7 +20,7 @@ describe String do
     end
     
     it 'should build a nice permalink from an accentuated string' do
-      "L'été s'ra chaud, l'été s'ra chaud".to_permalink.should == "l-ete-s-ra-chaud-l-ete-s-ra-chaud"
+      expect("L'été s'ra chaud, l'été s'ra chaud".to_permalink).to eq("l-ete-s-ra-chaud-l-ete-s-ra-chaud")
     end
     
   end

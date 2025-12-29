@@ -71,6 +71,7 @@ end
 
 describe "Given no blogs, a new default blog" do
   before :each do
+    Blog.delete_all
     @blog = Blog.new
   end
 
@@ -93,6 +94,7 @@ end
 describe "Valid permalink in blog" do
 
   before :each do
+    Blog.delete_all
     @blog = Blog.new
   end
 

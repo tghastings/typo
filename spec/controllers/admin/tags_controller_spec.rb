@@ -8,7 +8,7 @@ describe Admin::TagsController do
     #TODO Delete after removing fixtures
     Profile.delete_all
     henri = Factory(:user, :login => 'henri', :profile => Factory(:profile_admin, :label => Profile::ADMIN))
-    request.session = { :user => henri.id }
+    request.session = { :user_id => henri.id }
   end
 
   describe 'index action' do
@@ -17,11 +17,11 @@ describe Admin::TagsController do
     end
 
     it 'should be success' do
-      response.should be_success
+      expect(response).to be_success
     end
 
     it 'should render template index' do
-      response.should render_template('index')
+      expect(response).to render_template('index')
     end    
   end
 
@@ -32,15 +32,15 @@ describe Admin::TagsController do
     end
 
     it 'should be success' do
-      response.should be_success
+      expect(response).to be_success
     end
 
     it 'should render template edit' do
-      response.should render_template('edit')
+      expect(response).to render_template('edit')
     end
 
     it 'should assigns value :tag' do
-      assert assigns(:tag).valid?
+      expect(assigns(:tag)).to be_valid
     end    
   end
   
@@ -51,19 +51,19 @@ describe Admin::TagsController do
     end
     
     it 'should be success' do
-      response.should be_success
+      expect(response).to be_success
     end
     
     it 'should have an id in the form destination' do
-      response.should have_selector("form[action='/admin/tags/destroy/#{@tag_id}'][method='post']") 
+      expect(response).to have_selector("form[action='/admin/tags/destroy/#{@tag_id}'][method='post']") 
     end
 
     it 'should render template edit' do
-      response.should render_template('destroy')
+      expect(response).to render_template('destroy')
     end
 
     it 'should assigns value :tag' do
-      assert assigns(:record).valid?
+      expect(assigns(:record)).to be_valid
     end    
   end
 
@@ -74,11 +74,11 @@ describe Admin::TagsController do
     end
     
     it 'should redirect to index' do
-      response.should redirect_to(:action => 'index')
+      expect(response).to redirect_to(:action => 'index')
     end
     
     it 'should have one less tags' do
-      Tag.count.should == 0
+      expect(Tag.count).to eq(0)
     end
     
   end
@@ -90,13 +90,13 @@ describe Admin::TagsController do
     end
 
     it 'should redirect to index' do
-      response.should redirect_to(:action => 'index')
+      expect(response).to redirect_to(:action => 'index')
     end
 
     it 'should update tag' do
       @tag.reload
-      @tag.name.should == 'foo-bar'
-      @tag.display_name.should == "Foo Bar"
+      expect(@tag.name).to eq('foo-bar')
+      expect(@tag.display_name).to eq("Foo Bar")
     end
 
     it 'should create a redirect from the old to the new' do
@@ -105,7 +105,7 @@ describe Admin::TagsController do
       new_name = @tag.name
 
       r = Redirect.find_by_from_path "/tag/#{old_name}"
-      r.to_path.should == "/tag/#{new_name}"
+      expect(r.to_path).to eq("/tag/#{new_name}")
     end
   end
 

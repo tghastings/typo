@@ -12,7 +12,7 @@ describe "articles/index_atom_feed.atom.builder" do
     end
 
     it "renders the atom header partial" do
-      view.should render_template(:partial => "shared/_atom_header")
+      expect(view).to render_template(:partial => "shared/_atom_header")
     end
   end
 

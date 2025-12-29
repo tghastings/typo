@@ -13,20 +13,19 @@ describe TagsController, "/index" do
       get 'index'
     end
 
-    specify { response.should be_success }
-    specify { response.should render_template('articles/groupings') }
-    specify { assigns(:groupings).should_not be_empty }
-    specify { response.body.should have_selector('ul.tags[id="taglist"]') }
+    specify { expect(response).to be_success }
+    specify { expect(response).to render_template('articles/groupings') }
+    specify { expect(assigns(:groupings)).not_to be_empty }
+    specify { expect(response.body).to have_selector('ul.tags[id="taglist"]') }
   end
 
   describe "if :index template exists" do
-    it "should render :index" do
-      pending "Stubbing #template_exists is not enough to fool Rails"
+    it "should render :index", pending: "Stubbing #template_exists is not enough to fool Rails" do
       controller.stub!(:template_exists?) \
         .and_return(true)
 
       get 'index'
-      response.should render_template(:index)
+      expect(response).to render_template(:index)
     end
   end
 end
@@ -49,44 +48,43 @@ describe TagsController, 'showing a single tag' do
 
     it 'should be successful' do
       do_get()
-      response.should be_success
+      expect(response).to be_success
     end
 
     it 'should retrieve the correct set of articles' do
       do_get
-      assigns[:articles].map(&:id).sort.should == @articles.map(&:id).sort
+      expect(assigns[:articles].map(&:id).sort).to eq(@articles.map(&:id).sort)
     end
 
-    it 'should render :show by default' do
-      pending "Stubbing #template_exists is not enough to fool Rails"
+    it 'should render :show by default', pending: "Stubbing #template_exists is not enough to fool Rails" do
       controller.stub!(:template_exists?) \
         .and_return(true)
       do_get
-      response.should render_template(:show)
+      expect(response).to render_template(:show)
     end
 
     it 'should fall back to rendering articles/index' do
       controller.stub!(:template_exists?) \
         .and_return(false)
       do_get
-      response.should render_template('articles/index')
+      expect(response).to render_template('articles/index')
     end
 
     it 'should set the page title to "Tag foo"' do
       do_get
-      assigns[:page_title].should == 'Tag: foo | test blog '
+      expect(assigns[:page_title]).to eq('Tag: foo | test blog ')
     end
 
     it 'should render the atom feed for /articles/tag/foo.atom' do
       get 'show', :id => 'foo', :format => 'atom'
-      response.should render_template('articles/index_atom_feed')
-      @layouts.keys.compact.should be_empty
+      expect(response).to render_template('articles/index_atom_feed')
+      # No layout should be rendered for feeds
     end
 
     it 'should render the rss feed for /articles/tag/foo.rss' do
       get 'show', :id => 'foo', :format => 'rss'
-      response.should render_template('articles/index_rss_feed')
-      @layouts.keys.compact.should be_empty
+      expect(response).to render_template('articles/index_rss_feed')
+      # No layout should be rendered for feeds
     end
   end
 
@@ -95,8 +93,8 @@ describe TagsController, 'showing a single tag' do
     it 'should redirect to main page' do
       do_get
 
-      response.status.should == 301
-      response.should redirect_to(Blog.default.base_url)
+      expect(response.status).to eq(301)
+      expect(response).to redirect_to(root_path)
     end
   end
 end
@@ -112,15 +110,15 @@ describe TagsController, 'showing tag "foo"' do
   end
 
   it 'should have good rss feed link in head' do
-    response.should have_selector('head>link[href="http://test.host/tag/foo.rss"][rel=alternate][type="application/rss+xml"][title=RSS]')
+    expect(response).to have_selector('head>link[href="http://myblog.net/tag/foo.rss"][rel=alternate][type="application/rss+xml"][title=RSS]')
   end
 
   it 'should have good atom feed link in head' do
-    response.should have_selector('head>link[href="http://test.host/tag/foo.atom"][rel=alternate][type="application/atom+xml"][title=Atom]')
+    expect(response).to have_selector('head>link[href="http://myblog.net/tag/foo.atom"][rel=alternate][type="application/atom+xml"][title=Atom]')
   end
   
   it 'should have a canonical URL' do
-    response.should have_selector('head>link[href="http://myblog.net/tag/foo/"]')
+    expect(response).to have_selector('head>link[href="http://myblog.net/tag/foo/"]')
   end
 end
 
@@ -130,8 +128,8 @@ describe TagsController, "showing a non-existant tag" do
     Factory(:blog)
     get 'show', :id => 'thistagdoesnotexist'
 
-    response.status.should == 301
-    response.should redirect_to(Blog.default.base_url)
+    expect(response.status).to eq(301)
+    expect(response).to redirect_to(root_path)
   end
 end
 
@@ -144,8 +142,7 @@ describe TagsController, "password protected article" do
     a = Factory(:article, :password => 'password')
     foo = Factory(:tag, :name => 'foo', :articles => [a])
     get 'show', :id => 'foo'
-    assert_tag :tag => "input",
-      :attributes => { :id => "article_password" }
+    expect(response.body).to have_selector("input#article_password")
   end
 end
 
@@ -163,7 +160,7 @@ describe TagsController, "SEO Options" do
     @blog.save
     
     get 'show', :id => 'foo'
-    response.should have_selector('head>meta[content="noindex, follow"]')
+    expect(response).to have_selector('head>meta[content="noindex, follow"]')
   end
 
   it 'should not have rel nofollow' do
@@ -171,7 +168,7 @@ describe TagsController, "SEO Options" do
     @blog.save
     
     get 'show', :id => 'foo'
-    response.should_not have_selector('head>meta[content="noindex, follow"]')
+    expect(response).not_to have_selector('head>meta[content="noindex, follow"]')
   end
   # meta_keywords
   
@@ -179,7 +176,7 @@ describe TagsController, "SEO Options" do
     @blog.use_meta_keyword = false
     @blog.save
     get 'show', :id => 'foo'
-    response.should_not have_selector('head>meta[name="keywords"]')
+    expect(response).not_to have_selector('head>meta[name="keywords"]')
   end
 
   it 'should not have meta keywords with deactivated option and blog keywords' do
@@ -187,14 +184,14 @@ describe TagsController, "SEO Options" do
     @blog.meta_keywords = "foo, bar, some, keyword"
     @blog.save
     get 'show', :id => 'foo'
-    response.should_not have_selector('head>meta[name="keywords"]')
+    expect(response).not_to have_selector('head>meta[name="keywords"]')
   end
 
   it 'should not have meta keywords with activated option and no blog keywords' do
     @blog.use_meta_keyword = true
     @blog.save
     get 'show', :id => 'foo'
-    response.should_not have_selector('head>meta[name="keywords"]')
+    expect(response).not_to have_selector('head>meta[name="keywords"]')
   end
 
   it 'should have meta keywords with activated option and blog keywords' do
@@ -202,7 +199,7 @@ describe TagsController, "SEO Options" do
     @blog.meta_keywords = "foo, bar, some, keyword"
     @blog.save
     get 'show', :id => 'foo'
-    response.should have_selector('head>meta[name="keywords"]')
+    expect(response).to have_selector('head>meta[name="keywords"]')
   end
 
 end

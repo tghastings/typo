@@ -7,7 +7,7 @@ class Admin::TagsController < Admin::BaseController
 
   def edit
     @tag = Tag.find(params[:id])
-    @tag.attributes = params[:tag]
+    @tag.attributes = params[:tag] if params[:tag].present?
 
     if request.post?
       old_name = @tag.name

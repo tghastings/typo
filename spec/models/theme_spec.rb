@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 describe 'Given a new test theme' do
-  it 'layout path should be "#{::Rails.root.to_s}/themes/test/layouts/default.html.erb"'  do
+  it 'layout path should be "#{::Rails.root.to_s}/themes/test/layouts/default"'  do
     theme = Theme.new("test", "test")
-    theme.layout('index').should == "#{::Rails.root.to_s}/themes/test/layouts/default.html.erb"
+    theme.layout('index').should == "#{::Rails.root.to_s}/themes/test/layouts/default"
   end
 end
 
@@ -31,10 +31,10 @@ describe 'Given the default theme' do
     fake_blue_theme_dir = 'fake_blue_theme_dir'
     fake_red_theme_dir = 'fake_red_theme_dir'
     fake_bad_theme_dir = 'fake_bad_theme_dir'
-    Dir.should_receive(:glob).and_return([fake_blue_theme_dir, fake_bad_theme_dir, fake_red_theme_dir])
-    File.should_receive(:readable?).with(fake_blue_theme_dir + "/about.markdown").and_return(true)
-    File.should_receive(:readable?).with(fake_bad_theme_dir + "/about.markdown").and_return(false)
-    File.should_receive(:readable?).with(fake_red_theme_dir + "/about.markdown").and_return(true)
+    expect(Dir).to receive(:glob).and_return([fake_blue_theme_dir, fake_bad_theme_dir, fake_red_theme_dir])
+    expect(File).to receive(:readable?).with(fake_blue_theme_dir + "/about.markdown").and_return(true)
+    expect(File).to receive(:readable?).with(fake_bad_theme_dir + "/about.markdown").and_return(false)
+    expect(File).to receive(:readable?).with(fake_red_theme_dir + "/about.markdown").and_return(true)
     Theme.search_theme_directory.should == %w{ fake_blue_theme_dir fake_red_theme_dir }
   end
 

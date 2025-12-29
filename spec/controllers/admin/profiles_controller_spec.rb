@@ -8,9 +8,9 @@ describe Admin::ProfilesController do
       #TODO Remove this after remove FIXTURES...
       Profile.delete_all
       alice = Factory(:user, :login => 'alice', :profile => Factory(:profile_admin, :label => Profile::ADMIN))
-      request.session = { :user => alice.id }
+      request.session = { :user_id => alice.id }
       get :index
-      response.should render_template('index')
+      expect(response).to render_template('index')
     end
   end
 
@@ -21,9 +21,9 @@ describe Admin::ProfilesController do
       #TODO Remove this after remove FIXTURES...
       Profile.delete_all
       alice = Factory(:user, :login => 'alice', :profile => Factory(:profile_admin, :label => Profile::ADMIN))
-      request.session = { :user => alice.id }
+      request.session = { :user_id => alice.id }
       post :index, :user => {:email => 'foo@bar.com'}
-      response.should render_template('index')
+      expect(response).to render_template('index')
     end
   end
 end

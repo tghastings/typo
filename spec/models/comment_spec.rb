@@ -23,7 +23,7 @@ describe Comment do
     subject { @c.permalink_url }
 
     it 'should render permalink to comment in public part' do
-      should == "http://myblog.net/2004/05/01/inactive-article#comment-#{@c.id}"
+      is_expected.to eq("http://myblog.net/2004/05/01/inactive-article#comment-#{@c.id}")
     end
   end
 
@@ -74,7 +74,7 @@ describe Comment do
 
     it 'should save a valid comment' do
       c = valid_comment # article created 2 days ago
-      c.save.should be_true
+      expect(c.save).to be_truthy
       c.errors.should be_empty
     end
 
@@ -84,7 +84,7 @@ describe Comment do
       b.save
 
       c = Factory.build(:comment, :article => Factory(:article, :allow_comments => false))
-      c.save.should_not be_true
+      expect(c.save).to be_falsey
       c.errors.should_not be_empty
     end
 

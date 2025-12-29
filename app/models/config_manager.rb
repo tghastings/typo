@@ -29,11 +29,13 @@ module ConfigManager
 
     def add_setting_reader(item)
       self.send(:define_method, item.name) do
+        return item.default if settings.nil?
         raw_value = settings[item.name]
         raw_value.nil? ? item.default : raw_value
       end
       if item.ruby_type == :boolean
         self.send(:define_method, item.name + "?") do
+          return item.default if settings.nil?
           raw_value = settings[item.name]
           raw_value.nil? ? item.default : raw_value
         end

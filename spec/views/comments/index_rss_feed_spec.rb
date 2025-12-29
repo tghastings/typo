@@ -24,11 +24,10 @@ describe "comments/index_rss_feed.rss.builder" do
         xml = Nokogiri::XML.parse(rendered)
         entry_xml = xml.css("item").first
 
-        entry_xml.css("title").first.content.should ==
-          "Comment on #{article.title} by #{comment.author}"
-        entry_xml.css("guid").first.content.should == "urn:uuid:12313123123123123"
-        entry_xml.css("description").first.content.should == "<p>Comment body</p>"
-        entry_xml.css("link").first.content.should == "#{article.permalink_url}#comment-#{comment.id}"
+        entry_xml.css("title").first.content.should eq("Comment on #{article.title} by #{comment.author}")
+        entry_xml.css("guid").first.content.should eq("urn:uuid:12313123123123123")
+        entry_xml.css("description").first.content.should eq("Comment body")
+        entry_xml.css("link").first.content.should eq("#{article.permalink_url}#comment-#{comment.id}")
       end
     end
   end

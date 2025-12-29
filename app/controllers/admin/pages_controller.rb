@@ -12,7 +12,10 @@ class Admin::PagesController < Admin::BaseController
 
   def new
     @macros = TextFilter.macro_filters
-    @page = Page.new(params[:page])
+    page_params = params[:page]
+    # Convert ActionController::Parameters to hash for Model.new()
+    page_params = page_params.to_unsafe_h if page_params.respond_to?(:to_unsafe_h)
+    @page = Page.new(page_params)
     @page.user_id = current_user.id
     @page.text_filter ||= current_user.text_filter
     @images = Resource.where("mime LIKE '%image%'").order('created_at DESC').page(1).per(10)
@@ -29,7 +32,7 @@ class Admin::PagesController < Admin::BaseController
     @macros = TextFilter.macro_filters
     @images = Resource.where("mime LIKE '%image%'").page(1).order('created_at DESC').per(10)
     @page = Page.find(params[:id])
-    @page.attributes = params[:page]
+    @page.attributes = params[:page] if params[:page].present?
     if request.post? and @page.save
       flash[:notice] = _('Page was successfully updated.')
       redirect_to :action => 'index'

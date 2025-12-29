@@ -1,7 +1,7 @@
 class ArticlesController < ContentController
-  before_filter :login_required, :only => [:preview]
-  before_filter :auto_discovery_feed, :only => [:show, :index]
-  before_filter :verify_config
+  before_action :login_required, :only => [:preview]
+  before_action :auto_discovery_feed, :only => [:show, :index]
+  before_action :verify_config
 
   layout :theme_layout, :except => [:comment_preview, :trackback]
 
@@ -13,10 +13,13 @@ class ArticlesController < ContentController
   helper :'admin/base'
 
   def index
-    respond_to do |format|
-      format.html { @limit = this_blog.limit_article_display }
-      format.rss { @limit = this_blog.limit_rss_display }
-      format.atom { @limit = this_blog.limit_rss_display }
+    # Determine format from URL extension only, ignoring HTTP Accept header
+    requested_format = params[:format]
+
+    @limit = if requested_format == 'rss' || requested_format == 'atom'
+      this_blog.limit_rss_display
+    else
+      this_blog.limit_article_display
     end
 
     unless params[:year].blank?
@@ -33,21 +36,22 @@ class ArticlesController < ContentController
 
     suffix = (params[:page].nil? and params[:year].nil?) ? "" : "/"
 
-    @canonical_url = url_for(:only_path => false, :controller => 'articles', :action => 'index', :page => params[:page], :year => params[:year], :month => params[:month], :day => params[:day]) + suffix
-    respond_to do |format|
-      format.html { render_paginated_index }
-      format.atom do
-        render_articles_feed('atom')
-      end
-      format.rss do
-        auto_discovery_feed(:only_path => false)
-        render_articles_feed('rss')
-      end
+    @canonical_url = this_blog.base_url + "/" + [params[:year], params[:month], params[:day]].compact.join("/") + suffix
+
+    # Use params[:format] to determine format, ignoring HTTP Accept header
+    case requested_format
+    when 'atom'
+      render_articles_feed('atom')
+    when 'rss'
+      auto_discovery_feed(:only_path => false)
+      render_articles_feed('rss')
+    else
+      render_paginated_index_as_html
     end
   end
 
   def search
-    @canonical_url = url_for(:only_path => false, :controller => 'articles', :action => 'search', :page => params[:page], :q => params[:q])
+    @canonical_url = "#{this_blog.base_url}/search/#{params[:q]}"
     @articles = this_blog.articles_matching(params[:q], :page => params[:page], :per_page => @limit)
     return error(_("No posts found..."), :status => 200) if @articles.empty?
     @page_title = this_blog.search_title_template.to_title(@articles, this_blog, params)
@@ -91,11 +95,11 @@ class ArticlesController < ContentController
     # because it's changed
     ["%year%/%month%/%day%/%title%", "articles/%year%/%month%/%day%/%title%"].each do |part|
       match_permalink_format from, part
-      return redirect_to @article.permalink_url, :status => 301 if @article
+      return redirect_to @article.permalink_url, :status => 301, :allow_other_host => true if @article
     end
 
     r = Redirect.find_by_from_path(from.join("/"))
-    return redirect_to r.full_to_path, :status => 301 if r
+    return redirect_to r.full_to_path, :status => 301, :allow_other_host => true if r
 
     render "errors/404", :status => 404
   end
@@ -113,7 +117,7 @@ class ArticlesController < ContentController
 
   def comment_preview
     if (params[:comment][:body].blank? rescue true)
-      render :nothing => true
+      head :ok
       return
     end
 
@@ -143,7 +147,7 @@ class ArticlesController < ContentController
 
   # TODO: Move to TextfilterController?
   def markup_help
-    render :text => TextFilter.find(params[:id]).commenthelp
+    render plain: TextFilter.find(params[:id]).commenthelp
   end
 
   private
@@ -209,6 +213,18 @@ class ArticlesController < ContentController
       @auto_discovery_url_atom = "http://feeds2.feedburner.com/#{this_blog.feedburner_url}"
     end
     render 'index'
+  end
+
+  # Render paginated index explicitly as HTML, ignoring Accept header
+  def render_paginated_index_as_html(on_empty = _("No posts found..."))
+    return error(on_empty, :status => 200) if @articles.empty?
+    if this_blog.feedburner_url.empty?
+      auto_discovery_feed(:only_path => false)
+    else
+      @auto_discovery_url_rss = "http://feeds2.feedburner.com/#{this_blog.feedburner_url}"
+      @auto_discovery_url_atom = "http://feeds2.feedburner.com/#{this_blog.feedburner_url}"
+    end
+    render 'index', formats: [:html]
   end
 
   def index_title

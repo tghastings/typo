@@ -1,5 +1,5 @@
 class SetupController < ApplicationController
-  before_filter :check_config, :only => 'index'
+  before_action :check_config, :only => 'index'
   layout 'accounts'
 
   def index
@@ -28,9 +28,11 @@ class SetupController < ApplicationController
 
     # FIXME: Crappy hack : by default, the auto generated post is user_id less and it makes Typo crash
     if User.count == 1
-      art = Article.find(:first)
-      art.user_id = @user.id
-      art.save
+      art = Article.first
+      if art
+        art.user_id = @user.id
+        art.save
+      end
     end
     redirect_to :action => 'confirm'
   end

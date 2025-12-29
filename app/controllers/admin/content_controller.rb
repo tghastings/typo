@@ -13,13 +13,16 @@ class Admin::ContentController < Admin::BaseController
 
   def index
     @search = params[:search] ? params[:search] : {}
-    
+
     @articles = Article.search_with_pagination(@search, {:page => params[:page], :per_page => this_blog.admin_display_elements})
 
     if request.xhr?
       render :partial => 'article_list', :locals => { :articles => @articles }
     else
-      @article = Article.new(params[:article])
+      article_params = params[:article]
+      # Convert ActionController::Parameters to hash for Model.new()
+      article_params = article_params.to_unsafe_h if article_params.respond_to?(:to_unsafe_h)
+      @article = Article.new(article_params)
     end
   end
 
@@ -66,13 +69,14 @@ class Admin::ContentController < Admin::BaseController
   alias_method :resource_remove, :category_add
 
   def attachment_box_add
-    render :update do |page|
-      page["attachment_add_#{params[:id]}"].remove
-      page.insert_html :bottom, 'attachments',
-          :partial => 'admin/content/attachment',
-          :locals => { :attachment_num => params[:id], :hidden => true }
-      page.visual_effect(:toggle_appear, "attachment_#{params[:id]}")
-    end
+    # Return JSON response for JavaScript to handle DOM manipulation
+    render json: {
+      id: params[:id],
+      html: render_to_string(
+        partial: 'admin/content/attachment',
+        locals: { attachment_num: params[:id], hidden: true }
+      )
+    }
   end
 
   def attachment_save(attachment)
@@ -92,8 +96,8 @@ class Admin::ContentController < Admin::BaseController
     @article.text_filter = current_user.text_filter if current_user.simple_editor?
 
     get_fresh_or_existing_draft_for_article
-    
-    @article.attributes = params[:article]
+
+    @article.attributes = params[:article] if params[:article].present?
     @article.published = false
     set_article_author
     save_attachments
@@ -102,15 +106,16 @@ class Admin::ContentController < Admin::BaseController
 
     @article.state = "draft" unless @article.state == "withdrawn"
     if @article.save
-      render(:update) do |page|
-        page.replace_html('autosave', hidden_field_tag('article[id]', @article.id))
-        page.replace_html('preview_link', link_to(_("Preview"), {:controller => '/articles', :action => 'preview', :id => @article.id}, {:target => 'new', :class => 'btn info'}))
-        page.replace_html('destroy_link', link_to_destroy_draft(@article))
-      end
-
+      # Return JSON response with HTML fragments for JavaScript to update the page
+      preview_url = url_for(controller: '/articles', action: 'preview', id: @article.id)
+      render json: {
+        autosave: view_context.hidden_field_tag('article[id]', @article.id),
+        preview_link: view_context.link_to(_("Preview"), preview_url, target: 'new', class: 'btn info'),
+        destroy_link: view_context.link_to_destroy_draft(@article)
+      }
       return true
     end
-    render :text => nil
+    render body: nil
   end
 
   protected
@@ -157,7 +162,12 @@ class Admin::ContentController < Admin::BaseController
     end
 
     @article.keywords = Tag.collection_to_string @article.tags
-    @article.attributes = params[:article]
+    if params[:article].present?
+      # Exclude 'id' from mass assignment to prevent UNIQUE constraint violations
+      # when updating the parent article with a draft's id
+      article_params = params[:article].to_unsafe_h.except('id', :id)
+      @article.attributes = article_params
+    end
     # TODO: Consider refactoring, because double rescue looks... weird.
         
     @article.published_at = DateTime.strptime(params[:article][:published_at], "%B %e, %Y %I:%M %p GMT%z").utc rescue Time.parse(params[:article][:published_at]).utc rescue nil
@@ -195,7 +205,7 @@ class Admin::ContentController < Admin::BaseController
   end
 
   def destroy_the_draft
-    Article.all(:conditions => { :parent_id => @article.id }).map(&:destroy)
+    Article.where(:parent_id => @article.id).map(&:destroy)
   end
 
   def set_article_author
@@ -206,7 +216,7 @@ class Admin::ContentController < Admin::BaseController
 
   def set_article_title_for_autosave
     if @article.title.blank?
-      lastid = Article.find(:first, :order => 'id DESC').id
+      lastid = Article.order('id DESC').first.id
       @article.title = "Draft article " + lastid.to_s
     end
   end

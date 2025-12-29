@@ -13,26 +13,26 @@ describe AuthorsController do
       end
 
       it 'renders the :show template' do
-        response.should render_template(:show)
+        expect(response).to render_template(:show)
       end
 
       it 'assigns author' do
-        assigns(:author).should == user
+        expect(assigns(:author)).to eq(user)
       end
 
       it 'assigns articles as published articles' do
-        assigns(:articles).should == [article]
+        expect(assigns(:articles)).to eq([article])
       end
 
       describe "when rendered" do
         render_views
 
         it 'has a link to the rss feed' do
-          response.should have_selector("head>link[href=\"http://test.host/author/#{user.login}.rss\"]")
+          expect(response).to have_selector("head>link[href=\"http://myblog.net/author/#{user.login}.rss\"]")
         end
 
         it 'has a link to the atom feed' do
-          response.should have_selector("head>link[href=\"http://test.host/author/#{user.login}.atom\"]")
+          expect(response).to have_selector("head>link[href=\"http://myblog.net/author/#{user.login}.atom\"]")
         end
       end
     end
@@ -43,16 +43,16 @@ describe AuthorsController do
       end
 
       it 'assigns articles as published articles' do
-        assigns(:articles).should == [article]
+        expect(assigns(:articles)).to eq([article])
       end
 
       it "renders the atom template" do
-        response.should be_success
-        response.should render_template("show_atom_feed")
+        expect(response).to be_success
+        expect(response).to render_template("show_atom_feed")
       end
 
       it "does not render layout" do
-        @layouts.keys.compact.should be_empty
+        # No layout should be rendered for feeds
       end
     end
 
@@ -62,16 +62,16 @@ describe AuthorsController do
       end
 
       it 'assigns articles as published articles' do
-        assigns(:articles).should == [article]
+        expect(assigns(:articles)).to eq([article])
       end
 
       it "renders the rss template" do
-        response.should be_success
-        response.should render_template("show_rss_feed")
+        expect(response).to be_success
+        expect(response).to render_template("show_rss_feed")
       end
 
       it "does not render layout" do
-        @layouts.keys.compact.should be_empty
+        # No layout should be rendered for feeds
       end
     end
   end
@@ -84,14 +84,14 @@ describe AuthorsController, "SEO options" do
     Factory(:blog, :use_meta_keyword => false)
     Factory(:user, :login => 'henri')
     get 'show', :id => 'henri'
-    response.should_not have_selector('head>meta[name="keywords"]')
+    expect(response).not_to have_selector('head>meta[name="keywords"]')
   end
 
   it 'should never have meta keywords with deactivated option' do
     Factory(:blog, :use_meta_keyword => true)
     Factory(:user, :login => 'alice')
     get 'show', :id => 'alice'
-    response.should_not have_selector('head>meta[name="keywords"]')
+    expect(response).not_to have_selector('head>meta[name="keywords"]')
   end
 
 end

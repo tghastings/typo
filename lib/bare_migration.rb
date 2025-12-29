@@ -61,8 +61,7 @@ module BareMigration
     base.extend(ClassMethods)
 
     # Set the table name by eradicating "Bare" from the calculated table name.
-    # You can still use set_table_name if this is wrong.
-    base.set_table_name(base.table_name.sub(/.*?bare\d*_?/, ''))
+    base.table_name = base.table_name.sub(/.*?bare\d*_?/, '')
 
     # Default to ignoring the inheritance column
     base.inheritance_column = :ignore_inheritance_column
@@ -83,7 +82,8 @@ module BareMigration
 
     def find_and_update(find_type=:all, *rest, &update_block)
       self.transaction do
-        self.find(find_type, *rest).each do |item|
+        records = find_type == :all ? self.all : self.where(rest.first || {})
+        records.each do |item|
           update_block[item]
           item.save!
         end

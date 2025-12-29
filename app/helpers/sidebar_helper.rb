@@ -1,7 +1,7 @@
 module SidebarHelper
   def render_sidebars(*sidebars)
     begin
-      (sidebars.blank? ? Sidebar.find(:all, :order => 'active_position ASC') : sidebars).map do |sb|
+      (sidebars.blank? ? Sidebar.order('active_position ASC') : sidebars).map do |sb|
         @sidebar = sb
         sb.parse_request(content_array, params)
         render_sidebar(sb)
@@ -33,7 +33,7 @@ module SidebarHelper
       new_root.sub! %r{^/?vendor/}, ""
       new_root.sub! %r{/views}, ""
       new_root = File.join(this_blog.current_theme.path, "views", new_root)
-      view_root = new_root if File.exists?(File.join(new_root, "content.rhtml"))
+      view_root = new_root if File.exist?(File.join(new_root, "content.rhtml"))
     end
     render_to_string(:file => "#{view_root}/content.rhtml",
                      :locals => sidebar.to_locals_hash,

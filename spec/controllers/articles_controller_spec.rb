@@ -24,12 +24,12 @@ describe ArticlesController do
 
   it "should redirect category to /categories" do
     get 'category'
-    response.should redirect_to(categories_path)
+    expect(response).to redirect_to(categories_path)
   end
 
   it "should redirect tag to /tags" do
     get 'tag'
-    response.should redirect_to(tags_path)
+    expect(response).to redirect_to(tags_path)
   end
 
   describe 'index action' do
@@ -39,31 +39,31 @@ describe ArticlesController do
     end
 
     it 'should be render template index' do
-      response.should render_template(:index)
+      expect(response).to render_template(:index)
     end
 
     it 'should show some articles' do
-      assigns[:articles].should_not be_empty
+      expect(assigns[:articles]).not_to be_empty
     end
 
     it 'should have good link feed rss' do
-      response.should have_selector('head>link[href="http://test.host/articles.rss"]')
+      expect(response).to have_selector('head>link[href="http://myblog.net/articles.rss"]')
     end
 
     it 'should have good link feed atom' do
-      response.should have_selector('head>link[href="http://test.host/articles.atom"]')
+      expect(response).to have_selector('head>link[href="http://myblog.net/articles.atom"]')
     end
 
     it 'should have a canonical url' do
-      response.should have_selector('head>link[href="http://test.host/"]')
+      expect(response).to have_selector('head>link[href="http://myblog.net/"]')
     end
     
     it 'should have googd title' do 
-      response.should have_selector('title', :content => "test blog | test subtitles")
+      expect(response).to have_selector('title', :content => "test blog | test subtitles")
     end
     
     it 'should have a custom tracking field' do      
-      response.should have_selector('head>script[src="foo.js"]')
+      expect(response).to have_selector('head>script[src="foo.js"]')
     end
   end
 
@@ -82,60 +82,61 @@ describe ArticlesController do
       end
 
       it 'should render template search' do
-        response.should render_template(:search)
+        expect(response).to render_template(:search)
       end
 
       it 'should assigns articles' do
-        assigns[:articles].should_not be_nil
+        expect(assigns[:articles]).not_to be_nil
       end
 
       it 'should have good feed rss link' do
-        response.should have_selector('head>link[href="http://test.host/search/a.rss"]')
+        expect(response).to have_selector('head>link[href="http://myblog.net/search/a.rss"]')
       end
 
       it 'should have good feed atom link' do
-        response.should have_selector('head>link[href="http://test.host/search/a.atom"]')
+        expect(response).to have_selector('head>link[href="http://myblog.net/search/a.atom"]')
       end
 
       it 'should have a canonical url' do
-        response.should have_selector('head>link[href="http://test.host/search/a"]')
+        expect(response).to have_selector('head>link[href="http://myblog.net/search/a"]')
       end
       
       it 'should have a good title' do
-        response.should have_selector('title', :content => "Results for a | test blog")
+        expect(response).to have_selector('title', :content => "Results for a | test blog")
       end
 
       it 'should have content markdown interpret and without html tag' do
-        response.should have_selector('div') do |div|
-          div.should contain(/in markdown format\n\n\nwe\nuse\nok to define a link\n\n...\n/)
-        end
+        expect(response.body).to include('in markdown format')
+        expect(response.body).to include('we')
+        expect(response.body).to include('use')
+        expect(response.body).to include('ok to define a link')
       end
 
       it 'should have a custom tracking field' do      
-        response.should have_selector('head>script[src="foo.js"]')
+        expect(response).to have_selector('head>script[src="foo.js"]')
       end
     end
 
     it 'should render feed rss by search' do
       get 'search', :q => 'a', :format => 'rss'
-      response.should be_success
-      response.should render_template('index_rss_feed')
-      @layouts.keys.compact.should be_empty
-      response.should_not have_selector('head>script[src="foo.js"]')    
+      expect(response).to be_success
+      expect(response).to render_template('index_rss_feed')
+      # No layout should be rendered for feeds
+      expect(response).not_to have_selector('head>script[src="foo.js"]')    
     end
 
     it 'should render feed atom by search' do
       get 'search', :q => 'a', :format => 'atom'
-      response.should be_success
-      response.should render_template('index_atom_feed')
-      @layouts.keys.compact.should be_empty
-      response.should_not have_selector('head>script[src="foo.js"]')      
+      expect(response).to be_success
+      expect(response).to render_template('index_atom_feed')
+      # No layout should be rendered for feeds
+      expect(response).not_to have_selector('head>script[src="foo.js"]')      
     end
 
     it 'search with empty result' do
       get 'search', :q => 'abcdefghijklmnopqrstuvwxyz'
-      response.should render_template('articles/error')
-      assigns[:articles].should be_empty
+      expect(response).to render_template('articles/error')
+      expect(assigns[:articles]).to be_empty
     end
     
   end
@@ -152,24 +153,24 @@ describe ArticlesController do
       end
 
       it 'should be valid' do
-        assigns[:articles].should_not be_empty
-        assigns[:articles].should have(2).records
+        expect(assigns[:articles]).not_to be_empty
+        expect(assigns[:articles].size).to eq(2)
       end
 
       it 'should render without layout' do
-        response.should render_template(:layout => nil)
+        expect(response).to render_template(:layout => nil)
       end
 
       it 'should render template live_search' do
-        response.should render_template('live_search')
+        expect(response).to render_template('live_search')
       end
 
       it 'should not have h3 tag' do
-        response.should have_selector("h3")
+        expect(response).to have_selector("h3")
       end
 
       it "should assign @search the search string" do
-        assigns[:search].should be_equal(controller.params[:q])
+        expect(assigns[:search]).to be_equal(controller.params[:q])
       end
 
     end
@@ -179,13 +180,13 @@ describe ArticlesController do
   it 'archives' do
     3.times { Factory(:article) }
     get 'archives'
-    response.should render_template(:archives)
-    assigns[:articles].should_not be_nil
-    assigns[:articles].should_not be_empty
+    expect(response).to render_template(:archives)
+    expect(assigns[:articles]).not_to be_nil
+    expect(assigns[:articles]).not_to be_empty
 
-    response.should have_selector('head>link[href="http://test.host/archives"]')
-    response.should have_selector('title', :content => "Archives for test blog")
-    response.should have_selector('head>script[src="foo.js"]')
+    expect(response).to have_selector('head>link[href="http://test.host/archives"]')
+    expect(response).to have_selector('title', :content => "Archives for test blog")
+    expect(response).to have_selector('head>script[src="foo.js"]')
   end
 
   describe 'index for a month' do
@@ -196,24 +197,24 @@ describe ArticlesController do
     end
 
     it 'should render template index' do
-      response.should render_template(:index)
+      expect(response).to render_template(:index)
     end
 
     it 'should contain some articles' do
-      assigns[:articles].should_not be_nil
-      assigns[:articles].should_not be_empty
+      expect(assigns[:articles]).not_to be_nil
+      expect(assigns[:articles]).not_to be_empty
     end
 
     it 'should have a canonical url' do
-      response.should have_selector('head>link[href="http://test.host/2004/4/"]')
+      expect(response).to have_selector('head>link[href="http://myblog.net/2004/4/"]')
     end
     
     it 'should have a good title' do
-      response.should have_selector('title', :content => "Archives for test blog")
+      expect(response).to have_selector('title', :content => "Archives for test blog")
     end
     
     it 'should have a custom tracking field' do      
-      response.should have_selector('head>script[src="foo.js"]')
+      expect(response).to have_selector('head>script[src="foo.js"]')
     end
   end
 
@@ -227,7 +228,7 @@ describe ArticlesController, "nosettings" do
 
   it 'redirects to setup' do
     get 'index'
-    response.should redirect_to(:controller => 'setup', :action => 'index')
+    expect(response).to redirect_to(:controller => 'setup', :action => 'index')
   end
 
 end
@@ -236,14 +237,19 @@ describe ArticlesController, "nousers" do
   before(:each) do
     Factory(:blog)
     User.stub!(:count).and_return(0)
-    @user = mock("user")
+    @user = mock("user",
+      login: "testuser",
+      email: "test@example.com",
+      name: "Test User",
+      id: 1
+    )
     @user.stub!(:reload).and_return(@user)
     User.stub!(:new).and_return(@user)
   end
 
   it 'redirects to signup' do
     get 'index'
-    response.should redirect_to(:controller => 'accounts', :action => 'signup')
+    expect(response).to redirect_to(:controller => 'accounts', :action => 'signup')
   end
 end
 
@@ -263,45 +269,46 @@ describe ArticlesController, "feeds" do
 
   specify "/articles.atom => an atom feed" do
     get 'index', :format => 'atom'
-    response.should be_success
-    response.should render_template("index_atom_feed")
-    assigns(:articles).should == [@article1, @article2]
-    @layouts.keys.compact.should be_empty
+    expect(response).to be_success
+    expect(response).to render_template("index_atom_feed")
+    expect(assigns(:articles)).to eq([@article1, @article2])
+    # No layout should be rendered for feeds
   end
 
   specify "/articles.rss => an RSS 2.0 feed" do
     get 'index', :format => 'rss'
-    response.should be_success
-    response.should render_template("index_rss_feed")
-    assigns(:articles).should == [@article1, @article2]
-    @layouts.keys.compact.should be_empty
+    expect(response).to be_success
+    expect(response).to render_template("index_rss_feed")
+    expect(assigns(:articles)).to eq([@article1, @article2])
+    # No layout should be rendered for feeds
   end
 
   specify "atom feed for archive should be valid" do
     get 'index', :year => 2004, :month => 4, :format => 'atom'
-    response.should render_template("index_atom_feed")
-    assigns(:articles).should == [@article2]
-    @layouts.keys.compact.should be_empty
+    expect(response).to render_template("index_atom_feed")
+    expect(assigns(:articles)).to eq([@article2])
+    # No layout should be rendered for feeds
   end
 
   specify "RSS feed for archive should be valid" do
     get 'index', :year => 2004, :month => 4, :format => 'rss'
-    response.should render_template("index_rss_feed")
-    assigns(:articles).should == [@article2]
-    @layouts.keys.compact.should be_empty
+    expect(response).to render_template("index_rss_feed")
+    expect(assigns(:articles)).to eq([@article2])
+    # No layout should be rendered for feeds
   end
 end
 
 describe ArticlesController, "the index" do
   before(:each) do
-    Factory(:blog) 
+    Factory(:blog)
     Factory(:user, :login => 'henri', :profile => Factory(:profile_admin, :label => Profile::ADMIN))
+    Factory(:article)
   end
 
   it "should ignore the HTTP Accept: header" do
     request.env["HTTP_ACCEPT"] = "application/atom+xml"
     get "index"
-    response.should render_template("index")
+    expect(response).to render_template("index")
   end
 end
 
@@ -316,7 +323,7 @@ describe ArticlesController, "previewing" do
     end
 
     it 'should redirect to login' do
-      response.should redirect_to(:controller => "accounts", :action => "login")
+      expect(response).to redirect_to(:controller => "accounts", :action => "login")
     end
   end
 
@@ -325,7 +332,7 @@ describe ArticlesController, "previewing" do
       #TODO Delete after removing fixtures
       Profile.delete_all
       henri = Factory(:user, :login => 'henri', :profile => Factory(:profile_admin, :label => Profile::ADMIN))
-      @request.session = { :user => henri.id }
+      @request.session = { :user_id => henri.id }
       @article = Factory(:article)
     end
 
@@ -333,19 +340,19 @@ describe ArticlesController, "previewing" do
       it "should render template #{view_path}/articles/read" do
         @blog.theme = theme if theme
         get :preview, :id => @article.id
-        response.should render_template('articles/read')
+        expect(response).to render_template('articles/read')
       end
     end
 
     it 'should assigns article define with id' do
       get :preview, :id => @article.id
-      assigns[:article].should == @article
+      expect(assigns[:article]).to eq(@article)
     end
 
     it 'should assigns last article with id like parent_id' do
       draft = Factory(:article, :parent_id => @article.id)
       get :preview, :id => @article.id
-      assigns[:article].should == draft
+      expect(assigns[:article]).to eq(draft)
     end
   end
 end
@@ -370,8 +377,8 @@ describe ArticlesController, "redirecting" do
       Factory(:blog)
       Factory(:redirect)
       get :redirect, :from => "foo/bar"
-      assert_response 301
-      response.should redirect_to("http://test.host/someplace/else")
+      expect(response).to have_http_status(301)
+      expect(response).to redirect_to("http://myblog.net/someplace/else")
     end
 
     it 'should not redirect from unknown URL' do
@@ -391,7 +398,7 @@ describe ArticlesController, "redirecting" do
       Factory(:blog)
       Factory(:redirect)
       get :redirect, :from => "something/that/isnt/there"
-      assert_response 404
+      expect(response).to have_http_status(404)
     end
 
     # FIXME: Due to the changes in Rails 3 (no relative_url_root), this
@@ -423,22 +430,22 @@ describe ArticlesController, "redirecting" do
       it 'should redirect' do
         Factory(:redirect, :from_path => 'foo/bar', :to_path => '/someplace/else')
         get :redirect, :from => "foo/bar"
-        assert_response 301
-        response.should redirect_to("http://test.host/blog/someplace/else")
+        expect(response).to have_http_status(301)
+        expect(response).to redirect_to("http://test.host/blog/someplace/else")
       end
 
       it 'should redirect if to_path includes relative_url_root' do
         Factory(:redirect, :from_path => 'bar/foo', :to_path => '/blog/someplace/else')
         get :redirect, :from => "bar/foo"
-        assert_response 301
-        response.should redirect_to("http://test.host/blog/someplace/else")
+        expect(response).to have_http_status(301)
+        expect(response).to redirect_to("http://test.host/blog/someplace/else")
       end
 
       it "should ignore the blog base_url if the to_path is a full uri" do
         Factory(:redirect, :from_path => 'foo', :to_path => 'http://some.where/else')
         get :redirect, :from => "foo"
-        assert_response 301
-        response.should redirect_to("http://some.where/else")
+        expect(response).to have_http_status(301)
+        expect(response).to redirect_to("http://some.where/else")
       end
     end
   end
@@ -448,7 +455,7 @@ describe ArticlesController, "redirecting" do
     utf8article = Factory.create(:utf8article, :permalink => 'ルビー',
                                  :published_at => Time.utc(2004, 6, 2))
     get :redirect, :from => '2004/06/02/ルビー'
-    assigns(:article).should == utf8article
+    expect(assigns(:article)).to eq(utf8article)
   end
 
   # NOTE: This is needed because Rails over-unescapes glob parameters.
@@ -457,7 +464,7 @@ describe ArticlesController, "redirecting" do
     utf8article = Factory.create(:utf8article, :permalink => '%E3%83%AB%E3%83%93%E3%83%BC',
                                  :published_at => Time.utc(2004, 6, 2))
     get :redirect, :from => '2004/06/02/ルビー'
-    assigns(:article).should == utf8article
+    expect(assigns(:article)).to eq(utf8article)
   end
 
   describe 'accessing old-style URL with "articles" as the first part' do
@@ -468,8 +475,8 @@ describe ArticlesController, "redirecting" do
                         :updated_at => '2004-04-01 02:00:00',
                         :created_at => '2004-04-01 02:00:00')
       get :redirect, :from => "articles/2004/04/01/second-blog-article"
-      assert_response 301
-      response.should redirect_to("http://myblog.net/2004/04/01/second-blog-article")
+      expect(response).to have_http_status(301)
+      expect(response).to redirect_to("http://myblog.net/2004/04/01/second-blog-article")
     end
 
     it 'should redirect to article with url_root' do
@@ -479,8 +486,8 @@ describe ArticlesController, "redirecting" do
                         :updated_at => '2004-04-01 02:00:00',
                         :created_at => '2004-04-01 02:00:00')
       get :redirect, :from => "articles/2004/04/01/second-blog-article"
-      assert_response 301
-      response.should redirect_to("http://test.host/blog/2004/04/01/second-blog-article")
+      expect(response).to have_http_status(301)
+      expect(response).to redirect_to("http://test.host/blog/2004/04/01/second-blog-article")
     end
 
     it 'should redirect to article with articles in url_root' do
@@ -490,8 +497,8 @@ describe ArticlesController, "redirecting" do
                         :updated_at => '2004-04-01 02:00:00',
                         :created_at => '2004-04-01 02:00:00')
       get :redirect, :from => "articles/2004/04/01/second-blog-article"
-      assert_response 301
-      response.should redirect_to("http://test.host/aaa/articles/bbb/2004/04/01/second-blog-article")
+      expect(response).to have_http_status(301)
+      expect(response).to redirect_to("http://test.host/aaa/articles/bbb/2004/04/01/second-blog-article")
     end
   end
 
@@ -509,31 +516,31 @@ describe ArticlesController, "redirecting" do
     describe "accessing various non-matching URLs" do
       it "should not find '.htmlsecond-blog-article'" do
         get :redirect, :from => ".html#{@article.permalink}"
-        assert_response 404
+        expect(response).to have_http_status(404)
       end
 
       it "should not find 'second-blog-article.html.html'" do
         get :redirect, :from => "#{@article.permalink}.html.html"
-        assert_response 404
+        expect(response).to have_http_status(404)
       end
 
       it "should not find 'second-blog-article.html/foo'" do
         get :redirect, :from => "#{@article.permalink}.html/foo"
-        assert_response 404
+        expect(response).to have_http_status(404)
       end
     end
 
     describe "accessing legacy URLs" do
       it 'should redirect from default URL format' do
         get :redirect, :from => "2004/04/01/second-blog-article"
-        assert_response 301
-        response.should redirect_to("http://myblog.net/second-blog-article.html")
+        expect(response).to have_http_status(301)
+        expect(response).to redirect_to("http://myblog.net/second-blog-article.html")
       end
 
       it 'should redirect from old-style URL format with "articles" part' do
         get :redirect, :from => "articles/2004/04/01/second-blog-article"
-        assert_response 301
-        response.should redirect_to("http://myblog.net/second-blog-article.html")
+        expect(response).to have_http_status(301)
+        expect(response).to redirect_to("http://myblog.net/second-blog-article.html")
       end
     end
 
@@ -544,30 +551,30 @@ describe ArticlesController, "redirecting" do
       end
 
       it 'should render template read to article' do
-        response.should render_template('articles/read')
+        expect(response).to render_template('articles/read')
       end
 
       it 'should assign article1 to @article' do
-        assigns(:article).should == @article
+        expect(assigns(:article)).to eq(@article)
       end
 
       describe "the resulting page" do
         render_views
 
         it 'should have good rss feed link' do
-          response.should have_selector("head>link[href=\"http://myblog.net/#{@article.permalink}.html.rss\"]")
+          expect(response).to have_selector("head>link[href=\"http://myblog.net/#{@article.permalink}.html.rss\"]")
         end
 
         it 'should have good atom feed link' do
-          response.should have_selector("head>link[href=\"http://myblog.net/#{@article.permalink}.html.atom\"]")
+          expect(response).to have_selector("head>link[href=\"http://myblog.net/#{@article.permalink}.html.atom\"]")
         end
 
         it 'should have a canonical url' do
-          response.should have_selector("head>link[href='http://myblog.net/#{@article.permalink}.html']")
+          expect(response).to have_selector("head>link[href='http://myblog.net/#{@article.permalink}.html']")
         end
 
         it 'should have a good title' do
-          response.should have_selector('title', :content => "A big article | test blog")
+          expect(response).to have_selector('title', :content => "A big article | test blog")
         end
       end
 
@@ -581,9 +588,9 @@ describe ArticlesController, "redirecting" do
       end
 
       it 'should render feedback atom feed' do
-        assigns(:feedback).should == [@trackback1]
-        response.should render_template('feedback_atom_feed')
-        @layouts.keys.compact.should be_empty
+        expect(assigns(:feedback)).to eq([@trackback1])
+        expect(response).to render_template('feedback_atom_feed')
+        # No layout should be rendered for feeds
       end
     end
 
@@ -595,9 +602,9 @@ describe ArticlesController, "redirecting" do
       end
 
       it 'should render rss20 partial' do
-        assigns(:feedback).should == [@trackback1]
-        response.should render_template('feedback_rss_feed')
-        @layouts.keys.compact.should be_empty
+        expect(assigns(:feedback)).to eq([@trackback1])
+        expect(response).to render_template('feedback_rss_feed')
+        # No layout should be rendered for feeds
       end
     end
   end
@@ -611,12 +618,12 @@ describe ArticlesController, "redirecting" do
 
     it "should find the article if the url matches all components" do
       get :redirect, :from => "foo/#{@article.permalink}"
-      response.should be_success
+      expect(response).to be_successful
     end
 
     it "should not find the article if the url does not match the fixed component" do
       get :redirect, :from => "bar/#{@article.permalink}"
-      assert_response 404
+      expect(response).to have_http_status(404)
     end
   end
 
@@ -629,20 +636,20 @@ describe ArticlesController, "redirecting" do
 
     it "should find the article if the url matches all components" do
       get :redirect, :from => "foo/bar/#{@article.year_url}/#{@article.month_url}/#{@article.permalink}"
-      response.should be_success
+      expect(response).to be_successful
     end
 
     # FIXME: Documents current behavior; Blog URL format is only meant for one article shown
     it "should not find the article if the url only matches some components" do
       get :redirect, :from => "foo/bar/#{@article.year_url}/#{@article.month_url}"
-      assert_response 404
+      expect(response).to have_http_status(404)
     end
 
     # TODO: Think about allowing this, and changing find_by_params_hash to match.
     if false
       it "should find the article if the url matches all fixed parts and no variable components" do
         get :redirect, :from => "foo/bar"
-        response.should be_success
+        expect(response).to be_success
       end
 
       it "should not find the article if the url does not match all fixed component" do
@@ -663,18 +670,18 @@ describe ArticlesController, "password protected" do
 
   it 'article alone should be password protected' do
     get :redirect, :from => "#{@article.permalink}.html"
-    response.should have_selector('input[id="article_password"]', :count => 1)
+    expect(response).to have_selector('input[id="article_password"]', :count => 1)
   end
 
   describe "#check_password" do
     it "shows article when given correct password" do
-      xhr :get, :check_password, :article => {:id => @article.id, :password => @article.password}
-      response.should_not have_selector('input[id="article_password"]')
+      post :check_password, { article: { id: @article.id, password: @article.password } }, { xhr: true }
+      expect(response).not_to have_selector('input[id="article_password"]')
     end
 
     it "shows password form when given incorrect password" do
-      xhr :get, :check_password, :article => {:id => @article.id, :password => "wrong password"}
-      response.should have_selector('input[id="article_password"]')
+      post :check_password, { article: { id: @article.id, password: "wrong password" } }, { xhr: true }
+      expect(response).to have_selector('input[id="article_password"]')
     end
   end
 end
@@ -704,7 +711,7 @@ describe ArticlesController, "assigned keywords" do
     category = Factory(:category)
     article = Factory(:article, :categories => [category])
     get :redirect, :from => "#{article.permalink}.html"
-    assigns(:keywords).should == category.name
+    expect(assigns(:keywords)).to eq(category.name)
   end
 
   it 'article with neither categories nor tags should not have meta keywords' do
@@ -712,18 +719,18 @@ describe ArticlesController, "assigned keywords" do
     @blog.save
     article = Factory(:article)
     get :redirect, :from => "#{article.permalink}.html"
-    assigns(:keywords).should == ""
+    expect(assigns(:keywords)).to eq("")
   end
 
   it 'index without option and no blog keywords should not have meta keywords' do
     get 'index'
-    assigns(:keywords).should == ""
+    expect(assigns(:keywords)).to eq("")
   end
 
   it 'index without option but with blog keywords should have meta keywords' do
     @blog.meta_keywords = "typo, is, amazing"
     @blog.save
     get 'index'
-    assigns(:keywords).should == "typo, is, amazing"
+    expect(assigns(:keywords)).to eq("typo, is, amazing")
   end
 end

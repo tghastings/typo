@@ -1,7 +1,7 @@
 class AccountsController < ApplicationController
 
-  before_filter :verify_config
-  before_filter :verify_users, :only => [:login, :recover_password]
+  before_action :verify_config
+  before_action :verify_users, :only => [:login, :recover_password]
 
   def index
     if User.count.zero?
@@ -71,7 +71,7 @@ class AccountsController < ApplicationController
   def recover_password
     @page_title = "#{this_blog.blog_name} - #{_('Recover your password')}"
     if request.post?
-      @user = User.find(:first, :conditions => ["login = ? or email = ?", params[:user][:login], params[:user][:login]])
+      @user = User.where("login = ? or email = ?", params[:user][:login], params[:user][:login]).first
 
       if @user
         @user.password = generate_password

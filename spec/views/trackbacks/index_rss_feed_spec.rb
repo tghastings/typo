@@ -24,11 +24,10 @@ describe "trackbacks/index_rss_feed.rss.builder" do
         xml = Nokogiri::XML.parse(rendered)
         entry_xml = xml.css("item").first
 
-        entry_xml.css("title").first.content.should ==
-          "Trackback from #{trackback.blog_name}: #{trackback.title} on #{article.title}"
-        entry_xml.css("guid").first.content.should == "urn:uuid:dsafsadffsdsf"
-        entry_xml.css("description").first.content.should == "This is an excerpt"
-        entry_xml.css("link").first.content.should == trackback.url
+        entry_xml.css("title").first.content.should eq("Trackback from #{trackback.blog_name}: #{trackback.title} on #{article.title}")
+        entry_xml.css("guid").first.content.should eq("urn:uuid:dsafsadffsdsf")
+        entry_xml.css("description").first.content.should eq("This is an excerpt")
+        entry_xml.css("link").first.content.should eq(trackback.url)
       end
     end
   end

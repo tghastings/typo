@@ -3,6 +3,170 @@
 require 'digest/sha1'
 
 module ApplicationHelper
+  # Include CKEditor helper for ckeditor_textarea support
+  include Ckeditor::Helper if defined?(Ckeditor::Helper)
+  # Backward compatibility for form_remote_tag (removed in Rails 4+)
+  # Convert old Prototype.js remote forms to modern Rails forms
+  def form_remote_tag(options = {}, &block)
+    html_options = options[:html] || {}
+    url = options[:url] || {}
+
+    # Build data attributes for UJS (Unobtrusive JavaScript)
+    html_options[:'data-remote'] = true
+    html_options[:'data-type'] = 'script'
+
+    form_tag(url, html_options, &block)
+  end
+
+  # Backward compatibility for submit_to_remote (removed in Rails 4+)
+  def submit_to_remote(name, value, options = {})
+    options[:html] ||= {}
+    options[:html][:'data-remote'] = true
+    options[:html][:'data-type'] = 'script'
+    options[:html][:type] = 'submit'
+    options[:html][:value] = value
+    options[:html][:name] = name
+
+    tag(:input, options[:html])
+  end
+
+  # Backward compatibility for form_tag_with_upload_progress (removed in Rails 3+)
+  def form_tag_with_upload_progress(url_for_options = {}, options = {}, &block)
+    # Just use regular form_tag - upload progress bars need JavaScript now
+    form_tag(url_for_options, options, &block)
+  end
+
+  # Backward compatibility for link_to_function (removed in Rails 4+)
+  # Creates a link that executes JavaScript
+  def link_to_function(name, function, html_options = {})
+    html_options = html_options.symbolize_keys
+    onclick = "#{"#{html_options[:onclick]}; " if html_options[:onclick]}#{function}; return false;"
+    href = html_options[:href] || '#'
+    html_options.delete(:onclick)
+    html_options.delete(:href)
+    link_to name, href, html_options.merge(onclick: onclick)
+  end
+
+  # Backward compatibility for remote_function (removed in Rails 4+)
+  # Generates JavaScript for remote requests using modern Rails UJS
+  def remote_function(options)
+    javascript_options = {}
+
+    url = options[:url]
+    url = url_for(url) if url.is_a?(Hash)
+
+    update = options[:update]
+    method = options[:method] || :post
+
+    # Build a simple JavaScript that creates a remote request
+    # This is a simplified version that works with Rails UJS
+    if update
+      update_target = update.is_a?(Hash) ? update[:success] : update
+      "var link = document.createElement('a'); link.href = '#{url}'; link.setAttribute('data-remote', 'true'); link.setAttribute('data-type', 'script'); link.setAttribute('data-method', '#{method}'); Rails.fire(link, 'click');"
+    else
+      "var link = document.createElement('a'); link.href = '#{url}'; link.setAttribute('data-remote', 'true'); link.setAttribute('data-type', 'script'); link.setAttribute('data-method', '#{method}'); Rails.fire(link, 'click');"
+    end
+  end
+
+  # Backward compatibility for link_to_remote (removed in Rails 4+)
+  # Convert old Prototype.js remote links to modern Rails links with data-remote
+  def link_to_remote(name, options = {}, html_options = nil)
+    html_options ||= options.delete(:html) || {}
+    html_options = html_options.symbolize_keys
+
+    url = options[:url]
+    url = url_for(url) if url.is_a?(Hash)
+
+    # Add data attributes for UJS
+    html_options[:'data-remote'] = true
+    html_options[:'data-type'] = 'script'
+
+    # Handle method option
+    if options[:method]
+      html_options[:'data-method'] = options[:method]
+    end
+
+    # Handle update option (target element to update with response)
+    if options[:update]
+      update_target = options[:update].is_a?(Hash) ? options[:update][:success] : options[:update]
+      html_options[:'data-update'] = update_target
+    end
+
+    # Handle confirm option
+    if options[:confirm]
+      html_options[:'data-confirm'] = options[:confirm]
+    end
+
+    link_to name, url, html_options
+  end
+
+  # Backward compatibility for ckeditor_textarea (CKEditor plugin helper)
+  # Fallback implementation if CKEditor plugin helper is not loaded
+  def ckeditor_textarea(object, field, options = {})
+    # Try to use the CKEditor plugin's implementation if available
+    return super if defined?(super)
+
+    # Fallback: render a simple textarea
+    # This ensures the app doesn't break even if CKEditor isn't fully working
+    var = instance_variable_get("@#{object}")
+    value = var ? (var.send(field.to_sym) || "") : ""
+
+    id = "#{object}_#{field}"
+    cols = options[:cols] || 20
+    rows = options[:rows] || 20
+    width = options[:width] || '100%'
+    height = options[:height] || '300px'
+    css_class = options[:class] || ''
+
+    text_area_tag("#{object}[#{field}]", value,
+      id: id,
+      cols: cols,
+      rows: rows,
+      class: css_class,
+      style: "width:#{width};height:#{height}"
+    )
+  end
+
+  # Backward compatibility for error_messages_for (removed in Rails 4+)
+  def error_messages_for(*params)
+    options = params.extract_options!.symbolize_keys
+    objects = Array.wrap(options.delete(:object) || params).map do |object|
+      object = instance_variable_get("@#{object}") unless object.respond_to?(:to_model)
+      object
+    end
+
+    objects.compact!
+    count = objects.inject(0) {|sum, object| sum + object.errors.count }
+
+    unless count.zero?
+      html = {}
+      [:id, :class].each do |key|
+        if options.include?(key)
+          value = options[key]
+          html[key] = value if value.present?
+        else
+          html[key] = 'errorExplanation'
+        end
+      end
+
+      options[:object_name] ||= params.first
+
+      header_message = "#{pluralize(count, 'error', 'errors')} prohibited this #{options[:object_name].to_s.gsub('_', ' ')} from being saved"
+      message = 'There were problems with the following fields:'
+
+      error_messages = objects.sum([]) {|object| object.errors.full_messages.map {|msg| content_tag(:li, msg) } }.join.html_safe
+
+      contents = ''
+      contents << content_tag(options[:header_tag] || :h2, header_message) unless header_message.blank?
+      contents << content_tag(:p, message) unless message.blank?
+      contents << content_tag(:ul, error_messages)
+
+      content_tag(:div, contents.html_safe, html)
+    else
+      ''
+    end
+  end
+
   # Basic english pluralizer.
   # Axe?
 
@@ -34,7 +198,16 @@ module ApplicationHelper
   # options is a hash which should contain :email and :url for the plugin
   # (gravatar will use :email, pavatar will use :url, etc.)
   def avatar_tag(options = {})
-    avatar_class = this_blog.plugin_avatar.constantize
+    # Return empty string if plugin_avatar is not configured
+    return '' if this_blog.plugin_avatar.blank?
+
+    # Try to constantize the plugin class, return empty string if it fails
+    begin
+      avatar_class = this_blog.plugin_avatar.constantize
+    rescue NameError
+      return ''
+    end
+
     return '' unless avatar_class.respond_to?(:get_avatar)
     avatar_class.get_avatar(options)
   end
@@ -68,19 +241,19 @@ module ApplicationHelper
     type = model.class.to_s.downcase
     tag = []
     tag << content_tag("div",
-      link_to_remote('nuke', {
-        :url => {
-          :controller => "admin/feedback",
-          :action => "delete",
-          :id => model.id },
-        :method => :post,
-        :confirm => _("Are you sure you want to delete this %s?", "#{type}" )
-        }, :class => "admintools") <<
+      link_to('nuke', {
+        controller: "admin/feedback",
+        action: "delete",
+        id: model.id },
+        remote: true,
+        method: :post,
+        data: { type: 'script', confirm: _("Are you sure you want to delete this %s?", "#{type}") },
+        class: "admintools") <<
       link_to('edit', {
-        :controller => "admin/feedback",
-        :action => "edit", :id => model.id
-        }, :class => "admintools"),
-      :id => "admin_#{type}_#{model.id}", :style => "display: none")
+        controller: "admin/feedback",
+        action: "edit", id: model.id
+        }, class: "admintools"),
+      id: "admin_#{type}_#{model.id}", style: "display: none")
     tag.join(" | ")
   end
 
@@ -142,7 +315,7 @@ module ApplicationHelper
   end
 
   def javascript_include_lang
-    javascript_include_tag "lang/#{Localization.lang.to_s}" if File.exists? File.join(::Rails.root.to_s, 'public', 'lang', Localization.lang.to_s)
+    javascript_include_tag "lang/#{Localization.lang.to_s}" if File.exist? File.join(::Rails.root.to_s, 'public', 'lang', Localization.lang.to_s)
   end
 
   def use_canonical
@@ -168,7 +341,7 @@ module ApplicationHelper
   #{ meta_tag 'google-site-verification', this_blog.google_verification unless this_blog.google_verification.blank?}
   <meta name="generator" content="Typo #{TYPO_VERSION}" />
   #{ show_meta_keyword }
-  <link rel="EditURI" type="application/rsd+xml" title="RSD" href="#{ url_for :controller => '/xml', :action => 'rsd' }" />
+  <link rel="EditURI" type="application/rsd+xml" title="RSD" href="/xml/rsd" />
   <link rel="alternate" type="application/atom+xml" title="Atom" href="#{ feed_atom }" />
   <link rel="alternate" type="application/rss+xml" title="RSS" href="#{ feed_rss }" />
   #{ javascript_include_tag 'cookies', 'prototype', 'effects', 'builder', 'typo' }
@@ -181,31 +354,30 @@ module ApplicationHelper
   #{ this_blog.custom_tracking_field unless this_blog.custom_tracking_field.blank? }
   #{ google_analytics }
     HTML
-    ).chomp
+    ).chomp.html_safe
   end
 
   def feed_atom
     if params[:action] == 'search'
-      url_for(:only_path => false, :format => 'atom', :q => params[:q])
+      "#{this_blog.base_url}/search/#{params[:q]}.atom"
     elsif not @article.nil?
       @article.feed_url(:atom)
     elsif not @auto_discovery_url_atom.nil?
       @auto_discovery_url_atom
     else
-      # FIXME: When is this invoked?
-      url_for(:only_path => false, :format => 'atom')
+      "#{this_blog.base_url}/articles.atom"
     end
   end
 
   def feed_rss
     if params[:action] == 'search'
-      url_for(:only_path => false, :format => 'rss', :q => params[:q])
+      "#{this_blog.base_url}/search/#{params[:q]}.rss"
     elsif not @article.nil?
       @article.feed_url(:rss20)
     elsif not @auto_discovery_url_rss.nil?
       @auto_discovery_url_rss
     else
-      url_for(:only_path => false, :format => 'rss')
+      "#{this_blog.base_url}/articles.rss"
     end
   end
 
@@ -217,6 +389,7 @@ module ApplicationHelper
     html << "<a class='close' href='#'>×</a>"
     html << render_flash rescue nil
     html << "</div>"
+    html.html_safe
   end
 
   def content_array
@@ -260,7 +433,7 @@ module ApplicationHelper
   end
 
   def show_menu_for_post_type(posttype, before='<li>', after='</li>')
-    list = Article.find(:all, :conditions => ['post_type = ?', post_type])
+    list = Article.where('post_type = ?', post_type)
     html = ''
     
     return if list.size.zero?

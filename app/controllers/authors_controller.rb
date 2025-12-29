@@ -9,12 +9,15 @@ class AuthorsController < ContentController
     @keywords = (this_blog.meta_keywords.empty?) ? "" : this_blog.meta_keywords
     @description = this_blog.author_desc_template.to_title(@author, this_blog, params)
 
+    # Set auto discovery URLs for feeds
+    @auto_discovery_url_rss = "#{this_blog.base_url}/author/#{@author.login}.rss"
+    @auto_discovery_url_atom = "#{this_blog.base_url}/author/#{@author.login}.atom"
+
     respond_to do |format|
       format.html do
         render
       end
       format.rss do
-        auto_discovery_feed(:only_path => false)
         render_feed "rss"
       end
       format.atom do

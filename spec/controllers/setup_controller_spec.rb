@@ -14,7 +14,7 @@ describe SetupController do
         get 'index'
       end
 
-      specify { response.should render_template('index') }
+      specify { expect(response).to render_template('index') }
     end
 
     describe 'POST setup' do
@@ -22,18 +22,18 @@ describe SetupController do
         post 'index', {:setting => {:blog_name => 'Foo', :email => 'foo@bar.net'}}
       end
 
-      specify { response.should redirect_to(:action => 'confirm') }
+      specify { expect(response).to redirect_to(:action => 'confirm') }
 
       it "should correctly initialize blog and users" do
-        Blog.default.blog_name.should == 'Foo'
+        expect(Blog.default.blog_name).to eq('Foo')
         admin = User.find_by_login("admin")
-        admin.should_not be_nil
-        admin.email.should == 'foo@bar.net'
-        Article.find(:first).user.should == admin
+        expect(admin).not_to be_nil
+        expect(admin.email).to eq('foo@bar.net')
+        expect(Article.find(:first).user).to eq(admin)
       end
 
       it "should log in admin user" do
-        session[:user_id].should == User.find_by_login("admin").id
+        expect(session[:user_id]).to eq(User.find_by_login("admin").id)
       end
     end
   end
@@ -47,12 +47,12 @@ describe SetupController do
     
     it "empty blog name should raise an error" do
       post 'index', {:setting => {:blog_name => '', :email => 'foo@bar.net'}}
-      response.should redirect_to(:action => 'index')
+      expect(response).to redirect_to(:action => 'index')
     end
     
     it "empty email should raise an error" do
       post 'index', {:setting => {:blog_name => 'Foo', :email => ''}}
-      response.should redirect_to(:action => 'index')
+      expect(response).to redirect_to(:action => 'index')
     end
   end
 
@@ -63,7 +63,7 @@ describe SetupController do
         get 'index'
       end
 
-      specify { response.should redirect_to(:controller => 'articles', :action => 'index') }
+      specify { expect(response).to redirect_to(:controller => 'articles', :action => 'index') }
     end
 
     describe 'POST setup' do
@@ -72,12 +72,12 @@ describe SetupController do
         post 'index', {:setting => {:blog_name => 'Foo', :email => 'foo@bar.net'}}
       end
 
-      specify { response.should redirect_to(:controller => 'articles', :action => 'index') }
+      specify { expect(response).to redirect_to(:controller => 'articles', :action => 'index') }
 
       it "should not initialize blog and users" do
-        Blog.default.blog_name.should_not == 'Foo'
+        expect(Blog.default.blog_name).not_to eq('Foo')
         admin = User.find_by_login("admin")
-        admin.should be_nil
+        expect(admin).to be_nil
       end
     end
   end

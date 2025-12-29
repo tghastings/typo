@@ -2,14 +2,13 @@ require 'spec_helper'
 
 describe XmlController do
   before do
-    blog = stub_model(Blog, :base_url => "http://myblog.net")
-    Blog.stub(:default) { blog }
+    @blog = Factory(:blog)
     Trigger.stub(:fire) { }
   end
 
   def assert_moved_permanently_to(location)
-    assert_response :moved_permanently
-    assert_redirected_to location
+    expect(response).to have_http_status(:moved_permanently)
+    expect(response).to redirect_to(location)
   end
 
   describe "#feed" do
@@ -103,8 +102,7 @@ describe XmlController do
 
     describe "for an article" do
       before do
-        @article = stub_model(Article, :published_at => Time.now, :permalink => "foo")
-        Article.stub(:find) { @article }
+        @article = Factory(:article)
       end
 
       describe "without format parameter" do
@@ -131,19 +129,18 @@ describe XmlController do
 
     it "responds :missing when given a bad format" do
       get :feed, :format => 'atom04', :type => 'feed'
-      assert_response :missing
+      expect(response).to have_http_status(:not_found)
     end
 
     it "responds :missing when given a bad type" do
       get :feed, :format => 'rss20', :type => 'foobar'
-      assert_response :missing
+      expect(response).to have_http_status(:not_found)
     end
   end
 
   describe "#articlerss" do
     before do
-      @article = stub_model(Article, :published_at => Time.now, :permalink => "foo")
-      Article.stub(:find) { @article }
+      @article = Factory(:article)
     end
 
     it "redirects permanently to the article RSS feed" do
@@ -173,7 +170,7 @@ describe XmlController do
     end
 
     it "is succesful" do
-      assert_response :success
+      expect(response).to be_successful
     end
 
     it "returns a valid XML response" do
@@ -189,7 +186,7 @@ describe XmlController do
     end
 
     it "is succesful" do
-      assert_response :success
+      expect(response).to be_successful
     end
 
     it "returns a valid XML response" do

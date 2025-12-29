@@ -54,7 +54,7 @@ describe Tag do
   describe 'permalink_url' do
     subject { Tag.get('foo').permalink_url }
     it 'should be of form /tag/<name>' do
-      should == 'http://myblog.net/tag/foo'
+      is_expected.to eq('http://myblog.net/tag/foo')
     end
   end
 

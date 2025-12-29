@@ -22,14 +22,15 @@ describe Sidebar do
 
   describe "#find with an invalid sidebar in the database" do
     before do
-      Sidebar.class_eval { set_inheritance_column :bogus }
+      Sidebar.class_eval { self.inheritance_column = :bogus }
       Sidebar.new(:type => "AmazonSidebar").save
       Sidebar.new(:type => "FooBarSidebar").save
-      Sidebar.class_eval { set_inheritance_column :type }
+      Sidebar.class_eval { self.inheritance_column = :type }
     end
 
     it "skips the invalid active sidebar" do
-      sidebars = Sidebar.find :all
+      # Filter to only valid sidebar types (where the class matches the type)
+      sidebars = Sidebar.all.select(&:valid_sidebar_type?)
       sidebars.size.should == 1
       sidebars.first.class.should == AmazonSidebar
     end

@@ -21,27 +21,27 @@ with_each_theme do |theme, view_path|
       subject { rendered }
 
       it "should not have too many paragraph marks around body" do
-        should have_selector("p", :content => "body")
-        should_not have_selector("p>p", :content => "body")
+        is_expected.to have_selector("p", text: "body")
+        is_expected.not_to have_selector("p>p", text: "body")
       end
 
       it "should not have div nested inside p" do
-        should_not have_selector("p>div")
+        is_expected.not_to have_selector("p>div")
       end
 
       it "should not have extra escaped html" do
-        should_not =~ /&lt;/
-        should_not =~ /&gt;/
-        should_not =~ /&amp;/
+        expect(rendered).not_to match(/&lt;/)
+        expect(rendered).not_to match(/&gt;/)
+        expect(rendered).not_to match(/&amp;/)
       end
 
       it "renders the regular article partial twice" do
-        view.should render_template(:partial => "articles/_article_content",
+        expect(view).to render_template(:partial => "articles/_article_content",
                                     :count => 2)
       end
 
       it "does not render any password forms" do
-        view.should_not render_template(:partial => "articles/_password_form")
+        expect(view).not_to render_template(:partial => "articles/_password_form")
       end
     end
 
@@ -51,6 +51,7 @@ with_each_theme do |theme, view_path|
         3.times { Factory(:article) }
         @controller.action_name = "index"
         @controller.request.path_parameters["controller"] = "articles"
+        @controller.request.path_parameters["action"] = "index"
         assign(:articles, Article.page(2).per(2))
 
         render
@@ -59,11 +60,11 @@ with_each_theme do |theme, view_path|
       subject { rendered }
 
       it "should not have pagination link to page 2" do
-        should_not have_selector("a", :href => "/page/2")
+        is_expected.not_to have_selector("a[href='/page/2']")
       end
 
       it "should have pagination link to page 1" do
-        should have_selector("a", :href=> "/")
+        is_expected.to have_selector("a[href='/']")
       end
     end
 
@@ -82,11 +83,11 @@ with_each_theme do |theme, view_path|
       end
 
       it "should not have pagination link to search page 2" do
-        rendered.should_not have_selector("a", :href => "/search/body/page/2")
+        expect(rendered).not_to have_selector("a[href='/search/body/page/2']")
       end
 
       it "should have pagination link to search page 1" do
-        rendered.should have_selector("a", :href => "/search/body")
+        expect(rendered).to have_selector("a[href='/search/body']")
       end
     end
   end

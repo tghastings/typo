@@ -344,10 +344,16 @@ describe Article do
   end
 
   it 'should notify' do
+    # Clear any existing users with notification settings
+    User.where(notify_on_new_articles: true).destroy_all
+
     henri = Factory(:user, :login => 'henri', :notify_on_new_articles => true)
     alice = Factory(:user, :login => 'alice', :notify_on_new_articles => true)
 
-    a = Factory.build(:article)
+    # Create user for the article with notify_watch_my_articles disabled
+    # so only henri and alice are notified (must use string key for settings)
+    article_author = Factory(:user, :login => 'author', :settings => {'notify_watch_my_articles' => false})
+    a = Factory.build(:article, :user => article_author)
     assert a.save
     assert_equal 2, a.notify_users.size
     assert_equal ['alice', 'henri'], a.notify_users.collect {|u| u.login }.sort

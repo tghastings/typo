@@ -2,7 +2,7 @@ class Admin::SidebarController < Admin::BaseController
   def index
     @available = available
     # Reset the staged position based on the active position.
-    Sidebar.delete_all('active_position is null')
+    Sidebar.where('active_position is null').delete_all
     flash_sidebars
     begin
       @active = Sidebar.find(:all, :order => 'active_position ASC') unless @active
@@ -65,7 +65,7 @@ class Admin::SidebarController < Admin::BaseController
                                   :active_position => position)
         position += 1
       end
-      Sidebar.delete_all('active_position is null')
+      Sidebar.where('active_position is null').delete_all
     end
     PageCache.sweep_all
     index

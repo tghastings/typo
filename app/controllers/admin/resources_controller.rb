@@ -1,5 +1,5 @@
 class Admin::ResourcesController < Admin::BaseController
-  upload_status_for :file_upload, :status => :upload_status
+  # Note: upload_status_for from upload_progress gem removed (deprecated)
 
   cache_sweeper :blog_sweeper
 
@@ -17,7 +17,7 @@ class Admin::ResourcesController < Admin::BaseController
         @up.write_to_disk(file)
 
         @message = _('File uploaded: ')+ file.size.to_s
-        finish_upload_status "'#{@message}'"
+        flash[:notice] = @message
       end
     rescue
       @message = "'" + _('Unable to upload') + " #{file.original_filename}'"
@@ -28,7 +28,7 @@ class Admin::ResourcesController < Admin::BaseController
 
   def update
     @resource = Resource.find(params[:resource][:id])
-    @resource.attributes = params[:resource]
+    @resource.attributes = params[:resource] if params[:resource].present?
 
     if request.post? and @resource.save
       flash[:notice] = _('Metadata was successfully updated.')

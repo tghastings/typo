@@ -3,7 +3,7 @@ class Admin::SeoController < Admin::BaseController
 
   def index
     load_settings
-    if File.exists? "#{::Rails.root.to_s}/public/robots.txt"
+    if File.exist? "#{::Rails.root.to_s}/public/robots.txt"
       @setting.robots = ""
       file = File.readlines("#{::Rails.root.to_s}/public/robots.txt")
       file.each do |line|

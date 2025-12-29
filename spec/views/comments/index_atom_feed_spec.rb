@@ -21,7 +21,7 @@ describe "comments/index_atom_feed.atom.builder" do
     it "shows typo with the current version as the generator" do
       xml = Nokogiri::XML.parse(rendered)
       generator = xml.css("generator").first
-      generator.content.should == "Typo"
+      generator.content.should eq("Typo")
       generator["version"].should == TYPO_VERSION
     end
 
@@ -34,10 +34,9 @@ describe "comments/index_atom_feed.atom.builder" do
         xml = Nokogiri::XML.parse(rendered)
         entry_xml = xml.css("entry").first
 
-        entry_xml.css("title").first.content.should ==
-          "Comment on #{article.title} by #{comment.author}"
-        entry_xml.css("id").first.content.should == "urn:uuid:12313123123123123"
-        entry_xml.css("content").first.content.should == "<p>Comment body</p>"
+        entry_xml.css("title").first.content.should eq("Comment on #{article.title} by #{comment.author}")
+        entry_xml.css("id").first.content.should eq("urn:uuid:12313123123123123")
+        entry_xml.css("content").first.content.should eq("Comment body")
         link_xml = entry_xml.css("link").first
         link_xml["href"].should == "#{article.permalink_url}#comment-#{comment.id}"
       end

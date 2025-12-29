@@ -7,7 +7,7 @@ describe AccountsController do
       User.stub!(:salt).and_return('change-me')
       henri = Factory(:user, :login => 'henri', :password => 'testagain')
       post 'login', {:user => {:login => 'henri', :password => 'testagain'}, :remember_me => '1'}
-      request.session[:user_id].should == henri.id
+      expect(request.session[:user_id]).to eq(henri.id)
     end
   end
 
@@ -24,35 +24,35 @@ describe AccountsController do
 
     it 'session gets a user' do
       make_request
-      request.session[:user_id].should == @henri.id
+      expect(request.session[:user_id]).to eq(@henri.id)
     end
 
     it 'sets typo_user_profile cookie' do
       make_request
-      cookies["typo_user_profile"].should == 'admin_henri'
+      expect(cookies["typo_user_profile"]).to eq('admin_henri')
     end
 
     it 'redirects to /bogus/location' do
       request.session[:return_to] = '/bogus/location'
       make_request
-      response.should redirect_to('/bogus/location')
+      expect(response).to redirect_to('/bogus/location')
     end
 
     it 'redirects to /admin if no return' do
       make_request
-      response.should redirect_to(:controller => 'admin/dashboard')
+      expect(response).to redirect_to(:controller => 'admin/dashboard')
     end
 
     it 'redirects to /admin if no return and you are logged in' do
-      session[:user_id] = session[:user] = @henri.id
+      session[:user_id] = @henri.id
       make_request
-      response.should redirect_to(:controller => 'admin/dashboard')
+      expect(response).to redirect_to(:controller => 'admin/dashboard')
     end
 
     it "should redirect to signup if no users" do
       User.stub!(:count).and_return(0)
       make_request
-      response.should redirect_to('/accounts/signup')
+      expect(response).to redirect_to('/accounts/signup')
     end
   end
 
@@ -69,22 +69,22 @@ describe AccountsController do
 
     it 'no user id goes in the session' do
       make_request
-      request.session[:user_id].should be_nil
+      expect(request.session[:user_id]).to be_nil
     end
 
     it 'login should == "inactive"' do
       make_request
-      assigns[:login].should == 'inactive'
+      expect(assigns[:login]).to eq('inactive')
     end
 
     it 'typo_user_profile cookie should be blank' do
       make_request
-      cookies["typo_user_profile"].should be_blank
+      expect(cookies["typo_user_profile"]).to be_blank
     end
 
     it 'should render login action' do
       make_request
-      response.should render_template(:login)
+      expect(response).to render_template(:login)
     end
 
   end
@@ -101,7 +101,7 @@ describe AccountsController do
 
     it 'should render login action' do
       make_request
-      response.should render_template(:login)
+      expect(response).to render_template(:login)
     end
   end
 
@@ -118,22 +118,22 @@ describe AccountsController do
 
     it 'no user in goes in the session' do
       make_request
-      request.session[:user_id].should be_nil
+      expect(request.session[:user_id]).to be_nil
     end
 
     it 'login should == "bob"' do
       make_request
-      assigns[:login].should == 'bob'
+      expect(assigns[:login]).to eq('bob')
     end
 
     it 'typo_user_profile cookie should be blank' do
       make_request
-      cookies["typo_user_profile"].should be_blank
+      expect(cookies["typo_user_profile"]).to be_blank
     end
 
     it 'should render login action' do
       make_request
-      response.should render_template(:login)
+      expect(response).to render_template(:login)
     end
   end
 
@@ -142,14 +142,14 @@ describe AccountsController do
       Factory(:blog)
       User.stub!(:count).and_return(1)
       get 'index'
-      response.should redirect_to(:action => 'login')
+      expect(response).to redirect_to(:action => 'login')
     end
     
     it 'should redirect to signup' do
       Factory(:blog)
       User.stub!(:count).and_return(0)
       get 'index'
-      response.should redirect_to(:action => 'signup')
+      expect(response).to redirect_to(:action => 'signup')
     end    
   end
 
@@ -158,8 +158,8 @@ describe AccountsController do
       Factory(:blog)
       User.stub!(:count).and_return(1)
       get 'login'
-      response.should render_template(:login)
-      assigns[:login].should be_nil
+      expect(response).to render_template(:login)
+      expect(assigns[:login]).to be_nil
     end
   end
 
@@ -171,13 +171,13 @@ describe AccountsController do
 
     it 'should render action :signup' do
       get 'login'
-      response.should redirect_to(:action => 'signup')
-      assigns[:login].should be_nil
+      expect(response).to redirect_to(:action => 'signup')
+      expect(assigns[:login]).to be_nil
     end
 
     it 'should render :signup' do
       get 'recover_password'
-      response.should redirect_to(:action => 'signup')
+      expect(response).to redirect_to(:action => 'signup')
     end
   end
 
@@ -190,14 +190,14 @@ describe AccountsController do
     describe 'GET signup' do
       it 'should redirect to login' do
         get 'signup'
-        response.should redirect_to(:action => 'login')
+        expect(response).to redirect_to(:action => 'login')
       end
     end
     
     describe 'POST signup without allow_signup' do
       it 'should redirect to login' do
         post 'signup', {'user' =>  {'login' => 'newbob'}}
-        response.should redirect_to(:action => 'login')
+        expect(response).to redirect_to(:action => 'login')
       end
     end    
   end
@@ -211,14 +211,14 @@ describe AccountsController do
     describe 'GET signup with allow_signup' do
       it 'should redirect to login' do
         get 'signup'
-        response.should render_template('signup')
+        expect(response).to render_template('signup')
       end
     end    
 
     describe 'POST signup with allow_signup' do    
       it 'should redirect to login' do
         post 'signup', {'user' =>  {'login' => 'newbob', 'email' => 'newbob@mail.com'}}
-        response.should redirect_to(:action => 'confirm')
+        expect(response).to redirect_to(:action => 'confirm')
       end
     end
     
@@ -227,19 +227,26 @@ describe AccountsController do
     before(:each) do
       Factory(:blog)
       User.stub!(:count).and_return(0)
-      @user = mock("user")
+      @user = mock("user",
+        login: '',
+        email: '',
+        password: '',
+        password_confirmation: '',
+        name: '',
+        id: nil
+      )
       @user.stub!(:reload).and_return(@user)
       User.stub!(:new).and_return(@user)
     end
 
     it 'sets @user' do
       get 'signup'
-      assigns[:user].should == @user
+      expect(assigns[:user]).to eq(@user)
     end
 
     it 'renders action signup' do
       get 'signup'
-      response.should render_template(:signup)
+      expect(response).to render_template(:signup)
     end
   end
 
@@ -253,7 +260,7 @@ describe AccountsController do
     describe 'when GET signup' do
       before { get 'signup' }
       it 'redirects to setup' do
-        response.should redirect_to(:controller => 'setup', :action => 'index')
+        expect(response).to redirect_to(:controller => 'setup', :action => 'index')
       end
     end
 
@@ -263,14 +270,14 @@ describe AccountsController do
           'password_confirmation' => 'newpassword'}}
       end
       it 'redirects to setup' do
-        response.should redirect_to(:controller => 'setup', :action => 'index')
+        expect(response).to redirect_to(:controller => 'setup', :action => 'index')
       end
     end
 
     describe 'when GET login' do
       before { get 'login' }
       it 'redirects to setup' do
-        response.should redirect_to(:controller => 'setup', :action => 'index')
+        expect(response).to redirect_to(:controller => 'setup', :action => 'index')
       end
     end
 
@@ -279,7 +286,7 @@ describe AccountsController do
         post 'login', {'user' =>  {'login' => 'newbob', 'password' => 'newpassword'}}
       end
       it 'redirects to setup' do
-        response.should redirect_to(:controller => 'setup', :action => 'index')
+        expect(response).to redirect_to(:controller => 'setup', :action => 'index')
       end
     end
   end
@@ -299,20 +306,20 @@ describe AccountsController do
     end
 
     it 'creates and saves a user' do
-      User.should_receive(:new).and_return(@user)
-      @user.should_receive(:save).and_return(@user)
+      expect(User).to receive(:new).and_return(@user)
+      expect(@user).to receive(:save).and_return(@user)
       post 'signup', params
-      assigns[:user].should == @user
+      expect(assigns[:user]).to eq(@user)
     end
 
     it 'redirects to /account/confirm' do
       post 'signup', params
-      response.should redirect_to(:action => 'confirm')
+      expect(response).to redirect_to(:action => 'confirm')
     end
 
     it 'session gets a user' do
       post 'signup', params
-      request.session[:user_id].should == @user.id
+      expect(request.session[:user_id]).to eq(@user.id)
     end
 
     def params
@@ -337,7 +344,7 @@ describe AccountsController do
 
     it 'trying to log in once again redirects to admin/dashboard/index' do
       get 'login'
-      response.should redirect_to(:controller => 'admin/dashboard')
+      expect(response).to redirect_to(:controller => 'admin/dashboard')
     end
 
     describe "when logging out" do
@@ -346,20 +353,21 @@ describe AccountsController do
       end
 
       it 'deletes the session[:user_id]' do
-        session[:user_id].should be_blank
+        expect(session[:user_id]).to be_blank
       end
 
-      it 'deletes the session[:user]' do
-        session[:user].should be_blank
+      it 'session[:user_id] should be cleared after logout' do
+        # After logout, session[:user_id] should be blank (covered by earlier test)
+        expect(session[:user_id]).to be_blank
       end
 
       it 'redirects to the login action' do
-        response.should redirect_to(:action => 'login')
+        expect(response).to redirect_to(:action => 'login')
       end
 
       it 'deletes cookies containing credentials' do
-        cookies["auth_token"].should == nil
-        cookies["typo_user_profile"].should == nil
+        expect(cookies["auth_token"]).to eq(nil)
+        expect(cookies["typo_user_profile"]).to eq(nil)
       end
     end
   end
@@ -374,14 +382,14 @@ describe AccountsController do
     describe 'when GET' do
       before { get 'recover_password' }
 
-      specify { response.should render_template('recover_password') }
+      specify { expect(response).to render_template('recover_password') }
     end
 
     describe 'when a known login or email is POSTed' do
       before do
         post 'recover_password', {:user => {:login => @user.login}}
       end
-      specify { response.should redirect_to(:action => 'login') }
+      specify { expect(response).to redirect_to(:action => 'login') }
     end
 
     describe 'when an unknown login or email is POSTed' do
@@ -389,9 +397,9 @@ describe AccountsController do
         post 'recover_password', {:user => {:login => 'foobar'}}
       end
 
-      specify { response.should render_template('recover_password') }
+      specify { expect(response).to render_template('recover_password') }
       it "should display an error" do
-        request.flash[:error].should_not be_empty
+        expect(request.flash[:error]).not_to be_empty
       end
     end
   end

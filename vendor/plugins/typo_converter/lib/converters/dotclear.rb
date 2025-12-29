@@ -49,9 +49,8 @@ class DotclearConverter < BaseConverter
 
   def old_articles
     if @options.has_key?(:categories)
-      @old_article ||= Dotclear::Post.find(:all,
-                                           :include => :categorie,
-                                           :conditions => ["post_pub = 1 AND cat_libelle IN (?)", @options[:categories]])
+      @old_article ||= Dotclear::Post.includes(:categorie)
+                                      .where("post_pub = 1 AND cat_libelle IN (?)", @options[:categories])
     else
       @old_article ||= Dotclear::Post.find_all_by_post_pub true
     end

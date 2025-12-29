@@ -224,12 +224,12 @@ describe User do
   describe "#simple_editor?" do
     it "should be true if editor == 'simple'" do
       user = Factory.build(:user, :editor => 'simple')
-      user.simple_editor?.should be_true
+      user.simple_editor?.should be_truthy
     end
 
     it "should be false if editor != 'simple'" do
       user = Factory.build(:user, :editor => 'other')
-      user.simple_editor?.should be_false
+      user.simple_editor?.should be_falsey
     end
   end
 end

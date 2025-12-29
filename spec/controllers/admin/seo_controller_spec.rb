@@ -8,7 +8,7 @@ describe Admin::SeoController do
     #TODO Delete after removing fixtures
     Profile.delete_all
     henri = Factory(:user, :login => 'henri', :profile => Factory(:profile_admin, :label => Profile::ADMIN))
-    request.session = { :user => henri.id }
+    request.session = { :user_id => henri.id }
   end
 
   describe "#index" do
@@ -17,7 +17,7 @@ describe Admin::SeoController do
     end
 
     it 'should render index' do
-      response.should render_template('index')
+      expect(response).to render_template('index')
     end    
   end
 
@@ -27,7 +27,7 @@ describe Admin::SeoController do
     end
 
     it 'should render permalinks' do
-      response.should render_template('permalinks')
+      expect(response).to render_template('permalinks')
     end
   end
 
@@ -37,7 +37,7 @@ describe Admin::SeoController do
     end
     
     it 'should render titles' do
-      response.should render_template('titles')
+      expect(response).to render_template('titles')
     end    
   end
 
@@ -51,14 +51,14 @@ describe Admin::SeoController do
 
     it 'should success' do
       good_update
-      response.should redirect_to(:action => 'permalinks')
+      expect(response).to redirect_to(:action => 'permalinks')
     end
 
     it 'should not save blog with bad permalink format' do
       @blog = Blog.default
       good_update "setting" => {"permalink_format" => "/%month%"}
-      response.should redirect_to(:action => 'permalinks')
-      @blog.should == Blog.default
+      expect(response).to redirect_to(:action => 'permalinks')
+      expect(@blog).to eq(Blog.default)
     end
   end
 

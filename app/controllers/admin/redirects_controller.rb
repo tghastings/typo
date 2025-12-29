@@ -15,7 +15,7 @@ class Admin::RedirectsController < Admin::BaseController
 
   private
   def new_or_edit
-    @redirects = Redirect.where("origin is null").order('created_at desc').page(params[:page]).per(this_blog.admin_display_elements)
+    @redirects = Redirect.order('created_at desc').page(params[:page]).per(this_blog.admin_display_elements)
     
     @redirect = case params[:id]
     when nil
@@ -24,7 +24,7 @@ class Admin::RedirectsController < Admin::BaseController
       Redirect.find(params[:id])
     end
 
-    @redirect.attributes = params[:redirect]
+    @redirect.attributes = params[:redirect] if params[:redirect].present?
     if request.post?
       if @redirect.from_path.empty? || @redirect.from_path.nil?
         @redirect.from_path = @redirect.shorten

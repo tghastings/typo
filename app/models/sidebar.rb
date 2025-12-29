@@ -1,6 +1,35 @@
 class Sidebar < ActiveRecord::Base
   serialize :config
 
+  # Handle STI subclass lookup errors gracefully for invalid sidebar types
+  class << self
+    def find_sti_class(type_name)
+      super
+    rescue NameError
+      # Return Sidebar as fallback for unknown types, but mark for filtering
+      Sidebar
+    end
+
+    # Override sti_class_for to handle unknown types
+    def sti_class_for(type_name)
+      if type_name.present?
+        begin
+          type_name.constantize
+        rescue NameError
+          # Skip unknown sidebar types by returning nil indicator
+          nil
+        end
+      else
+        self
+      end
+    end
+  end
+
+  # Mark records with invalid type for filtering
+  def valid_sidebar_type?
+    self.class != Sidebar || self.type.blank?
+  end
+
   class Field
     attr_accessor :key
     attr_accessor :options
@@ -122,32 +151,16 @@ class Sidebar < ActiveRecord::Base
   class << self
     attr_accessor :view_root
 
-    def find *args
-      begin
-        super
-      rescue ActiveRecord::SubclassNotFound => e
-        available = available_sidebars.map {|klass| klass.to_s}
-        set_inheritance_column :bogus
-        super.each do |record|
-          unless available.include? record.type
-            record.delete
-          end
-        end
-        set_inheritance_column :type
-        super
-      end
-    end
-
     def find_all_visible
-      find :all, :conditions => 'active_position is not null', :order => 'active_position'
+      where('active_position is not null').order('active_position').to_a
     end
 
     def find_all_staged
-      find :all, :conditions => 'staged_position is not null', :order => 'staged_position'
+      where('staged_position is not null').order('staged_position').to_a
     end
 
     def purge
-      delete_all('active_position is null and staged_position is null')
+      where('active_position is null and staged_position is null').delete_all
     end
 
     def setting(key, default=nil, options = { })
@@ -213,6 +226,10 @@ class Sidebar < ActiveRecord::Base
   end
 
   def initialize(*args)
+    # Handle ActionController::Parameters for Rails 7 compatibility
+    if args.first.is_a?(ActionController::Parameters)
+      args[0] = args.first.to_unsafe_h
+    end
     if block_given?
       super(*args) { |instance| yield instance }
     else

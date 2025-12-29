@@ -8,7 +8,7 @@ module Localization
     translated = @@l10s[@@lang][string_to_localize]
     translated = string_to_localize if translated == "" or translated.nil?
 
-    return translated.call(*args).to_s  if translated.is_a? Proc
+    return translated.call(*args).to_s.html_safe  if translated.is_a? Proc
 
     if translated.is_a? Array
       translated = if translated.size == 3
@@ -17,14 +17,14 @@ module Localization
         translated[args[0]>1 ? 1 : 0]
       end
     end
-    sprintf translated, *args
+    (sprintf translated, *args).html_safe
   end
 
   def self.__(string_to_localize, *args)
     translated = @@l10s[@@lang][string_to_localize]
     translated = string_to_localize if translated == "" or translated.nil?
 
-    return translated.call(*args).to_s  if translated.is_a? Proc
+    return translated.call(*args).to_s.html_safe  if translated.is_a? Proc
 
     if translated.is_a? Array
       translated = if translated.size == 3
@@ -33,7 +33,7 @@ module Localization
         translated[args[0]>1 ? 1 : 0]
       end
     end
-    translated
+    translated.to_s.html_safe
   end
 
   def self.define(lang = :default)

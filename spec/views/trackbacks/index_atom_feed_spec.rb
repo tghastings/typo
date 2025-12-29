@@ -21,7 +21,7 @@ describe "trackbacks/index_atom_feed.atom.builder" do
     it "shows typo with the current version as the generator" do
       xml = Nokogiri::XML.parse(rendered)
       generator = xml.css("generator").first
-      generator.content.should == "Typo"
+      generator.content.should eq("Typo")
       generator["version"].should == TYPO_VERSION
     end
 
@@ -34,10 +34,9 @@ describe "trackbacks/index_atom_feed.atom.builder" do
         xml = Nokogiri::XML.parse(rendered)
         entry_xml = xml.css("entry").first
 
-        entry_xml.css("title").first.content.should ==
-          "Trackback from #{trackback.blog_name}: #{trackback.title} on #{article.title}"
-        entry_xml.css("id").first.content.should == "urn:uuid:dsafsadffsdsf"
-        entry_xml.css("summary").first.content.should == "This is an excerpt"
+        entry_xml.css("title").first.content.should eq("Trackback from #{trackback.blog_name}: #{trackback.title} on #{article.title}")
+        entry_xml.css("id").first.content.should eq("urn:uuid:dsafsadffsdsf")
+        entry_xml.css("summary").first.content.should eq("This is an excerpt")
         link_xml = entry_xml.css("link").first
         link_xml["href"].should == "#{article.permalink_url}#trackback-#{trackback.id}"
       end

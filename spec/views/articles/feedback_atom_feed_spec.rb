@@ -27,9 +27,8 @@ describe "articles/feedback_atom_feed.atom.builder" do
         xml = Nokogiri::XML.parse(rendered)
         entry_xml = xml.css("entry").first
 
-        entry_xml.css("title").first.content.should ==
-          "Trackback from #{trackback.blog_name}: #{trackback.title} on #{article.title}"
-        entry_xml.css("id").first.content.should == "urn:uuid:dsafsadffsdsf"
+        entry_xml.css("title").first.content.should eq("Trackback from #{trackback.blog_name}: #{trackback.title} on #{article.title}")
+        entry_xml.css("id").first.content.should eq("urn:uuid:dsafsadffsdsf")
       end
     end
   end

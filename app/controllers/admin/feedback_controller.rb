@@ -79,7 +79,7 @@ class Admin::FeedbackController < Admin::BaseController
 
   def create
     @article = Article.find(params[:article_id])
-    @comment = @article.comments.build(params[:comment])
+    @comment = @article.comments.build(comment_params)
     @comment.user_id = current_user.id
 
     if request.post? and @comment.save
@@ -105,7 +105,7 @@ class Admin::FeedbackController < Admin::BaseController
       redirect_to :action => 'index'
       return
     end
-    comment.attributes = params[:comment]
+    comment.attributes = comment_params if params[:comment].present?
     if request.post? and comment.save
       flash[:notice] = _('Comment was successfully updated.')
       redirect_to :action => 'article', :id => comment.article.id
@@ -125,12 +125,15 @@ class Admin::FeedbackController < Admin::BaseController
     end
 
     template = (feedback.state.to_s.downcase == 'spam') ? 'spam' : 'ham'
-    render(:update) do |page|
-      if params[:context] != 'listing'
-        page.visual_effect :fade, "feedback_#{feedback.id}"
-      else
-        page.replace("feedback_#{feedback.id}", :partial => template, :locals => {:comment => feedback})
-      end
+    # Return JSON response with HTML for JavaScript to update the page
+    if params[:context] != 'listing'
+      render json: { action: 'fade', id: feedback.id }
+    else
+      render json: {
+        action: 'replace',
+        id: feedback.id,
+        html: render_to_string(partial: template, locals: { comment: feedback })
+      }
     end
   end
 
@@ -177,9 +180,13 @@ class Admin::FeedbackController < Admin::BaseController
 
   protected
 
+  def comment_params
+    params.require(:comment).permit(:author, :email, :url, :body, :title)
+  end
+
   def delete_all_spam
     if request.post?
-      Feedback.delete_all(['state = ?', 'spam'])
+      Feedback.where('state = ?', 'spam').delete_all
       flash[:notice] = _("All spam have been deleted")
     end
   end

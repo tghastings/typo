@@ -7,7 +7,6 @@
 #
 class Blog < ActiveRecord::Base
   include ConfigManager
-  extend ActiveSupport::Memoizable
   include Rails.application.routes.url_helpers
 
   attr_accessor :custom_permalink
@@ -20,7 +19,7 @@ class Blog < ActiveRecord::Base
 
   validates :blog_name, :presence => true
 
-  serialize :settings, Hash
+  serialize :settings, coder: YAML, type: Hash
 
   # Description
   setting :blog_name,                  :string, 'My Shiny Weblog!'
@@ -29,7 +28,7 @@ class Blog < ActiveRecord::Base
   setting :canonical_server_url,       :string, ''  # Deprecated
   setting :lang,                       :string, 'en_US'
   setting :title_prefix,               :integer, 0 # Deprecated but needed for a migration
-  
+
   # Spam
   setting :sp_global,                  :boolean, false
   setting :sp_article_auto_close,      :integer, 0
@@ -99,15 +98,18 @@ class Blog < ActiveRecord::Base
   setting :search_title_template,      :string, "Results for %search% | %blog_name% %page%" # OK
   setting :search_desc_template,       :string, "Results for %search% | %blog_name% | %blog_subtitle% %page%" # OK
   setting :custom_tracking_field,      :string, ''
-#  setting :meta_author_template,       :string, "%blog_name% | %nickname%"
 
 # Error handling
   setting :title_error_404,            :string, "Page not found"
   setting :msg_error_404,              :string, "<p>The page you are looking for has moved or does not exist.</p>"
-  
+
   validate :permalink_has_identifier
 
   def initialize(*args)
+    # Handle ActionController::Parameters for Rails 7 compatibility
+    if args.first.is_a?(ActionController::Parameters)
+      args[0] = args.first.to_unsafe_h
+    end
     super
     # Yes, this is weird - PDC
     begin
@@ -120,7 +122,7 @@ class Blog < ActiveRecord::Base
   # The default Blog. This is the lowest-numbered blog, almost always
   # id==1. This should be the only blog as well.
   def self.default
-    find(:first, :order => 'id')
+    order(:id).first
   rescue
     logger.warn 'You have no blog installed.'
     nil
@@ -149,18 +151,13 @@ class Blog < ActiveRecord::Base
   end
 
   # The +Theme+ object for the current theme.
-  def current_theme
-    Theme.find(theme)
+  def current_theme(reload = false)
+    @current_theme = nil if reload
+    @current_theme ||= Theme.find(theme)
   end
-  memoize :current_theme
 
-  # Generate a URL based on the +base_url+.  This allows us to generate URLs
-  # without needing a controller handy, so we can produce URLs from within models
-  # where appropriate.
-  #
-  # It also caches the result in the RouteCache, so repeated URL generation
-  # requests should be fast, as they bypass all of Rails' route logic.
-  def url_for_with_base_url(options = {}, extra_params = {})
+  # Generate a URL based on the +base_url+.
+  def url_for(options = {}, extra_params = {})
     case options
     when String
       if extra_params[:only_path]
@@ -168,26 +165,19 @@ class Blog < ActiveRecord::Base
       else
         url_generated = base_url
       end
-      url_generated += "/#{options}" # They asked for 'url_for "/some/path"', so return it unedited.
+      url_generated += "/#{options}"
       url_generated += "##{extra_params[:anchor]}" if extra_params[:anchor]
       url_generated
     when Hash
-      unless RouteCache[options]
-        options.reverse_merge!(:only_path => false, :controller => '',
-                               :action => 'permalink',
-                               :host => host_with_port,
-                               :script_name => root_path)
-
-        RouteCache[options] = url_for_without_base_url(options)
-      end
-
-      return RouteCache[options]
+      options.reverse_merge!(:only_path => false, :controller => '',
+                             :action => 'permalink',
+                             :host => host_with_port,
+                             :script_name => root_path)
+      super(options)
     else
       raise "Invalid URL in url_for: #{options.inspect}"
     end
   end
-
-  alias_method_chain :url_for, :base_url
 
   # The URL for a static file.
   def file_url(filename)
@@ -211,12 +201,12 @@ class Blog < ActiveRecord::Base
 
   def permalink_has_identifier
     unless permalink_format =~ /(%title%)/
-      errors.add(:permalink_format, _("You need a permalink format with an identifier : %%title%%"))
+      errors.add(:permalink_format, "You need a permalink format with an identifier : %title%")
     end
 
     # A permalink cannot end in .atom or .rss. it's reserved for the feeds
     if permalink_format =~ /\.(atom|rss)$/
-      errors.add(:permalink_format, _("Can't end in .rss or .atom. These are reserved to be used for feed URLs"))
+      errors.add(:permalink_format, "Can't end in .rss or .atom. These are reserved to be used for feed URLs")
     end
   end
 
@@ -248,6 +238,4 @@ class Blog < ActiveRecord::Base
     end
     @split_base_url
   end
-
 end
-

@@ -9,7 +9,7 @@ class Admin::PostTypesController < Admin::BaseController
     @record = PostType.find(params[:id])
     return(render 'admin/shared/destroy') unless request.post?
 
-    Article.find(:all, :conditions => ["post_type = ?", @record.permalink]).each do |article|
+    Article.where("post_type = ?", @record.permalink).each do |article|
       article.post_type = 'read'
       article.save
     end
@@ -20,14 +20,14 @@ class Admin::PostTypesController < Admin::BaseController
   private
 
   def new_or_edit
-    @post_types = PostType.find(:all)
+    @post_types = PostType.all
     @post_type = case params[:id]
                 when nil
                   PostType.new
                 else
                   PostType.find(params[:id])
                 end
-    @post_type.attributes = params[:post_type]
+    @post_type.attributes = params[:post_type] if params[:post_type].present?
     if request.post?
       save_post_type
       return

@@ -2,27 +2,27 @@ require 'spec_helper'
 
 describe Admin::PostTypesController do
   render_views
-  before do 
+  before do
     Factory(:blog)
     #TODO delete this after remove fixture
     Profile.delete_all
     @user = Factory(:user, :profile => Factory(:profile_admin, :label => Profile::ADMIN))
-    request.session = { :user => @user.id }
+    request.session = { :user_id => @user.id }
   end
 
   it "index shoudld redirect to new" do
     get :index
-    assert_response :redirect, :action => 'new'
+    expect(response).to redirect_to(action: 'new')
   end
 
   it "test_create" do
     pt = Factory(:post_type)
-    PostType.should_receive(:find).with(:all).and_return([])
-    PostType.should_receive(:new).and_return(pt)
-    pt.should_receive(:save!).and_return(true)
+    expect(PostType).to receive(:all).and_return([])
+    expect(PostType).to receive(:new).and_return(pt)
+    expect(pt).to receive(:save!).and_return(true)
     post :edit, 'post_type' => { :name => "new post type" }
-    assert_response :redirect
-    assert_redirected_to :action => 'index'
+    expect(response).to be_redirect
+    expect(response).to redirect_to(action: 'index')
   end
 
   describe "test_new" do
@@ -31,45 +31,45 @@ describe Admin::PostTypesController do
     end
 
     it 'should render template new' do
-      assert_template 'new'
+      expect(response).to render_template('new')
     end
 
   end
 
   describe "test_edit" do
     it 'should render template new' do
-      get :edit, :id => Factory.build(:post_type).id
-      assert_template 'new'
+      get :edit, :id => Factory(:post_type).id
+      expect(response).to render_template('new')
     end
       
     it "test_update" do
       post :edit, :id => Factory(:post_type).id
-      assert_response :redirect, :action => 'index'
+      expect(response).to redirect_to(action: 'index')
     end
   end
     
   describe "test_destroy with GET" do
     before(:each) do
       test_id = Factory(:post_type).id
-      assert_not_nil PostType.find(test_id)
+      expect(PostType.find(test_id)).not_to be_nil
       get :destroy, :id => test_id
     end
 
     it 'should render destroy template' do
-      assert_response :success
-      assert_template 'destroy'      
+      expect(response).to be_successful
+      expect(response).to render_template('destroy')      
     end
   end
 
   it "test_destroy with POST" do
     test_id = Factory(:post_type).id
-    assert_not_nil PostType.find(test_id)
+    expect(PostType.find(test_id)).not_to be_nil
     get :destroy, :id => test_id
 
     post :destroy, :id => test_id
-    assert_response :redirect, :action => 'index'
+    expect(response).to redirect_to(action: 'index')
 
-    assert_raise(ActiveRecord::RecordNotFound) { PostType.find(test_id) }
+    expect { PostType.find(test_id) }.to raise_error(ActiveRecord::RecordNotFound)
   end
  
 

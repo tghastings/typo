@@ -5,18 +5,18 @@ describe ApplicationHelper do
   before(:each) { @blog = Factory(:blog) }
   describe '#render_flash' do
     it 'should render empty string if no flash' do
-      render_flash.should == ''
+      expect(render_flash).to eq('')
     end
 
     it 'should render a good render if only one notice' do
       flash[:notice] = 'good update'
-      render_flash.should == '<span class="notice">good update</span>'
+      expect(render_flash).to eq('<span class="notice">good update</span>')
     end
 
     it 'should render the notice and error flash' do
       flash[:notice] = 'good update'
       flash[:error] = "its not good"
-      render_flash.split("<br />\n").sort.should == ['<span class="error">its not good</span>','<span class="notice">good update</span>']
+      expect(render_flash.split("<br />\n").sort).to eq(['<span class="error">its not good</span>','<span class="notice">good update</span>'])
     end
   end
 

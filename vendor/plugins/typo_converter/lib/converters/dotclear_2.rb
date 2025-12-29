@@ -61,9 +61,8 @@ class Dotclear2Converter < BaseConverter
 
   def old_articles
     if @options.has_key?(:categories)
-      @old_article ||= Dotclear2::Post.find(:all,
-                                           :include => :categorie,
-                                           :conditions => ["post_status = ? AND cat_title IN (?)", true, @options[:categories]])
+      @old_article ||= Dotclear2::Post.includes(:categorie)
+                                       .where("post_status = ? AND cat_title IN (?)", true, @options[:categories])
     else
       @old_article ||= Dotclear2::Post.find_all_by_post_status true
     end

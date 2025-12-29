@@ -10,9 +10,12 @@ class Redirect < ActiveRecord::Base
   def full_to_path
     path = self.to_path
     return path if path =~ /^(https?):\/\/([^\/]*)(.*)/
-    url_root = Blog.default.root_path
-    path = url_root + path unless url_root.nil? or path[0,url_root.length] == url_root
-    path
+    blog = Blog.default
+    url_root = blog.root_path
+    # Prepend url_root if path doesn't already start with it
+    path = url_root + path unless url_root.nil? or url_root.empty? or path[0,url_root.length] == url_root
+    # Return full URL with base_url
+    blog.base_url.sub(/#{Regexp.escape(url_root)}$/, '') + path
   end
 
   def shorten

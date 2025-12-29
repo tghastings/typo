@@ -16,17 +16,23 @@ class XmlController < ApplicationController
     @format = params[:format]
 
     unless @format
-      return render(:text => 'Unsupported format', :status => 404)
+      return render plain: 'Unsupported format', status: 404
     end
 
     # TODO: Move redirects into config/routes.rb, if possible
     case params[:type]
     when 'feed'
-      redirect_to :controller => 'articles', :action => 'index', :format => @format, :status => :moved_permanently
+      if @format == 'atom'
+        redirect_to atom_url, :status => :moved_permanently
+      else
+        redirect_to rss_url, :status => :moved_permanently
+      end
     when 'comments'
       redirect_to admin_comments_url(:format => @format), :status => :moved_permanently
     when 'article'
-      redirect_to Article.find(params[:id]).permalink_by_format(@format), :status => :moved_permanently
+      article = Article.find_by(id: params[:id])
+      return render plain: 'Article not found', status: 404 unless article
+      redirect_to article.permalink_by_format(@format), :status => :moved_permanently, allow_other_host: true
     when 'category', 'tag', 'author'
       redirect_to self.send("#{params[:type]}_url", params[:id], :format => @format), :status => :moved_permanently
     when 'trackbacks'
@@ -38,13 +44,15 @@ class XmlController < ApplicationController
         format.googlesitemap
       end
     else
-      return render(:text => 'Unsupported feed type', :status => 404)
+      return render plain: 'Unsupported feed type', status: 404
     end
   end
 
   # TODO: Move redirects into config/routes.rb, if possible
   def articlerss
-    redirect_to Article.find(params[:id]).permalink_by_format('rss'), :status => :moved_permanently
+    article = Article.find_by(id: params[:id])
+    return render plain: 'Article not found', status: 404 unless article
+    redirect_to article.permalink_by_format('rss'), :status => :moved_permanently, allow_other_host: true
   end
 
   def commentrss
@@ -56,7 +64,10 @@ class XmlController < ApplicationController
   end
 
   def rsd
-    render "rsd.rsd.builder"
+    respond_to do |format|
+      format.rsd
+      format.html { render "rsd", :formats => [:rsd] }
+    end
   end
 
   protected
@@ -67,7 +78,11 @@ class XmlController < ApplicationController
     else
       params[:format] = 'rss'
     end
-    request.format = params[:format] if params[:format]
+    # Set the request format based on the normalized format
+    if params[:format]
+      mime_type = Mime::Type.lookup_by_extension(params[:format])
+      request.format = mime_type.to_sym if mime_type
+    end
     return true
   end
 
@@ -76,7 +91,7 @@ class XmlController < ApplicationController
       association = association.to_s.singularize.classify.constantize
     end
     limit ||= this_blog.limit_rss_display
-    @items += association.find_already_published(:all, :limit => limit, :order => order)
+    @items += association.find_already_published.order(order).limit(limit)
   end
 
   def prep_sitemap
@@ -85,7 +100,7 @@ class XmlController < ApplicationController
 
     @feed_title = this_blog.blog_name
     @link = this_blog.base_url
-    @self_url = url_for(params)
+    @self_url = url_for(params.to_unsafe_h.symbolize_keys.merge(only_path: false))
 
     fetch_items(:articles, 'created_at DESC', 1000)
     fetch_items(:pages, 'created_at DESC', 1000)

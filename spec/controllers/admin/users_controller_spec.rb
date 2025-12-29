@@ -7,23 +7,23 @@ describe Admin::UsersController, "rough port of the old functional test" do
     before(:each) do
       Factory(:blog)
             @admin = Factory(:user, :profile => Factory(:profile_admin, :label => Profile::ADMIN))
-      request.session = { :user => @admin.id }
+      request.session = { :user_id => @admin.id }
     end
 
     it "test_index" do
       get :index
-      assert_template 'index'
-      assigns(:users).should_not be_nil
+      expect(response).to render_template('index')
+      expect(assigns(:users)).not_to be_nil
     end
 
     it "test_new" do
       get :new
-      assert_template 'new'
+      expect(response).to render_template('new')
 
       post :new, :user => { :login => 'errand', :email => 'corey@test.com',
         :password => 'testpass', :password_confirmation => 'testpass', :profile_id => 1, 
         :nickname => 'fooo', :firstname => 'bar' }
-      response.should redirect_to(:action => 'index')
+      expect(response).to redirect_to(:action => 'index')
     end
 
     describe '#EDIT action' do
@@ -33,19 +33,19 @@ describe Admin::UsersController, "rough port of the old functional test" do
           post :edit, :id => @admin.id, :user => { :login => 'errand',
             :email => 'corey@test.com', :password => 'testpass',
             :password_confirmation => 'testpass' }
-          response.should redirect_to(:action => 'index')
+          expect(response).to redirect_to(:action => 'index')
         end
       end
 
       describe 'with GET request' do
         shared_examples_for 'edit admin render' do
           it 'should render template edit' do
-            assert_template 'edit'
+            expect(response).to render_template('edit')
           end
 
           it 'should assigns tobi user' do
-            assert assigns(:user).valid?
-            assigns(:user).should == @admin 
+            expect(assigns(:user)).to be_valid
+            expect(assigns(:user)).to eq(@admin )
           end
         end
         describe 'with no id params' do
@@ -68,15 +68,15 @@ describe Admin::UsersController, "rough port of the old functional test" do
     it "test_destroy" do
       user_count = User.count
       get :destroy, :id => @admin.id
-      assert_template 'destroy'
-      assert assigns(:record).valid?
+      expect(response).to render_template('destroy')
+      expect(assigns(:record)).to be_valid
 
       user = Factory.build(:user)
-      user.should_receive(:destroy)
-      User.should_receive(:count).and_return(2)
-      User.should_receive(:find).with(@admin.id).and_return(user)
+      expect(user).to receive(:destroy)
+      expect(User).to receive(:count).and_return(2)
+      expect(User).to receive(:find).with(@admin.id.to_s).and_return(user)
       post :destroy, :id => @admin.id
-      response.should redirect_to(:action => 'index')
+      expect(response).to redirect_to(:action => 'index')
     end
   end
 
@@ -90,7 +90,7 @@ describe Admin::UsersController, "rough port of the old functional test" do
 
     it "don't see the list of user" do
       get :index
-      response.should redirect_to(:controller => "/accounts", :action => "login")
+      expect(response).to redirect_to(:controller => "/accounts", :action => "login")
     end
 
     describe 'EDIT Action' do
@@ -106,12 +106,12 @@ describe Admin::UsersController, "rough port of the old functional test" do
         end
 
         it 'should redirect to login' do
-          response.should redirect_to(:controller => "/accounts", :action => "login")
+          expect(response).to redirect_to(:controller => "/accounts", :action => "login")
         end
 
         it 'should not change user profile' do
           u = @administrator.reload
-          u.profile_id.should == @admin_profile.id
+          expect(u.profile_id).to eq(@admin_profile.id)
         end
       end
     end

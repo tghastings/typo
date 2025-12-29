@@ -2,7 +2,7 @@ require 'rexml/document'
 require 'xmlrpc/client'
 
 class Ping < ActiveRecord::Base
-  belongs_to :article
+  belongs_to :article, optional: true
 
   class Pinger
     attr_accessor :article

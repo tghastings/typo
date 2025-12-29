@@ -8,7 +8,7 @@ describe Admin::CacheController do
     #TODO Delete after removing fixtures
     Profile.delete_all
     @henri = Factory(:user, :login => 'henri', :profile => Factory(:profile_admin, :label => Profile::ADMIN))
-    request.session = { :user => @henri.id }
+    request.session = { :user_id => @henri.id }
   end
 
   describe "test_index" do
@@ -17,7 +17,7 @@ describe Admin::CacheController do
     end
     
     it 'should render template index' do
-      assert_template 'index'
+      expect(response).to render_template('index')
     end    
   end
 end

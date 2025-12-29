@@ -1,7 +1,7 @@
 class FeedbackController < ApplicationController
   helper :theme
 
-  before_filter :get_article, :only => [:create]
+  before_action :get_article, :only => [:create]
 
   cache_sweeper :blog_sweeper
 
@@ -27,10 +27,14 @@ class FeedbackController < ApplicationController
     respond_to do |format|
       format.html do
         if params[:article_id]
-          article = Article.find(params[:article_id])
-          redirect_to "#{article.permalink_url}\##{@page_title.underscore}"
+          article = Article.find_by(id: params[:article_id])
+          if article
+            redirect_to "#{article.permalink_url}\##{@page_title.underscore}", allow_other_host: true
+          else
+            render plain: 'Article not found', status: 404
+          end
         else
-          render :text => 'this space left blank'
+          render plain: 'this space left blank'
         end
       end
       format.atom { render_feed 'atom', get_feedback }
@@ -42,9 +46,10 @@ class FeedbackController < ApplicationController
 
   def get_feedback
     if params[:article_id]
-      Article.find(params[:article_id]).published_feedback
+      article = Article.find_by(id: params[:article_id])
+      article ? article.published_feedback : []
     else
-      this_blog.published_feedback.find(:all, this_blog.rss_limit_params.merge(:order => 'created_at DESC'))
+      Feedback.where(published: true).order('created_at DESC').limit(this_blog.limit_rss_display)
     end
   end
 

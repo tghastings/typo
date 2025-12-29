@@ -22,7 +22,7 @@
          <div class='container'>
            <ul class='nav'>
              <%= content_tag(:li, link_to(_('Home'), this_blog.base_url, {:class => render_active_home}))%>
-             <%= content_tag(:li, link_to(_('Articles'), {:controller => 'categories'}, {:class => render_active_articles}))%>
+             <%= content_tag(:li, link_to(_('Articles'), '/categories', {:class => render_active_articles}))%>
              <%= show_pages_links %>
            </ul>
          </div>

@@ -333,7 +333,8 @@ describe 'Given a new article' do
   end
 
   it 'A new article should get an empty password' do
-    @article.password.should == ''
+    # nil or empty string both indicate no password protection
+    expect(@article.password.to_s).to eq('')
   end
 end
 

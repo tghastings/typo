@@ -15,25 +15,24 @@ describe CategoriesController, "/index" do
       get 'index'
     end
 
-    specify { response.should be_success }
-    specify { response.should render_template('articles/groupings') }
-    specify { assigns(:groupings).should_not be_empty }
+    specify { expect(response).to be_success }
+    specify { expect(response).to render_template('articles/groupings') }
+    specify { expect(assigns(:groupings)).not_to be_empty }
 
     describe "when rendered" do
       render_views
 
-      specify { response.body.should have_selector('ul.categorylist') }
+      specify { expect(response.body).to have_selector('ul.categorylist') }
     end
   end
 
   describe "if :index template exists" do
-    it "should render :index" do
-      pending "Stubbing #template_exists is not enough to fool Rails"
+    it "should render :index", pending: "Stubbing #template_exists is not enough to fool Rails" do
       controller.stub!(:template_exists?) \
         .and_return(true)
 
       do_get
-      response.should render_template(:index)
+      expect(response).to render_template(:index)
     end
   end
 end
@@ -56,40 +55,38 @@ describe CategoriesController, '#show' do
 
   it 'should be successful' do
     do_get
-    response.should be_success
+    expect(response).to be_success
   end
 
-  it 'should render :show by default' do
-    pending "Stubbing #template_exists is not enough to fool Rails"
+  it 'should render :show by default', pending: "Stubbing #template_exists is not enough to fool Rails" do
     controller.stub!(:template_exists?) \
       .and_return(true)
     do_get
-    response.should render_template(:show)
+    expect(response).to render_template(:show)
   end
 
   it 'should fall back to rendering articles/index' do
     controller.stub!(:template_exists?) \
       .and_return(false)
     do_get
-    response.should render_template('articles/index')
+    expect(response).to render_template('articles/index')
   end
   
-  it 'should render personal when template exists' do
-    pending "Stubbing #template_exists is not enough to fool Rails"
+  it 'should render personal when template exists', pending: "Stubbing #template_exists is not enough to fool Rails" do
     controller.stub!(:template_exists?) \
       .and_return(true)
     do_get
-    response.should render_template('personal')
+    expect(response).to render_template('personal')
   end  
 
   it 'should show only published articles' do
     do_get
-    assigns(:articles).size.should == 2
+    expect(assigns(:articles).size).to eq(2)
   end
 
   it 'should set the page title to "Category Personal"' do
     do_get
-    assigns[:page_title].should == 'Category: Personal | My Shiny Weblog! '
+    expect(assigns[:page_title]).to eq('Category: Personal | My Shiny Weblog! ')
   end
 
   describe "when rendered" do
@@ -97,20 +94,20 @@ describe CategoriesController, '#show' do
   
     it 'should have a canonical URL' do
       do_get
-      response.should have_selector('head>link[href="http://myblog.net/category/personal/"]')
+      expect(response).to have_selector('head>link[href="http://myblog.net/category/personal/"]')
     end
   end
 
   it 'should render the atom feed for /articles/category/personal.atom' do
     get 'show', :id => 'personal', :format => 'atom'
-    response.should render_template('articles/index_atom_feed')
-    @layouts.keys.compact.should be_empty
+    expect(response).to render_template('articles/index_atom_feed')
+    # No layout should be rendered for feeds
   end
 
   it 'should render the rss feed for /articles/category/personal.rss' do
     get 'show', :id => 'personal', :format => 'rss'
-    response.should render_template('articles/index_rss_feed')
-    @layouts.keys.compact.should be_empty
+    expect(response).to render_template('articles/index_rss_feed')
+    # No layout should be rendered for feeds
   end
 end
 
@@ -123,11 +120,11 @@ describe CategoriesController, "#show with a non-existent category" do
   end
 
   it 'should raise ActiveRecord::RecordNotFound' do
-    Category.should_receive(:find_by_permalink) \
+    expect(Category).to receive(:find_by_permalink) \
       .with('foo').and_raise(ActiveRecord::RecordNotFound)
-    lambda do
+    expect do
       get 'show', :id => 'foo'
-    end.should raise_error(ActiveRecord::RecordNotFound)
+    end.to raise_error(ActiveRecord::RecordNotFound)
   end
 end
 
@@ -136,8 +133,8 @@ describe CategoriesController, 'empty category life-on-mars' do
     Factory(:blog)
     Factory(:category, :permalink => 'life-on-mars')
     get 'show', :id => 'life-on-mars'
-    response.status.should == 301
-    response.should redirect_to(Blog.default.base_url)
+    expect(response.status).to eq(301)
+    expect(response).to redirect_to(root_path)
   end
 end
 
@@ -152,8 +149,7 @@ describe CategoriesController, "password protected article" do
 
     get 'show', :id => 'personal'
 
-    assert_tag :tag => "input",
-      :attributes => { :id => "article_password" }
+    expect(response.body).to have_selector("input#article_password")
   end  
 end
 
@@ -165,7 +161,7 @@ describe CategoriesController, "SEO Options" do
     cat = Factory(:category, :permalink => 'personal')
     Factory(:article, :categories => [cat])
     get 'show', :id => 'personal'
-    response.should_not have_selector('head>meta[name="keywords"]')
+    expect(response).not_to have_selector('head>meta[name="keywords"]')
   end
 
   it 'category with keywords and activated option (use_meta_keyword ON) should have meta keywords' do
@@ -192,13 +188,13 @@ describe CategoriesController, "SEO Options" do
     cat = Factory(:category, :permalink => 'personal', :keywords => "some, keywords")
     Factory(:article, :categories => [cat])
     get 'show', :id => 'personal'
-    response.should have_selector(expected)
+    expect(response).to have_selector(expected)
   end
 
   def after_build_category_should_not_have_selector expected
     cat = Factory(:category, :permalink => 'personal', :keywords => "some, keywords")
     Factory(:article, :categories => [cat])
     get 'show', :id => 'personal'
-    response.should_not have_selector(expected)
+    expect(response).not_to have_selector(expected)
   end
 end

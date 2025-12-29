@@ -8,7 +8,7 @@ describe Admin::SettingsController do
     #TODO Remove this line after remove FIXTURE
     Profile.delete_all
     alice = Factory(:user, :login => 'alice', :profile => Factory(:profile_admin, :label => Profile::ADMIN))
-    request.session = { :user => alice.id }
+    request.session = { :user_id => alice.id }
   end
 
   describe "#index" do
@@ -17,7 +17,7 @@ describe Admin::SettingsController do
     end
     
     it 'should render index' do  
-      response.should render_template('index')
+      expect(response).to render_template('index')
     end
   end
 
@@ -27,7 +27,7 @@ describe Admin::SettingsController do
     end
     
     it 'should be success' do
-      assert_template 'write'
+      expect(response).to render_template('write')
     end    
   end
 
@@ -37,14 +37,14 @@ describe Admin::SettingsController do
     end
     
     it 'should be sucess' do
-      assert_template 'feedback'
+      expect(response).to render_template('feedback')
     end    
   end
 
   describe 'redirect action' do
     it 'should be success' do
       get :redirect
-      assert_response :redirect, :controller => 'admin/settings', :action => 'index'
+      expect(response).to be_redirect, :controller => 'admin/settings', :action => 'index'
     end
   end
 
@@ -65,14 +65,14 @@ describe Admin::SettingsController do
 
     it 'should success' do
       good_update
-      response.should redirect_to(:action => 'seo')
+      expect(response).to redirect_to(:action => 'seo')
     end
 
     it 'should not save blog with bad permalink format' do
       @blog = Blog.default
       good_update "setting" => {"permalink_format" => "/%month%"}
-      response.should redirect_to(:action => 'seo')
-      @blog.should == Blog.default
+      expect(response).to redirect_to(:action => 'seo')
+      expect(@blog).to eq(Blog.default)
     end
   end
 end

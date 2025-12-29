@@ -1,6 +1,6 @@
 require_dependency 'spam_protection'
 class Feedback < Content
-  set_table_name "feedback"
+  self.table_name = "feedback"
 
   include TypoGuid
 
@@ -43,11 +43,11 @@ class Feedback < Content
   end
 
   def edit_url(anchor=:ignored)
-    blog.url_for(:controller => "/admin/#{self.class.to_s.downcase}s", :action =>"edit", :id => id)
+    blog.url_for("admin/#{self.class.to_s.downcase}s/edit/#{id}")
   end
 
   def delete_url(anchor=:ignored)
-    blog.url_for(:controller => "/admin/#{self.class.to_s.downcase}s", :action =>"destroy", :id => id)
+    blog.url_for("admin/#{self.class.to_s.downcase}s/destroy/#{id}")
   end
 
   def html_postprocess(field, html)
