@@ -73,7 +73,7 @@ class MovableTypeService < TypoWebService
   before_invocation :authenticate, :except => [:getTrackbackPings, :supportedMethods, :supportedTextFilters]
 
   def getRecentPostTitles(blogid, username, password, numberOfPosts)
-    Article.find(:all,:order => "created_at DESC", :limit => numberOfPosts).collect do |article|
+    Article.order("created_at DESC").limit(numberOfPosts).collect do |article|
       MovableTypeStructs::ArticleTitle.new(
             :dateCreated => article.created_at,
             :userid      => blogid.to_s,
@@ -84,7 +84,7 @@ class MovableTypeService < TypoWebService
   end
 
   def getCategoryList(blogid, username, password)
-    Category.find(:all).collect do |c|
+    Category.all.collect do |c|
       MovableTypeStructs::CategoryList.new(
           :categoryId   => c.id,
           :categoryName => c.name
@@ -120,7 +120,7 @@ class MovableTypeService < TypoWebService
   # Support for markdown and textile formatting dependant on the relevant
   # translators being available.
   def supportedTextFilters()
-    TextFilter.find(:all).collect do |filter|
+    TextFilter.all.collect do |filter|
       MovableTypeStructs::TextFilter.new(:key => filter.name, :label => filter.description)
     end
   end

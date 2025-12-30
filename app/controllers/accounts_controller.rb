@@ -52,7 +52,7 @@ class AccountsController < ApplicationController
       return
     end
 
-    @user = User.new(params[:user])
+    @user = User.new(signup_params)
 
     if request.post?
       @user.password = generate_password
@@ -94,12 +94,24 @@ class AccountsController < ApplicationController
     redirect_to :action => 'login'
   end
 
+  def confirm
+    @page_title = "#{this_blog.blog_name} - #{_('confirm')}"
+  end
+
   private
   def generate_password
     chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a
     newpass = ""
     1.upto(7) { |i| newpass << chars[rand(chars.size-1)] }
     return newpass
+  end
+
+  def signup_params
+    if params[:user].present?
+      params.require(:user).permit(:login, :email, :name)
+    else
+      {}
+    end
   end
 
   def verify_users

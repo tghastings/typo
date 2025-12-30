@@ -1,5 +1,5 @@
 class Sidebar < ActiveRecord::Base
-  serialize :config
+  serialize :config, coder: YAML
 
   # Handle STI subclass lookup errors gracefully for invalid sidebar types
   class << self

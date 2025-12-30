@@ -4,11 +4,22 @@ class Admin::CategoriesController < Admin::BaseController
   def index; redirect_to :action => 'new' ; end
   def edit; new_or_edit;  end
 
-  def new 
+  def new
     respond_to do |format|
       format.html { new_or_edit }
-      format.js { 
+      format.turbo_stream {
         @category = Category.new
+        render turbo_stream: turbo_stream.append(
+          'category_overlay_container',
+          partial: 'admin/categories/overlay_form'
+        )
+      }
+      format.js {
+        @category = Category.new
+        render turbo_stream: turbo_stream.append(
+          'category_overlay_container',
+          partial: 'admin/categories/overlay_form'
+        )
       }
     end
   end
@@ -24,17 +35,35 @@ class Admin::CategoriesController < Admin::BaseController
   private
 
   def new_or_edit
-    @categories = Category.find(:all)
-    @category = Category.find(params[:id])
+    @categories = Category.all
+    @category = params[:id].present? ? Category.find(params[:id]) : Category.new
     @category.attributes = params[:category] if params[:category].present?
     if request.post?
       respond_to do |format|
         format.html { save_category }
-        format.js do 
-          @category.save
-          @article = Article.new
-          @article.categories << @category
-          return render(:partial => 'admin/content/categories')
+        format.turbo_stream do
+          if @category.save
+            @article = Article.new
+            @article.categories << @category
+            render turbo_stream: [
+              turbo_stream.replace('categories', partial: 'admin/content/categories'),
+              turbo_stream.remove('category_overlay')
+            ]
+          else
+            render turbo_stream: turbo_stream.replace('category_overlay', partial: 'admin/categories/overlay_form')
+          end
+        end
+        format.js do
+          if @category.save
+            @article = Article.new
+            @article.categories << @category
+            render turbo_stream: [
+              turbo_stream.replace('categories', partial: 'admin/content/categories'),
+              turbo_stream.remove('category_overlay')
+            ]
+          else
+            render turbo_stream: turbo_stream.replace('category_overlay', partial: 'admin/categories/overlay_form')
+          end
         end
       end
       return

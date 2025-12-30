@@ -3,6 +3,7 @@ require 'spec_helper'
 describe SetupController do
   describe 'when no blog is configured' do
     before do
+      Blog.delete_all
       User.delete_all
       Article.delete_all
       Blog.new.save
@@ -29,7 +30,7 @@ describe SetupController do
         admin = User.find_by_login("admin")
         expect(admin).not_to be_nil
         expect(admin.email).to eq('foo@bar.net')
-        expect(Article.find(:first).user).to eq(admin)
+        expect(Article.first.user).to eq(admin)
       end
 
       it "should log in admin user" do

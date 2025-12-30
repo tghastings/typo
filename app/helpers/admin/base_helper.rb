@@ -266,7 +266,10 @@ module Admin::BaseHelper
   end
 
   def build_editor_link(label, action, id, update, editor)
-    link = link_to(label, "/admin/content/#{action}?editor=#{editor}", class: 'ui-button-text')
+    link = link_to(label, "#",
+      class: 'ui-button-text',
+      onclick: "switchEditor('#{editor}'); return false;"
+    )
     link << image_tag("spinner-blue.gif", :id => "update_spinner_#{id}", :style => 'display:none;')
     link.html_safe
   end

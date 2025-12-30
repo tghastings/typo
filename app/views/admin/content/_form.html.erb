@@ -1,6 +1,7 @@
 <input type="hidden" name="current_editor" id="current_editor" value="<%= current_user.editor %>" />
 <input type="hidden" name="user_textfilter" id="user_textfilter" value="<%= current_user.text_filter_name %>" />
-<div id="autosave"></div>
+<div id="article_id_field"></div>
+<div id="autosave" data-autosave-target="status"></div>
 <div id="article_keywords_auto_complete" class="auto_complete"></div>
 
 <%= error_messages_for 'article' %>
@@ -116,12 +117,12 @@
       </div>
 
       <div id ='visual_editor' <%= "style='display: none;'" if current_user.editor == 'simple'%> >
-        <%= ckeditor_textarea('article', 'body_and_extended', {:class => 'large', :height => '300px', :rows => '20'}) if current_user.editor == 'visual' %>
+        <%= ckeditor_textarea('article', 'body_and_extended', {:class => 'large', :height => '300px', :rows => '20'}) %>
       </div>
 
       <div id='simple_editor' class='input_text' <%= "style='display: none;'" if current_user.editor == 'visual'%> >
-        <%= text_area('article', 'body_and_extended', {:class => 'large', :height => '300px', :rows => '20'}) if current_user.editor == 'simple' %>
-        <%= render_macros(@macros) if current_user.editor == 'simple' %>
+        <%= text_area('article', 'body_and_extended', {:class => 'large', :height => '300px', :rows => '20', :id => 'article_body_and_extended_simple'}) %>
+        <%= render_macros(@macros) %>
       </div>
     </div>
 

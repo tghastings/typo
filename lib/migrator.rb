@@ -11,7 +11,8 @@ module Migrator
   end
 
   def self.current_schema_version
-    ActiveRecord::Base.connection.migration_context.current_version rescue 0
+    # Rails 8 compatible: use ActiveRecord::MigrationContext API
+    ActiveRecord::MigrationContext.new(migrations_path).current_version rescue 0
   end
 
   def self.max_schema_version

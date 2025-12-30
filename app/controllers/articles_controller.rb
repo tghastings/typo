@@ -153,7 +153,7 @@ class ArticlesController < ContentController
   private
 
   def verify_config
-    if  ! this_blog.configured?
+    if this_blog.nil? || ! this_blog.configured?
       redirect_to :controller => "setup", :action => "index"
     elsif User.count == 0
       redirect_to :controller => "accounts", :action => "signup"

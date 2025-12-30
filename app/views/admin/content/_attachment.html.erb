@@ -1,10 +1,13 @@
-<li id="attachment_<%= attachment_num -%>"<% if hidden %> style="display: none;"<% end %>>
+<li id="attachment_<%= attachment_num -%>"<% if hidden %> style="display: none;"<% end %> data-controller="fade-out">
   <%= file_field 'attachments', "filename_#{attachment_num}" -%>
   <%= link_to _("Remove"), "#",
-      onclick: "if (confirm('#{j _('Really delete attachment')} #{attachment_num}?')) { $('#attachment_#{attachment_num}').fadeOut(300, function() { $(this).remove(); }); } return false;" -%>
+      data: { action: "click->fade-out#fadeAndRemove" },
+      onclick: "return confirm('#{j _('Really delete attachment')} #{attachment_num}?');" -%>
 </li>
 <li id="attachment_add_<%= attachment_num.succ %>">
-  <%= link_to _('Add Another Attachment'), { action: "attachment_box_add", id: attachment_num.succ }, remote: true, data: { type: 'script' } -%>
+  <%= link_to _('Add Another Attachment'),
+      { action: "attachment_box_add", id: attachment_num.succ },
+      data: { turbo_stream: true } -%>
 </li>
 
 <% if @article and @article.id %>
@@ -12,13 +15,17 @@
   <% if  @article.resources.count > 0 %>
     <h3><%= _("Currently this article has the following resources")%></h3>
     <% for resource in @article.resources %>
-      <%= link_to "- #{resource.filename}", { action: "resource_remove", id: @article.id, resource_id: resource.id }, remote: true, data: { type: 'script', update: 'resources' } %><br/>
+      <%= link_to "- #{resource.filename}",
+          { action: "resource_remove", id: @article.id, resource_id: resource.id },
+          data: { turbo_stream: true } %><br/>
     <% end %>
   <% end %>
 
   <h3><%= _("You can associate the following resources")%></h3>
   <% for resource in @resources - @article.resources %>
-    <%= link_to "+ #{resource.filename}", { action: "resource_add", id: @article.id, resource_id: resource.id }, remote: true, data: { type: 'script', update: 'resources' } %><br />
+    <%= link_to "+ #{resource.filename}",
+        { action: "resource_add", id: @article.id, resource_id: resource.id },
+        data: { turbo_stream: true } %><br />
   <% end %>
 </li>
 <% end %>

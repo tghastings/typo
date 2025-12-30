@@ -22,6 +22,7 @@ class ContentController < ApplicationController
   protected
 
   def auto_discovery_feed(options = {})
+    return unless this_blog
     # Use explicit base_url to avoid url_for issues
     base = this_blog.base_url
     @auto_discovery_url_rss = "#{base}/articles.rss"
@@ -29,6 +30,7 @@ class ContentController < ApplicationController
   end
 
   def theme_layout
+    return 'application' unless this_blog
     this_blog.current_theme.layout(self.action_name)
   end
 end

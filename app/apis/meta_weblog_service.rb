@@ -68,7 +68,7 @@ class MetaWeblogService < TypoWebService
   before_invocation :authenticate
 
   def getCategories(blogid, username, password)
-    Category.find(:all).collect { |c| c.name }
+    Category.all.collect { |c| c.name }
   end
 
   def getPost(postid, username, password)
@@ -78,7 +78,7 @@ class MetaWeblogService < TypoWebService
   end
 
   def getRecentPosts(blogid, username, password, numberOfPosts)
-    Article.find(:all, :order => "created_at DESC", :limit => numberOfPosts).collect{ |c| article_dto_from(c) }
+    Article.order("created_at DESC").limit(numberOfPosts).collect{ |c| article_dto_from(c) }
   end
 
   def newPost(blogid, username, password, struct, publish)
@@ -103,7 +103,7 @@ class MetaWeblogService < TypoWebService
     end
 
     if struct['categories']
-      Category.find(:all).each do |c|
+      Category.all.each do |c|
         article.categories << c if struct['categories'].include?(c.name)
       end
     end
@@ -134,7 +134,7 @@ class MetaWeblogService < TypoWebService
 
     if struct['categories']
       article.categorizations.clear
-      Category.find(:all).each do |c|
+      Category.all.each do |c|
         article.categories << c if struct['categories'].include?(c.name)
       end
     end

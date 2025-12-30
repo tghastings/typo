@@ -35,6 +35,7 @@
 <%= hidden_field_tag "search", params[:search]%>
 <%= hidden_field_tag "page", params[:page]%>
 
+<%= turbo_frame_tag "feedback_list" do %>
 <table class='zebra-striped'>
 <thead>
   <tr class='noborder'>
@@ -44,18 +45,12 @@
     <th><%= _("Comment")%></th>
     <th><%= _("Article")%></th>
   </tr>
-  
+
 </thead>
   <%= render_void_table(@feedback.size, 5) %>
 
   <% @feedback.each do |comment| %>
-  <tr id='<%= "feedback_#{comment.id}" %>'>
-    <% if comment.state.to_s.downcase == 'spam'  %>
-      <%= render 'spam', {:comment => comment} %>
-    <% else %>
-      <%= render 'ham', {:comment => comment} %>
-    <% end %>
-  </tr>
+    <%= render 'feedback_row', comment: comment %>
   <% end %>
 
   <%= display_pagination(@feedback, 5) %>
@@ -64,6 +59,7 @@
     <th colspan='4'><%= _("Select all") %></th>
   </tr>
 </table>
+<% end %>
 
 <%= render 'button', { :position => 'bottom' } %>
 <% end %>

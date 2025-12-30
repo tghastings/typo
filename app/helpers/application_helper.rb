@@ -3,8 +3,6 @@
 require 'digest/sha1'
 
 module ApplicationHelper
-  # Include CKEditor helper for ckeditor_textarea support
-  include Ckeditor::Helper if defined?(Ckeditor::Helper)
   # Backward compatibility for form_remote_tag (removed in Rails 4+)
   # Convert old Prototype.js remote forms to modern Rails forms
   def form_remote_tag(options = {}, &block)
@@ -100,31 +98,44 @@ module ApplicationHelper
     link_to name, url, html_options
   end
 
-  # Backward compatibility for ckeditor_textarea (CKEditor plugin helper)
-  # Fallback implementation if CKEditor plugin helper is not loaded
+  # Modern rich text editor using Quill (replaces CKEditor)
   def ckeditor_textarea(object, field, options = {})
-    # Try to use the CKEditor plugin's implementation if available
-    return super if defined?(super)
+    rich_editor(object, field, options)
+  end
 
-    # Fallback: render a simple textarea
-    # This ensures the app doesn't break even if CKEditor isn't fully working
+  def rich_editor(object, field, options = {})
     var = instance_variable_get("@#{object}")
     value = var ? (var.send(field.to_sym) || "") : ""
 
-    id = "#{object}_#{field}"
-    cols = options[:cols] || 20
-    rows = options[:rows] || 20
-    width = options[:width] || '100%'
+    id = "#{object}__#{field}_editor"  # Use double underscore to differentiate from simple editor
+    editor_div_id = "#{id}_container"
     height = options[:height] || '300px'
     css_class = options[:class] || ''
+    toolbar = options[:toolbar] || 'full'
 
-    text_area_tag("#{object}[#{field}]", value,
-      id: id,
-      cols: cols,
-      rows: rows,
-      class: css_class,
-      style: "width:#{width};height:#{height}"
-    )
+    content_tag(:div,
+      data: {
+        controller: "rich-editor",
+        rich_editor_placeholder_value: options[:placeholder] || "Start writing...",
+        rich_editor_toolbar_value: toolbar
+      },
+      class: "rich-editor-wrapper #{css_class}") do
+
+      # Hidden input to store the actual value - this will be submitted with the form
+      hidden_field = hidden_field_tag("#{object}[#{field}]", value,
+        id: id,
+        data: { rich_editor_target: "input" }
+      )
+
+      # Editor container
+      editor_div = content_tag(:div, "",
+        id: editor_div_id,
+        data: { rich_editor_target: "editor" },
+        style: "height: #{height}; border: 1px solid #ccc; border-radius: 4px;"
+      )
+
+      hidden_field + editor_div
+    end
   end
 
   # Backward compatibility for error_messages_for (removed in Rails 4+)
@@ -344,7 +355,8 @@ module ApplicationHelper
   <link rel="EditURI" type="application/rsd+xml" title="RSD" href="/xml/rsd" />
   <link rel="alternate" type="application/atom+xml" title="Atom" href="#{ feed_atom }" />
   <link rel="alternate" type="application/rss+xml" title="RSS" href="#{ feed_rss }" />
-  #{ javascript_include_tag 'cookies', 'prototype', 'effects', 'builder', 'typo' }
+  #{ javascript_importmap_tags }
+  #{ javascript_include_tag 'cookies', 'typo' }
   #{ stylesheet_link_tag 'coderay', 'user-styles' }
   #{ javascript_include_lang }
   #{ javascript_tag "window._token = '#{form_authenticity_token}'"}

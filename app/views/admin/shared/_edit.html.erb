@@ -1,5 +1,6 @@
 <% className = form_action.delete(:class) %>
-<%= form_tag(form_action, :id => "#{form_type}_form", :enctype => "multipart/form-data", :class => className) do %>
+<% autosave_url = form_action.merge(action: 'autosave') if className =~ /autosave/ %>
+<%= form_tag(form_action, :id => "#{form_type}_form", :enctype => "multipart/form-data", :class => className, data: autosave_url ? { controller: 'autosave', autosave_url_value: url_for(autosave_url) } : {}) do %>
 
   <%= render :partial => "form" %>
 

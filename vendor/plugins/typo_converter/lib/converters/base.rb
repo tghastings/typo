@@ -117,7 +117,7 @@ class BaseConverter
 
   # Returns all the users from the current Typo site, in a hash indexed by login name.
   def users
-    @users        = ::User.find(:all)
+    @users        = ::User.all
     @default_user = @users.first
     @users.index_by(&:login)
   end
@@ -130,12 +130,12 @@ class BaseConverter
 
   # Returns all Category, in a hash indexed by the category name.
   def categories
-    @categories ||= ::Category.find(:all).index_by(&:name)
+    @categories ||= ::Category.all.index_by(&:name)
   end
 
   # Returns all Tag in a hash indexed by the tag name
   def tags
-    @tags ||= ::Tag.find(:all).index_by(&:name)
+    @tags ||= ::Tag.all.index_by(&:name)
   end
 
   def import_users(&block)

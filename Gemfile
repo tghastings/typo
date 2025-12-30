@@ -1,12 +1,12 @@
 source 'https://rubygems.org'
 
-gem 'rails', '~> 7.0.8'
+gem 'rails', '~> 8.0.0'
 
 # Web server
 gem 'puma'
 
 # Database
-gem 'sqlite3', '~> 1.4'
+gem 'sqlite3', '~> 2.1'  # Rails 8 requires >= 2.1
 
 group :production do
   gem 'pg', '~> 1.5'
@@ -34,6 +34,11 @@ gem 'rails_autolink'  # Provides auto_link helper removed in Rails 4
 gem 'sprockets-rails'
 gem 'sassc-rails'
 
+# Modern JavaScript with Turbo & Stimulus
+gem 'importmap-rails', '~> 2.0'
+gem 'turbo-rails', '~> 2.0'
+gem 'stimulus-rails', '~> 1.3'
+
 # For observers (Rails 7 compatible)
 gem 'rails-observers'
 
@@ -49,6 +54,9 @@ group :development, :test do
   gem 'simplecov', :require => false
   gem 'database_cleaner-active_record'
   gem 'capybara'
+  gem 'selenium-webdriver'  # For system tests with JavaScript
+  gem 'cucumber-rails', require: false
+  gem 'cucumber', '~> 9.0'
   gem 'debug'
   gem 'xmlrpc'  # Required for ping/XML-RPC tests in Ruby 3+
 end

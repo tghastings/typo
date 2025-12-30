@@ -1,11 +1,12 @@
 require 'net/http'
-require './app/models/content.rb'
+# Rails 8: Remove manual require - let Rails autoloading handle it
+# require './app/models/content.rb'
 
 class TextFilter < ActiveRecord::Base
-  serialize :filters
-  serialize :params
+  serialize :filters, coder: YAML
+  serialize :params, coder: YAML
 
-  @text_helper = ContentTextHelpers.new
+  # Rails 8: Removed unused @text_helper = ContentTextHelpers.new (causes loading order issues)
 
   def sanitize(*args,&blk)
     self.class.sanitize(*args,&blk)

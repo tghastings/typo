@@ -1,71 +1,16 @@
-function autosave_request(e) {
-  new Form.Observer (e, 30, function(element, value) {
-			if ($('current_editor').value == 'visual') {
-				$('article__body_and_extended_editor').value = CKEDITOR.instances.article__body_and_extended_editor.getData();;
-			}
+// Typo Administration JavaScript - Rewritten for Stimulus/Turbo (no Prototype dependency)
 
-      new Ajax.Request(e.action.gsub(/\/new\/{0,1}/, '/autosave/') , {
-                                        asynchronous:true,
-                                        evalScripts:true,
-                                        parameters: Form.serialize(e)
-                                      })
-			var g = new k.Growler({location : 'br'});
-			g.info('Article was successfully saved', {life: 3});
-})
+// Note: Most functionality has been moved to Stimulus controllers:
+// - Autosave: app/javascript/controllers/autosave_controller.js
+// - Category overlay: app/javascript/controllers/category_overlay_controller.js
+// - Merge links: Moved to inline Turbo Frames
 
-}
-
-Event.observe(window, 'load', function() {
-  $$('.autosave').each(function(e){autosave_request(e)});
-  $$('#article_form .new_category').each(function(cat_link){ cat_link.observe('click', bind_new_category_overlay); });
-  $$('.merge_link').each(function(merge_link){ merge_link.observe('click', bind_merge_link); });
-})
-
-// UJS for new category link in admin#new_article
-function bind_new_category_overlay(event) {
-  new Ajax.Request(event.element().readAttribute('href'),
-  {
-    method:'get',
-    onSuccess: function(transport){
-      var response = transport.responseText;
-      Element.insert(document.body, {top: response });
-      window.scrollTo(window.pageXOffset, 0); 
-    },
-    onFailure: function(){ alert('Something went wrong...') }
-  });
-  event.stop();
-}
-
-// JS for merging tags links in admin#tags
-function bind_merge_link(e) {
-  var merger = $('tag_merger');
-  if(!merger) { return; }
-  merger.hide();
-  // Take calling element, then take informations
-  var tag_id = e.element()['id'] + 0;
-  var tag_name = e.element().up(1).previous().text;
-  merger.down('span').update(tag_name);
-  merger.show();
-  e.stop();
-}
+// This file now only contains the QuickTags editor which doesn't require Prototype
 
 // JS QuickTags version 1.3.1
-//
 // Copyright (c) 2002-2008 Alex King
 // http://alexking.org/projects/js-quicktags
-//
-// Thanks to Greg Heo <greg@node79.com> for his changes
-// to support multiple toolbars per page.
-//
 // Licensed under the LGPL license
-// http://www.gnu.org/copyleft/lesser.html
-//
-// **********************************************************************
-// This program is distributed in the hope that it will be useful, but
-// WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-// **********************************************************************
-
 
 var dictionaryUrl = 'http://www.ninjawords.com/';
 var edButtons = new Array();
@@ -73,133 +18,26 @@ var edLinks = new Array();
 var edOpenTags = new Array();
 
 function edButton(id, display, tagStart, tagEnd, access, open) {
-	this.id = id;				// used to name the toolbar button
-	this.display = display;		// label on button
-	this.tagStart = tagStart; 	// open tag
-	this.tagEnd = tagEnd;		// close tag
-	this.access = access;			// set to -1 if tag does not need to be closed
-	this.open = open;			// set to -1 if tag does not need to be closed
+	this.id = id;
+	this.display = display;
+	this.tagStart = tagStart;
+	this.tagEnd = tagEnd;
+	this.access = access;
+	this.open = open;
 }
 
-edButtons.push(
-	new edButton(
-		'ed_bold'
-		,'b'
-		,'<strong>'
-		,'</strong>'
-		,'b'
-	)
-);
-
-edButtons.push(
-	new edButton(
-		'ed_italic'
-		,'i'
-		,'<em>'
-		,'</em>'
-		,'i'
-	)
-);
-
-edButtons.push(
-	new edButton(
-		'ed_link'
-		,'link'
-		,''
-		,'</a>'
-		,'a'
-	)
-); // special case
-
-edButtons.push(
-	new edButton(
-		'ed_img'
-		,'img'
-		,''
-		,''
-		,'m'
-		,-1
-	)
-); // special case
-
-edButtons.push(
-	new edButton(
-		'ed_ul'
-		,'ul'
-		,'<ul>\n'
-		,'</ul>\n\n'
-		,'u'
-	)
-);
-
-edButtons.push(
-	new edButton(
-		'ed_ol'
-		,'ol'
-		,'<ol>\n'
-		,'</ol>\n\n'
-		,'o'
-	)
-);
-
-edButtons.push(
-	new edButton(
-		'ed_li'
-		,'li'
-		,'\t<li>'
-		,'</li>\n'
-		,'l'
-	)
-);
-
-edButtons.push(
-	new edButton(
-		'ed_block'
-		,'b-quote'
-		,'<blockquote>'
-		,'</blockquote>'
-		,'q'
-	)
-);
-
-edButtons.push(
-	new edButton(
-		'ed_del'
-		,'del'
-		,'<del>'
-		,'</del>'
-	)
-);
-
-edButtons.push(
-	new edButton(
-		'ed_code'
-		,'code'
-		,'<code>'
-		,'</code>'
-		,'c'
-	)
-);
-
-edButtons.push(
-	new edButton(
-		'ed_more'
-		,'more'
-		,'\n<!--more-->\n'
-		,''
-		,''
-	)
-);
-
-edButtons.push(
-	new edButton(
-		'ed_typocode'
-		,'typo:code'
-		,''
-		,'\n</typo:code>\n\n'
-		,'typo:code'
-	)
-);
+edButtons.push(new edButton('ed_bold', 'b', '<strong>', '</strong>', 'b'));
+edButtons.push(new edButton('ed_italic', 'i', '<em>', '</em>', 'i'));
+edButtons.push(new edButton('ed_link', 'link', '', '</a>', 'a'));
+edButtons.push(new edButton('ed_img', 'img', '', '', 'm', -1));
+edButtons.push(new edButton('ed_ul', 'ul', '<ul>\n', '</ul>\n\n', 'u'));
+edButtons.push(new edButton('ed_ol', 'ol', '<ol>\n', '</ol>\n\n', 'o'));
+edButtons.push(new edButton('ed_li', 'li', '\t<li>', '</li>\n', 'l'));
+edButtons.push(new edButton('ed_block', 'b-quote', '<blockquote>', '</blockquote>', 'q'));
+edButtons.push(new edButton('ed_del', 'del', '<del>', '</del>'));
+edButtons.push(new edButton('ed_code', 'code', '<code>', '</code>', 'c'));
+edButtons.push(new edButton('ed_more', 'more', '\n<!--more-->\n', '', ''));
+edButtons.push(new edButton('ed_typocode', 'typo:code', '', '\n</typo:code>\n\n', 'typo:code'));
 
 var extendedStart = edButtons.length;
 
@@ -212,10 +50,7 @@ function edLink(display, URL, newWin) {
 	this.newWin = newWin;
 }
 
-
-edLinks[edLinks.length] = new edLink('alexking.org'
-                                    ,'http://www.alexking.org/'
-                                    );
+edLinks[edLinks.length] = new edLink('alexking.org', 'http://www.alexking.org/');
 
 function edShowButton(which, button, i) {
 	if (button.access) {
@@ -273,10 +108,10 @@ function edCheckOpenTags(which, button) {
 		}
 	}
 	if (tag > 0) {
-		return true; // tag found
+		return true;
 	}
 	else {
-		return false; // tag not found
+		return false;
 	}
 }
 
@@ -334,31 +169,19 @@ function edToolbar(which) {
 	for (i = 0; i < extendedStart; i++) {
 		edShowButton(which, edButtons[i], i);
 	}
-	if (edShowExtraCookie()) {
-		document.write(
-			'<input type="button" id="ed_close_' + which + '" class="btn" onclick="edCloseAllTags(\'' + which + '\');" value="Close Tags" />'
-			+ '<input type="button" id="ed_spell_' + which + '" class="btn" onclick="edSpell(\'' + which + '\');" value="Dict" />'
-		);
-	}
-	else {
-		document.write(
-			'<input type="button" id="ed_close_' + which + '" class="btn" onclick="edCloseAllTags(\'' + which + '\');" value="Close Tags" />'
-			+ '<input type="button" id="ed_spell_' + which + '" class="btn" onclick="edSpell(\'' + which + '\');" value="Dict" />'
-		);
-	}
+	document.write(
+		'<input type="button" id="ed_close_' + which + '" class="btn" onclick="edCloseAllTags(\'' + which + '\');" value="Close Tags" />'
+		+ '<input type="button" id="ed_spell_' + which + '" class="btn" onclick="edSpell(\'' + which + '\');" value="Dict" />'
+	);
 	for (i = extendedStart; i < edButtons.length; i++) {
 		edShowButton(which, edButtons[i], i);
 	}
-//	edShowLinks();
 	document.write('</div>');
     edOpenTags[which] = new Array();
 }
 
-// insertion code
-
 function edInsertTag(which, i) {
     myField = document.getElementById(which);
-	//IE support
 	if (document.selection) {
 		myField.focus();
 	    sel = document.selection.createRange();
@@ -377,7 +200,6 @@ function edInsertTag(which, i) {
 		}
 		myField.focus();
 	}
-	//MOZILLA/NETSCAPE support
 	else if (myField.selectionStart || myField.selectionStart == '0') {
 		var startPos = myField.selectionStart;
 		var endPos = myField.selectionEnd;
@@ -427,14 +249,12 @@ function edInsertTag(which, i) {
 
 function edInsertContent(which, myValue) {
     myField = document.getElementById(which);
-	//IE support
 	if (document.selection) {
 		myField.focus();
 		sel = document.selection.createRange();
 		sel.text = myValue;
 		myField.focus();
 	}
-	//MOZILLA/NETSCAPE support
 	else if (myField.selectionStart || myField.selectionStart == '0') {
 		var startPos = myField.selectionStart;
 		var endPos = myField.selectionEnd;
@@ -458,7 +278,7 @@ function edInsertLink(which, i, defaultValue) {
 		defaultValue = 'http://';
 	}
 	if (!edCheckOpenTags(which, i)) {
-		var URL = prompt('Enter the URL' ,defaultValue);
+		var URL = prompt('Enter the URL', defaultValue);
 		if (URL) {
 			edButtons[i].tagStart = '<a href="' + URL + '">';
 			edInsertTag(which, i);
@@ -475,7 +295,7 @@ function edInsertTypoCode(which, i, defaultValue) {
 		defaultValue = '';
 	}
 	if (!edCheckOpenTags(which, i)) {
-		var code = prompt('Choose language' ,defaultValue);
+		var code = prompt('Choose language', defaultValue);
 		if (code) {
 			edButtons[i].tagStart = '<typo:code lang="' + code + '">\n';
 			edInsertTag(which, i);
@@ -485,7 +305,6 @@ function edInsertTypoCode(which, i, defaultValue) {
 		edInsertTag(which, i);
 	}
 }
-
 
 function edInsertImage(which) {
     myField = document.getElementById(which);
@@ -525,7 +344,6 @@ function edInsertVia(which) {
 		edInsertContent(which, myValue);
 	}
 }
-
 
 function edSetCookie(name, value, expires, path, domain) {
 	document.cookie= name + "=" + escape(value) +

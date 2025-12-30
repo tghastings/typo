@@ -5,7 +5,7 @@ class Page < Content
 
   include ConfigManager
 
-  serialize :settings, Hash
+  serialize :settings, coder: YAML, type: Hash
   setting :password, :string, ''
 
   before_save :set_permalink

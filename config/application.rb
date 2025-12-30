@@ -16,8 +16,8 @@ require_relative '../vendor/plugins/calendar_date_select/lib/calendar_date_selec
 
 module TypoBlog
   class Application < Rails::Application
-    # Initialize configuration defaults for Rails 7.0
-    config.load_defaults 7.0
+    # Initialize configuration defaults for Rails 8.0
+    config.load_defaults 8.0
 
     # Settings in config/environments/* take precedence over those specified here.
 

@@ -214,6 +214,7 @@ FactoryBot.define do
     end
 
     factory :profile_admin do
+      label { 'admin' }
       nicename { 'Typo administrator' }
       modules { [:dashboard, :write, :articles, :pages, :feedback, :themes, :sidebar, :users, :seo, :media, :settings, :profile] }
     end

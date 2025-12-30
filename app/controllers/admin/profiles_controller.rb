@@ -3,12 +3,24 @@ class Admin::ProfilesController < Admin::BaseController
 
   def index
     @user = current_user
-    @profiles = Profile.find(:all, :order => 'id')
-    @user.attributes = params[:user] if params[:user].present?
+    @profiles = Profile.order(:id)
+    @user.attributes = profile_params if params[:user].present?
     if request.post? and @user.save
-      current_user = @user
+      self.current_user = @user
       flash[:notice] = _('User was successfully updated.')
     end
   end
 
+  private
+
+  def profile_params
+    params.require(:user).permit(
+      :email, :name, :login, :password, :password_confirmation,
+      :firstname, :lastname, :nickname, :description, :url,
+      :msn, :aim, :yahoo, :twitter, :jabber,
+      :show_url, :show_msn, :show_aim, :show_yahoo, :show_twitter, :show_jabber,
+      :notify_via_email, :notify_on_new_articles, :notify_on_comments,
+      :editor, :admin_theme, :text_filter_id
+    )
+  end
 end

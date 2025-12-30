@@ -99,7 +99,8 @@ end
 
 # Requires supporting ruby files with custom matchers and macros, etc,
 # in spec/support/ and its subdirectories.
-Dir[Rails.root.join("spec/support/**/*.rb")].each {|f| require f}
+# Exclude mocks directory for now as it will be loaded conditionally
+Dir[Rails.root.join("spec/support/**/*.rb")].reject { |f| f.include?('/mocks/') }.each {|f| require f}
 
 RSpec.configure do |config|
   config.mock_with :rspec
@@ -107,10 +108,48 @@ RSpec.configure do |config|
   config.include FactoryBot::Syntax::Methods
   config.render_views
 
+  # Load HTTP mocks only for non-system tests (Selenium needs real HTTP)
+  config.before(:suite) do
+    unless ENV['SKIP_HTTP_MOCKS']
+      # Only load mocks for non-system test suites
+      if RSpec.configuration.files_to_run.none? { |f| f.include?('spec/system') }
+        Dir[Rails.root.join("spec/support/mocks/*.rb")].each {|f| require f}
+      end
+    end
+  end
+
   # Text filters are seeded by db/seeds.rb, no need to create them here
 
   config.before(:each) do
     Localization.lang = :default
+
+    # Ensure essential database records exist to prevent test pollution
+    # Create default text filters if they don't exist
+    unless TextFilter.find_by(name: 'textile')
+      FactoryBot.create(:textile)
+    end
+    unless TextFilter.find_by(name: 'markdown')
+      FactoryBot.create(:markdown)
+    end
+    unless TextFilter.find_by(name: 'none')
+      FactoryBot.create(:none_filter)
+    end
+
+    # Ensure default profiles exist
+    unless Profile.find_by(label: 'admin')
+      FactoryBot.create(:profile_admin)
+    end
+    unless Profile.find_by(label: 'publisher')
+      FactoryBot.create(:profile_publisher)
+    end
+    unless Profile.find_by(label: 'contributor')
+      FactoryBot.create(:profile_contributor)
+    end
+
+    # Ensure a Blog record exists
+    unless Blog.first
+      FactoryBot.create(:blog)
+    end
   end
 
   # Disable deprecated should syntax warnings

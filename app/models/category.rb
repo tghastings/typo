@@ -1,6 +1,9 @@
 class Category < ActiveRecord::Base
   acts_as_list
-  acts_as_tree
+
+  # Tree structure (replacing acts_as_tree for Rails 8 compatibility)
+  belongs_to :parent, class_name: 'Category', optional: true
+  has_many :children, class_name: 'Category', foreign_key: 'parent_id'
 
   has_many :categorizations
   has_many :articles, -> { order("published_at DESC, created_at DESC") }, through: :categorizations

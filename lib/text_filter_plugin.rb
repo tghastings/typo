@@ -115,34 +115,51 @@ end
 class TextFilterPlugin::Markup < TextFilterPlugin
 end
 
-class Typo
-  class Textfilter
-    class MacroPost < TextFilterPlugin
-      plugin_display_name "MacroPost"
-      plugin_description "Macro expansion meta-filter (post-markup)"
+# Only define these classes if they haven't been defined yet (Rails 8 autoloading fix)
+unless defined?(Typo::Textfilter::MacroPostExpander)
+  class Typo
+    class Textfilter
+      class MacroPostExpander < TextFilterPlugin::MacroPost
+        plugin_display_name "MacroPost"
+        plugin_description "Macro expansion meta-filter (post-markup)"
 
-      def self.filtertext(blog,content,text,params)
-        filterparams = params[:filterparams]
+        def self.short_name
+          "macropost"
+        end
 
-        macros = TextFilter.available_filter_types['macropost']
-        macros.inject(text) do |text,macro|
-          macro.filtertext(blog,content,text,params)
+        def self.filtertext(blog,content,text,params)
+          filterparams = params[:filterparams]
+
+          # Exclude self to prevent infinite recursion
+          macros = TextFilter.available_filter_types['macropost'].reject { |m| m == self }
+          macros.inject(text) do |text,macro|
+            macro.filtertext(blog,content,text,params)
+          end
         end
       end
-    end
 
-    class MacroPre < TextFilterPlugin
-      plugin_display_name "MacroPre"
-      plugin_description "Macro expansion meta-filter (pre-markup)"
+      class MacroPreExpander < TextFilterPlugin::MacroPre
+        plugin_display_name "MacroPre"
+        plugin_description "Macro expansion meta-filter (pre-markup)"
 
-      def self.filtertext(blog,content,text,params)
-        filterparams = params[:filterparams]
+        def self.short_name
+          "macropre"
+        end
 
-        macros = TextFilter.available_filter_types['macropre']
-        macros.inject(text) do |text,macro|
-          macro.filtertext(blog,content,text,params)
+        def self.filtertext(blog,content,text,params)
+          filterparams = params[:filterparams]
+
+          # Exclude self to prevent infinite recursion
+          macros = TextFilter.available_filter_types['macropre'].reject { |m| m == self }
+          macros.inject(text) do |text,macro|
+            macro.filtertext(blog,content,text,params)
+          end
         end
       end
     end
   end
 end
+
+# Re-register the macro expanders under their correct short names
+TextFilterPlugin.filter_map["macropost"] = Typo::Textfilter::MacroPostExpander
+TextFilterPlugin.filter_map["macropre"] = Typo::Textfilter::MacroPreExpander

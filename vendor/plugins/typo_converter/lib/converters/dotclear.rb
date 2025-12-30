@@ -58,7 +58,7 @@ class DotclearConverter < BaseConverter
   end
 
   def old_users
-    @old_users ||= Dotclear::User.find(:all).index_by &:user_id
+    @old_users ||= Dotclear::User.all.index_by &:user_id
   end
 
   def get_login(dc_user)

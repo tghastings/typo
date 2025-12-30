@@ -111,13 +111,21 @@ Rails.application.routes.draw do
   get 'accounts/logout', to: 'accounts#logout', as: :logout
   get 'accounts/recover_password', to: 'accounts#recover_password'
   post 'accounts/recover_password', to: 'accounts#recover_password'
+  get 'accounts/signup', to: 'accounts#signup', as: :signup
+  post 'accounts/signup', to: 'accounts#signup'
+  get 'accounts/confirm', to: 'accounts#confirm', as: :accounts_confirm
   get 'accounts/:action', to: 'accounts#index'
 
   # Admin controllers
   namespace :admin do
+    # Admin root redirects to dashboard
+    root to: redirect('/admin/dashboard')
+
     # Explicit routes for common actions that views link to
     get 'content/new', to: 'content#new', as: 'new_content'
+    post 'content/new', to: 'content#new'
     get 'pages/new', to: 'pages#new', as: 'new_page'
+    post 'pages/new', to: 'pages#new'
     get 'users/edit/:id', to: 'users#edit', as: 'edit_user'
 
     # Explicit routes for themes
@@ -130,10 +138,13 @@ Rails.application.routes.draw do
     get 'dashboard', to: 'dashboard#index'
     get 'dashboard/index', to: 'dashboard#index'
 
+    # Profile update route (POST to index)
+    post 'profiles', to: 'profiles#index'
+
     %w{advanced cache categories comments content profiles feedback general pages
        resources sidebar textfilters trackbacks users settings tags redirects seo post_types}.each do |ctrl|
       get "/#{ctrl}", to: "#{ctrl}#index", as: nil
-      get "/#{ctrl}/:action", controller: ctrl, as: nil
+      match "/#{ctrl}/:action", controller: ctrl, via: [:get, :post], as: nil
       match "/#{ctrl}/:action/:id", controller: ctrl, via: :all, as: nil
     end
   end

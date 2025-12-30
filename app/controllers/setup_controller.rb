@@ -46,7 +46,7 @@ class SetupController < ApplicationController
   end
 
   def check_config
-    return unless this_blog.configured?
+    return unless this_blog && this_blog.configured?
     redirect_to :controller => 'articles', :action => 'index'
   end
 end

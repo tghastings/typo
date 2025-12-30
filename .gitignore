@@ -23,3 +23,5 @@ public/cache/*
 .rbenv-version
 bin/
 .bundle/
+log/test.log.0
+log/*.log.*

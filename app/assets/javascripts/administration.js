@@ -19,6 +19,26 @@ Event.observe(window, 'load', function() {
   $$('.autosave').each(function(e){autosave_request(e)});
   $$('#article_form .new_category').each(function(cat_link){ cat_link.observe('click', bind_new_category_overlay); });
   $$('.merge_link').each(function(merge_link){ merge_link.observe('click', bind_merge_link); });
+
+  // Handle form submission - sync editors and disable inactive one
+  var articleForm = $('article_form');
+  if (articleForm) {
+    articleForm.observe('submit', function(e) {
+      var currentEditor = $('current_editor') ? $('current_editor').value : 'visual';
+
+      if (currentEditor == 'visual') {
+        // Using visual editor - disable simple editor field
+        if ($('article_body_and_extended_simple')) {
+          $('article_body_and_extended_simple').disabled = true;
+        }
+      } else {
+        // Using simple editor - disable visual editor hidden field
+        if ($('article__body_and_extended_editor')) {
+          $('article__body_and_extended_editor').disabled = true;
+        }
+      }
+    });
+  }
 })
 
 // UJS for new category link in admin#new_article
@@ -551,4 +571,74 @@ function edShowExtraCookie() {
 		}
 	}
 	return false;
+}
+
+// Switch between visual and simple editor modes
+function switchEditor(editor) {
+	// Update current editor field
+	if ($('current_editor')) {
+		$('current_editor').value = editor;
+	}
+
+	if (editor == 'visual') {
+		// Switch to visual (Quill) editor
+		if ($('quicktags')) $('quicktags').style.display = 'none';
+		if ($('simple_editor')) $('simple_editor').style.display = 'none';
+		if ($('visual_editor')) $('visual_editor').style.display = 'block';
+		if ($('s')) $('s').className = '';
+		if ($('f')) $('f').className = 'active';
+		if ($('text_filter')) $('text_filter').value = 'none';
+
+		// Get content from simple editor textarea
+		var content = '';
+		if ($('article_body_and_extended_simple')) {
+			content = $('article_body_and_extended_simple').value;
+		}
+
+		// Wait for Quill to initialize and set content
+		setTimeout(function() {
+			var editorElement = document.querySelector('#visual_editor [data-rich-editor-target="editor"]');
+			if (editorElement && editorElement.quill) {
+				editorElement.quill.root.innerHTML = content;
+				// Update the hidden field that gets submitted
+				if ($('article__body_and_extended_editor')) {
+					$('article__body_and_extended_editor').value = content;
+				}
+			}
+		}, 100);
+
+		if ($('carousel-wrapper')) $('carousel-wrapper').style.display = 'none';
+
+	} else if (editor == 'simple') {
+		// Switch to simple (HTML) editor
+		if ($('quicktags')) $('quicktags').style.display = 'block';
+		if ($('simple_editor')) $('simple_editor').style.display = 'block';
+		if ($('s')) $('s').className = 'active';
+		if ($('f')) $('f').className = '';
+
+		// Get user's default text filter
+		if ($('user_textfilter') && $('text_filter')) {
+			$('text_filter').value = $('user_textfilter').value;
+		}
+
+		// Get content from Quill editor if it exists
+		var content = '';
+		var editorElement = document.querySelector('#visual_editor [data-rich-editor-target="editor"]');
+		if (editorElement && editorElement.quill) {
+			content = editorElement.quill.root.innerHTML;
+		} else if ($('article__body_and_extended_editor')) {
+			content = $('article__body_and_extended_editor').value;
+		}
+
+		// Set content in simple editor textarea
+		if ($('article_body_and_extended_simple')) {
+			$('article_body_and_extended_simple').value = content;
+		}
+
+		if ($('visual_editor')) {
+			$('visual_editor').style.display = 'none';
+		}
+
+		if ($('carousel-wrapper')) $('carousel-wrapper').style.display = 'block';
+	}
 }

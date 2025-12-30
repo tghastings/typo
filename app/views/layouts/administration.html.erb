@@ -5,12 +5,89 @@
   <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
   <title><%= this_blog.blog_name %> – <%= controller.controller_name %></title>
   <meta http-equiv="imagetoolbar" content="no" />
-  <%= stylesheet_link_tag "growler", "bootstrap", "administration_structure", "lightbox" %>
-  <%= javascript_include_tag "prototype", "effects", "builder", "dragdrop", "controls", "typo", "lightbox", "growler", "typo_carousel", "administration", "ckeditor/ckeditor" %>
+  <%= stylesheet_link_tag "bootstrap", "administration_structure", "lightbox" %>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+  <%= javascript_importmap_tags %>
+  <%= javascript_include_tag "prototype", "builder", "effects", "controls", "dragdrop", "typo", "lightbox", "typo_carousel", "administration" %>
   <%= calendar_date_select_includes %>
   <style type="text/css">
     #carousel-content .slide { width: <%= this_blog.image_thumb_size %>; }
+
+    /* Ensure editors are visible and properly sized */
+    #visual_editor .rich-editor-wrapper { margin-bottom: 10px; }
+    #visual_editor .ql-container { min-height: 300px; background: white; }
+    #visual_editor .ql-editor { min-height: 300px; }
+    #simple_editor textarea { min-height: 300px; width: 100%; background: white; }
+    .ql-toolbar { background: #f3f3f3; border: 1px solid #ccc !important; }
+
+    /* Fix footer positioning */
+    footer {
+      clear: both;
+      position: relative;
+      z-index: 1;
+      margin-left: 220px; /* Same as sidebar width */
+      padding: 20px;
+      text-align: center;
+      background: #f5f5f5;
+      border-top: 1px solid #ddd;
+    }
   </style>
+  <script>
+    // Fallback Quill initialization without Stimulus
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM loaded, initializing Quill...');
+
+      // Find editor container
+      var editorContainer = document.querySelector('[data-rich-editor-target="editor"]');
+      var hiddenInput = document.querySelector('[data-rich-editor-target="input"]');
+
+      if (editorContainer && typeof Quill !== 'undefined') {
+        console.log('Found editor container, creating Quill instance...');
+
+        var quill = new Quill(editorContainer, {
+          theme: 'snow',
+          placeholder: 'Start writing...',
+          modules: {
+            toolbar: [
+              [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+              ['bold', 'italic', 'underline', 'strike'],
+              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+              [{ 'indent': '-1'}, { 'indent': '+1' }],
+              [{ 'align': [] }],
+              ['blockquote', 'code-block'],
+              ['link', 'image'],
+              [{ 'color': [] }, { 'background': [] }],
+              ['clean']
+            ]
+          }
+        });
+
+        console.log('Quill created!', quill);
+
+        // Store reference for switchEditor
+        editorContainer.quill = quill;
+        window.quillEditor = quill;
+
+        // Set initial content
+        if (hiddenInput && hiddenInput.value) {
+          quill.root.innerHTML = hiddenInput.value;
+        }
+
+        // Sync content to hidden input
+        quill.on('text-change', function() {
+          if (hiddenInput) {
+            hiddenInput.value = quill.root.innerHTML;
+          }
+        });
+      } else {
+        console.log('No editor container found or Quill not loaded');
+        console.log('Editor container:', editorContainer);
+        console.log('Quill:', typeof Quill);
+      }
+    });
+  </script>
 </head>
 <body>
   <div class='topbar'>
@@ -18,9 +95,9 @@
       <div class='container-fluid'>
         <%= link_to this_blog.blog_name, this_blog.base_url, { :class => 'brand' } %>
         <ul class="nav secondary-nav">
-          <li class="dropdown" onmouseover='$("user_menu").style.display = "block"' onmouseout='$("user_menu").style.display = "none"'>
-            <a class="dropdown-toggle" href="#"><%= _("Logged in as %s", current_user.nickname)%></a>
-            <ul class="dropdown-menu" id="user_menu" style='display: none'>
+          <li class="dropdown" data-controller="dropdown">
+            <a class="dropdown-toggle" href="#" data-action="click->dropdown#toggle"><%= _("Logged in as %s", current_user.nickname)%></a>
+            <ul class="dropdown-menu" data-dropdown-target="menu" style='display: none'>
               <li><%= link_to(_("New Article"), '/admin/content/new') %></li>
               <li><%= link_to _("Profile"), '/admin/profiles'  %></li>
               <li><%= link_to _("%s &raquo;", "Log out").html_safe, '/accounts/logout' %></li>
@@ -28,9 +105,9 @@
           </li>
         </ul>
         <ul class="nav secondary-nav">
-          <li class="dropdown" onmouseover='$("help_menu").style.display = "block"' onmouseout='$("help_menu").style.display = "none"'>
-            <a class="dropdown-toggle" href="#"><%= _("Help")%></a>
-            <ul class="dropdown-menu" id="help_menu" style="display: none;">
+          <li class="dropdown" data-controller="dropdown">
+            <a class="dropdown-toggle" href="#" data-action="click->dropdown#toggle"><%= _("Help")%></a>
+            <ul class="dropdown-menu" data-dropdown-target="menu" style="display: none;">
               <li><%= link_to _("Documentation"), "https://github.com/fdv/typo/wiki" %></li>
               <li><%= link_to _("Report a bug"), "https://github.com/fdv/typo/issues" %></li>
               <li><%= link_to _("In page plugins"), "https://github.com/fdv/typo/wiki/In-Page-Plugins" %></li>

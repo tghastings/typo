@@ -115,8 +115,6 @@ class Admin::FeedbackController < Admin::BaseController
   end
 
   def change_state
-    return unless request.xhr?
-
     feedback = Feedback.find(params[:id])
     if (feedback.state.to_s.downcase == 'spam')
       feedback.mark_as_ham!
@@ -124,16 +122,17 @@ class Admin::FeedbackController < Admin::BaseController
       feedback.mark_as_spam!
     end
 
-    template = (feedback.state.to_s.downcase == 'spam') ? 'spam' : 'ham'
-    # Return JSON response with HTML for JavaScript to update the page
-    if params[:context] != 'listing'
-      render json: { action: 'fade', id: feedback.id }
-    else
-      render json: {
-        action: 'replace',
-        id: feedback.id,
-        html: render_to_string(partial: template, locals: { comment: feedback })
-      }
+    # Use Turbo Streams to update the UI
+    respond_to do |format|
+      format.turbo_stream do
+        template = (feedback.state.to_s.downcase == 'spam') ? 'spam' : 'ham'
+        render turbo_stream: turbo_stream.replace(
+          "feedback_#{feedback.id}",
+          partial: 'admin/feedback/feedback_row',
+          locals: { comment: feedback, template: template }
+        )
+      end
+      format.html { redirect_to admin_feedback_index_path }
     end
   end
 

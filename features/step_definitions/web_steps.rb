@@ -32,15 +32,26 @@ end
 World(WithinHelpers)
 
 Given /^the blog is set up$/ do
-  Blog.default.update_attributes!({:blog_name => 'Teh Blag',
-                                   :base_url => 'http://localhost:3000'});
-  Blog.default.save!
-  User.create!({:login => 'admin',
-                :password => 'aaaaaaaa',
-                :email => 'joe@snow.com',
-                :profile_id => 1,
-                :name => 'admin',
-                :state => 'active'})
+  # Create blog if it doesn't exist
+  blog = Blog.default || Blog.create!({:blog_name => 'Teh Blag', :base_url => 'http://localhost:3000'})
+  blog.update!({:blog_name => 'Teh Blag',
+                :base_url => 'http://localhost:3000'});
+  blog.save!
+
+  # Create profile first, then user
+  profile = Profile.find_or_create_by!(id: 1) do |p|
+    p.label = 'admin'
+    p.nicename = 'admin'
+    p.modules = []  # modules expects an array, not a string
+  end
+
+  User.find_or_create_by!(login: 'admin') do |u|
+    u.password = 'aaaaaaaa'
+    u.email = 'joe@snow.com'
+    u.profile_id = profile.id
+    u.name = 'admin'
+    u.state = 'active'
+  end
 end
 
 And /^I am logged into the admin panel$/ do
@@ -81,9 +92,10 @@ When /^(?:|I )follow "([^"]*)"$/ do |link|
   click_link(link)
 end
 
-When /^(?:|I )fill in "([^"]*)" with "([^"]*)"$/ do |field, value|
-  fill_in(field, :with => value)
-end
+# Commented out - duplicate of common_steps.rb definition
+# When /^(?:|I )fill in "([^"]*)" with "([^"]*)"$/ do |field, value|
+#   fill_in(field, :with => value)
+# end
 
 When /^(?:|I )fill in "([^"]*)" for "([^"]*)"$/ do |value, field|
   fill_in(field, :with => value)
@@ -126,13 +138,14 @@ When /^(?:|I )attach the file "([^"]*)" to "([^"]*)"$/ do |path, field|
   attach_file(field, File.expand_path(path))
 end
 
-Then /^(?:|I )should see "([^"]*)"$/ do |text|
-  if page.respond_to? :should
-    page.should have_content(text)
-  else
-    assert page.has_content?(text)
-  end
-end
+# Commented out - duplicate of common_steps.rb definition
+# Then /^(?:|I )should see "([^"]*)"$/ do |text|
+#   if page.respond_to? :should
+#     page.should have_content(text)
+#   else
+#     assert page.has_content?(text)
+#   end
+# end
 
 Then /^(?:|I )should see \/([^\/]*)\/$/ do |regexp|
   regexp = Regexp.new(regexp)

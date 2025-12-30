@@ -4,19 +4,23 @@
   $('s').className = 'active';
   $('f').className = '';
   $('text_filter').value = $('user_textfilter').value;
-  
-  content = CKEDITOR.instances.article__body_and_extended_editor.getData();
-  
-    if (CKEDITOR.instances.article__body_and_extended_editor &&
-      typeof(CKEDITOR.instances.article__body_and_extended_editor) == 'object') {
-        delete(CKEDITOR.instances.article__body_and_extended_editor);
-      }
-  
+
+  // Get content from Quill editor if it exists
+  var content = '';
+  var editorElement = document.querySelector('#visual_editor [data-rich-editor-target="editor"]');
+  if (editorElement && editorElement.quill) {
+    content = editorElement.quill.root.innerHTML;
+  } else {
+    content = $('article_body_and_extended').value;
+  }
+
 </script>
 <%= text_area('article', 'body_and_extended', {:class => 'large', :height => '300px', :rows => '20'}) %>
 <script type="text/javascript">
   $('visual_editor').innerHTML = "";
   $('visual_editor').style.display = 'none';
-  $('article_body_and_extended').innerHTML = content;
-  $('carousel-wrapper').style.display = 'block';
+  $('article_body_and_extended').value = content;
+  if ($('carousel-wrapper')) {
+    $('carousel-wrapper').style.display = 'block';
+  }
 </script>

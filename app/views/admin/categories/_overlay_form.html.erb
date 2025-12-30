@@ -1,0 +1,126 @@
+<div id="category_overlay" class="modal" data-controller="category-overlay" data-category-overlay-target="modal" style="display: block;">
+  <div class="modal-backdrop" data-category-overlay-target="backdrop" data-action="click->category-overlay#closeOnBackdrop"></div>
+
+  <div class="modal-content" data-action="keydown@window->category-overlay#closeOnEscape">
+    <div class="modal-header">
+      <h3><%= _("New Category") %></h3>
+      <%= link_to 'X', '#close',
+          title: _('close'),
+          class: 'close-button',
+          data: { action: "click->category-overlay#hide" } %>
+    </div>
+
+    <div class="modal-body">
+      <%= form_with model: @category,
+          url: { controller: 'admin/categories', action: 'edit', id: @category.id },
+          data: {
+            category_overlay_target: "form",
+            action: "submit->category-overlay#submit"
+          } do |f| %>
+
+        <%= error_messages_for 'category' %>
+
+        <div class='clearfix'>
+          <%= f.label :name, _("Name") %>
+          <div class='input'>
+            <%= f.text_field :name, class: 'large' %>
+          </div>
+        </div>
+
+        <div class='clearfix'>
+          <%= f.label :keywords, _("Keywords") %>
+          <div class='input'>
+            <%= f.text_field :keywords, class: 'large' %>
+          </div>
+        </div>
+
+        <div class='clearfix'>
+          <%= f.label :permalink, _("Permalink") %>
+          <div class='input'>
+            <%= f.text_field :permalink, class: 'large' %>
+            <span class='help-block'><%= _("Your category slug. Leave empty if you don't know what to put here") %></span>
+          </div>
+        </div>
+
+        <div class='clearfix'>
+          <%= f.label :description, _("Description") %>
+          <div class='input'>
+            <%= f.text_area :description, rows: 5, class: 'large' %>
+          </div>
+        </div>
+
+        <div class='actions'>
+          <%= f.submit _("Save"), class: 'btn primary' %>
+          <%= link_to _("Cancel"), '#cancel',
+              class: 'btn',
+              data: { action: "click->category-overlay#hide" } %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<style>
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1050;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+}
+
+.modal-content {
+  position: relative;
+  background-color: white;
+  margin: 50px auto;
+  padding: 20px;
+  width: 600px;
+  max-width: 90%;
+  border-radius: 5px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  z-index: 1060;
+}
+
+.modal-header {
+  border-bottom: 1px solid #e5e5e5;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+  position: relative;
+}
+
+.modal-header h3 {
+  margin: 0;
+  line-height: 30px;
+}
+
+.close-button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 5px 10px;
+  font-size: 20px;
+  font-weight: bold;
+  text-decoration: none;
+  color: #000;
+  opacity: 0.5;
+}
+
+.close-button:hover {
+  opacity: 1;
+}
+
+.modal-body {
+  padding: 15px 0;
+}
+</style>

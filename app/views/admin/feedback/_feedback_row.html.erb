@@ -1,0 +1,7 @@
+<tr id="<%= dom_id(comment, :feedback) %>">
+  <% if comment.state.to_s.downcase == 'spam' %>
+    <%= render 'admin/feedback/spam', comment: comment %>
+  <% else %>
+    <%= render 'admin/feedback/ham', comment: comment %>
+  <% end %>
+</tr>

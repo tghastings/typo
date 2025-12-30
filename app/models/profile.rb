@@ -1,5 +1,5 @@
 class Profile < ActiveRecord::Base
-  serialize :modules
+  serialize :modules, coder: YAML
   validates_uniqueness_of :label
 
   ADMIN = 'admin'

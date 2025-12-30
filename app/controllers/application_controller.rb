@@ -19,11 +19,14 @@ class ApplicationController < ActionController::Base
   protected
 
   def set_paths
+    return unless this_blog
     prepend_view_path "#{::Rails.root.to_s}/themes/#{this_blog.theme}/views"
   end
 
   def setup_themer
-    self.class.view_paths = ::ActionController::Base.view_paths.dup.unshift("#{::Rails.root.to_s}/themes/#{this_blog.theme}/views")
+    return unless this_blog
+    # Rails 8 compatible: use prepend_view_path instead of manipulating view_paths directly
+    prepend_view_path "#{::Rails.root.to_s}/themes/#{this_blog.theme}/views"
   end
 
   def error(message = "Record not found...", options = {})

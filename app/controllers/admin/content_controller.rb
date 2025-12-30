@@ -69,14 +69,25 @@ class Admin::ContentController < Admin::BaseController
   alias_method :resource_remove, :category_add
 
   def attachment_box_add
-    # Return JSON response for JavaScript to handle DOM manipulation
-    render json: {
-      id: params[:id],
-      html: render_to_string(
-        partial: 'admin/content/attachment',
-        locals: { attachment_num: params[:id], hidden: true }
-      )
-    }
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.append(
+          'attachment_list',
+          partial: 'admin/content/attachment',
+          locals: { attachment_num: params[:id], hidden: false }
+        )
+      end
+      format.json do
+        # Fallback for non-Turbo requests
+        render json: {
+          id: params[:id],
+          html: render_to_string(
+            partial: 'admin/content/attachment',
+            locals: { attachment_num: params[:id], hidden: true }
+          )
+        }
+      end
+    end
   end
 
   def attachment_save(attachment)
@@ -106,16 +117,42 @@ class Admin::ContentController < Admin::BaseController
 
     @article.state = "draft" unless @article.state == "withdrawn"
     if @article.save
-      # Return JSON response with HTML fragments for JavaScript to update the page
-      preview_url = url_for(controller: '/articles', action: 'preview', id: @article.id)
-      render json: {
-        autosave: view_context.hidden_field_tag('article[id]', @article.id),
-        preview_link: view_context.link_to(_("Preview"), preview_url, target: 'new', class: 'btn info'),
-        destroy_link: view_context.link_to_destroy_draft(@article)
-      }
+      # Use Turbo Streams to update UI elements
+      respond_to do |format|
+        format.turbo_stream do
+          render turbo_stream: [
+            turbo_stream.update('autosave', partial: 'admin/content/autosave_status', locals: { article: @article }),
+            turbo_stream.update('article_id_field', view_context.hidden_field_tag('article[id]', @article.id)),
+            turbo_stream.update('preview_link', view_context.link_to(_("Preview"), url_for(controller: '/articles', action: 'preview', id: @article.id), target: 'new', class: 'btn info')),
+            turbo_stream.update('destroy_link', view_context.link_to_destroy_draft(@article))
+          ]
+        end
+        format.json do
+          # Fallback for non-Turbo requests
+          preview_url = url_for(controller: '/articles', action: 'preview', id: @article.id)
+          render json: {
+            autosave: view_context.hidden_field_tag('article[id]', @article.id),
+            preview_link: view_context.link_to(_("Preview"), preview_url, target: 'new', class: 'btn info'),
+            destroy_link: view_context.link_to_destroy_draft(@article)
+          }
+        end
+        format.html do
+          # For tests and backwards compatibility
+          head :ok
+        end
+        format.all do
+          # Catch-all for any other format
+          head :ok
+        end
+      end
       return true
     end
-    render body: nil
+    respond_to do |format|
+      format.turbo_stream { render turbo_stream: [], status: :unprocessable_entity }
+      format.json { render json: { error: "Save failed" }, status: :unprocessable_entity }
+      format.html { head :unprocessable_entity }
+      format.all { head :unprocessable_entity }
+    end
   end
 
   protected
@@ -139,7 +176,16 @@ class Admin::ContentController < Admin::BaseController
     send("setup_#{attrib.pluralize}")
     @article.send(attrib.pluralize).send(real_action_for(action), send(attrib))
     @article.save
-    render :partial => "show_#{attrib.pluralize}"
+
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace(
+          "#{attrib.pluralize}",
+          partial: "show_#{attrib.pluralize}"
+        )
+      end
+      format.html { render :partial => "show_#{attrib.pluralize}" }
+    end
   end
 
   def real_action_for(action); { 'add' => :<<, 'remove' => :delete}[action]; end
@@ -150,7 +196,7 @@ class Admin::ContentController < Admin::BaseController
     @article = Article.get_or_build_article(id)
     @article.text_filter = current_user.text_filter if current_user.simple_editor?
 
-    @post_types = PostType.find(:all)
+    @post_types = PostType.all
     if request.post?
       if params[:article][:draft]
         get_fresh_or_existing_draft_for_article

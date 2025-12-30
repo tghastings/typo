@@ -21,7 +21,7 @@
       </td>
       <td><%= collection_select_with_current('search', 'category', Category.all, "id", "name", @search[:category].to_i, true)
       %></td>
-      <td><%= collection_select_with_current(:search, :user_id, User.find(:all), "id", "name", @search[:user_id].to_i, true) %></td>
+      <td><%= collection_select_with_current(:search, :user_id, User.all, "id", "name", @search[:user_id].to_i, true) %></td>
       <td>
         <%= collection_select_with_current(:search, :published_at, Article.find_by_published_at, "publication", "publication", @search[:published_at], true) %>
       </td>
