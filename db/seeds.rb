@@ -1,20 +1,63 @@
 # Basic seed data for Typo blog
 
 # Create the blog
-Blog.create!(id: 1, settings: {"canonical_server_url" => ""}, base_url: "http://localhost:3000/")
+Blog.find_or_create_by!(id: 1) do |blog|
+  blog.settings = {"canonical_server_url" => ""}
+  blog.base_url = "http://localhost:3000/"
+end
 
 # Create a default category
-Category.create!(id: 1, name: "General", permalink: "general", position: 1)
+Category.find_or_create_by!(id: 1) do |category|
+  category.name = "General"
+  category.permalink = "general"
+  category.position = 1
+end
 
 # Create profiles (modules should be an array)
-Profile.create!(id: 1, label: "admin", modules: [:dashboard, :articles, :pages, :media, :feedback, :themes, :sidebar, :users, :settings, :profile, :seo], nicename: "Typo administrator")
-Profile.create!(id: 2, label: "publisher", modules: [:dashboard, :articles, :media, :pages, :feedback, :profile], nicename: "Blog publisher")
-Profile.create!(id: 3, label: "contributor", modules: [:dashboard, :profile], nicename: "Contributor")
+Profile.find_or_create_by!(id: 1) do |profile|
+  profile.label = "admin"
+  profile.modules = [:dashboard, :articles, :pages, :media, :feedback, :themes, :sidebar, :users, :settings, :profile, :seo]
+  profile.nicename = "Typo administrator"
+end
+Profile.find_or_create_by!(id: 2) do |profile|
+  profile.label = "publisher"
+  profile.modules = [:dashboard, :articles, :media, :pages, :feedback, :profile]
+  profile.nicename = "Blog publisher"
+end
+Profile.find_or_create_by!(id: 3) do |profile|
+  profile.label = "contributor"
+  profile.modules = [:dashboard, :profile]
+  profile.nicename = "Contributor"
+end
 
 # Create text filters
-TextFilter.create!(description: "None", filters: "", id: 1, markup: "none", name: "none", params: "")
-TextFilter.create!(description: "Markdown", filters: "", id: 2, markup: "markdown", name: "markdown", params: "")
-TextFilter.create!(description: "Textile", filters: "", id: 5, markup: "textile", name: "textile", params: "")
+TextFilter.find_or_create_by!(id: 1) do |tf|
+  tf.description = "None"
+  tf.filters = ""
+  tf.markup = "none"
+  tf.name = "none"
+  tf.params = ""
+end
+TextFilter.find_or_create_by!(id: 2) do |tf|
+  tf.description = "Markdown"
+  tf.filters = ""
+  tf.markup = "markdown"
+  tf.name = "markdown"
+  tf.params = ""
+end
+TextFilter.find_or_create_by!(id: 5) do |tf|
+  tf.description = "Textile"
+  tf.filters = ""
+  tf.markup = "textile"
+  tf.name = "textile"
+  tf.params = ""
+end
 
 puts "Database seeded successfully!"
 puts "Visit /setup to create your admin user and configure the blog."
+
+# Load additional seed files from db/seeds directory
+Dir[Rails.root.join('db', 'seeds', '*.rb')].sort.each do |file|
+  puts "Loading seed file: #{File.basename(file)}"
+  load file
+end

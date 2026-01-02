@@ -5,12 +5,18 @@ class AmazonSidebar < Sidebar
   setting :associate_id, 'justasummary-20'
   setting :maxlinks,     4
 
-  attr_accessor :asins
+  attr_accessor :products
 
   def parse_request(contents, request_params)
-    asin_list = contents.to_a.map do |item|
-      item.whiteboard[:asins].to_a
-    end.flatten
-    self.asins = asin_list.uniq.compact[0,maxlinks.to_i]
+    all_products = {}
+
+    contents.to_a.each do |item|
+      if item.whiteboard[:amazon_products].is_a?(Hash)
+        all_products.merge!(item.whiteboard[:amazon_products])
+      end
+    end
+
+    # Limit to maxlinks products
+    self.products = all_products.first(maxlinks.to_i).to_h
   end
 end

@@ -25,7 +25,7 @@ module TypoPlugins
         options[:default] = CGI::escape(options[:default]) if options.include?(:default)
         options[:size] ||= 48
   
-        url = "http://www.gravatar.com/avatar.php?" << options.map { |key,value| "#{key}=#{value}" }.sort.join("&")
+        url = "https://www.gravatar.com/avatar/#{options[:gravatar_id]}?" << options.except(:gravatar_id).map { |key,value| "#{key}=#{value}" }.sort.join("&")
         "<img src=\"#{url}\" class=\"avatar gravatar\" />"
       end
     end

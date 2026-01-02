@@ -1,0 +1,4 @@
+<% @comment.published = true %>
+<ol class="comments preview-comments">
+  <%= render partial: 'comments/comment', object: @comment, as: :comment %>
+</ol>

@@ -149,6 +149,65 @@ RSpec.describe 'Admin::Sidebar', type: :request do
         # Response may be 200, 204 (No Content), 404, or 500 (RJS template)
         expect(response.status).to be_in([200, 204, 404, 500])
       end
+
+      it 'creates a new sidebar when dragging from available' do
+        get '/admin/sidebar'  # Initialize flash
+        expect {
+          post '/admin/sidebar/set_active', params: { active: ['static'] }, xhr: true
+        }.to change { Sidebar.count }.by(1)
+      end
+
+      it 'creates the correct sidebar type' do
+        get '/admin/sidebar'
+        post '/admin/sidebar/set_active', params: { active: ['static'] }, xhr: true
+        expect(Sidebar.last).to be_a(StaticSidebar)
+      end
+
+      it 'stores sidebar id in flash for publishing' do
+        get '/admin/sidebar'
+        post '/admin/sidebar/set_active', params: { active: ['static'] }, xhr: true
+        # The flash should contain the new sidebar's ID
+        expect(flash[:sidebars]).to include(Sidebar.last.id)
+      end
+
+      it 'handles multiple sidebars being activated' do
+        get '/admin/sidebar'
+        expect {
+          post '/admin/sidebar/set_active', params: { active: ['static', 'search', 'archives'] }, xhr: true
+        }.to change { Sidebar.count }.by(3)
+      end
+
+      it 'preserves existing active sidebars when reordering' do
+        existing = StaticSidebar.create!(active_position: 0, config: { 'title' => 'Existing' })
+        get '/admin/sidebar'  # This sets flash[:sidebars] = [existing.id]
+
+        # Simulate reordering - keep existing and add new
+        post '/admin/sidebar/set_active', params: {
+          active: ["static-#{existing.id}", 'search']
+        }, xhr: true
+
+        expect(flash[:sidebars]).to include(existing.id)
+      end
+
+      it 'returns JavaScript response' do
+        get '/admin/sidebar'
+        post '/admin/sidebar/set_active', params: { active: ['static'] },
+             headers: { 'Accept' => 'text/javascript' }, xhr: true
+        expect(response.content_type).to include('javascript')
+      end
+
+      it 'handles empty active array' do
+        get '/admin/sidebar'
+        post '/admin/sidebar/set_active', params: { active: [] }, xhr: true
+        expect(response).to be_successful
+        expect(flash[:sidebars]).to eq([])
+      end
+
+      it 'handles missing active param' do
+        get '/admin/sidebar'
+        post '/admin/sidebar/set_active', xhr: true
+        expect(response).to be_successful
+      end
     end
   end
 

@@ -29,7 +29,7 @@ describe ThemeController do
     get :static_view_test
     expect(response).to be_successful
 
-    expect(@response.body =~ /Static View Test from typographic/).to be_truthy
+    expect(@response.body =~ /Static View Test from scribbish/).to be_truthy
   end
 
   it "disabled_test_javascript"

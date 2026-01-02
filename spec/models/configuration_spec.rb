@@ -75,7 +75,7 @@ describe 'Given a new blog' do
   end
 
   it '#theme should be "Bootstrap"' do
-    @blog.theme.should == 'bootstrap'
+    @blog.theme.should == 'scribbish'
   end
 
   it 'should not use any avatar plugin' do

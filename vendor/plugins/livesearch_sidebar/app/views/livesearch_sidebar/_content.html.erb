@@ -1,15 +1,37 @@
 <h3 class='sidebar-title'>
-  <label for="q"><%= sidebar.title %></label>
+  <label for="live_search"><%= sidebar.title %></label>
 </h3>
-<% form_tag({:controller => 'articles',  :action => 'search'}, {:method => 'get', :id => 'sform'}) do %>
+<%= form_tag({:controller => 'articles',  :action => 'search'}, {:method => 'get', :id => 'sform'}) do %>
   <%= text_field_tag :q, '', {:id => "live_search", :size => 15, :autocomplete => "off"} %>
-  <%= image_tag "spinner-blue.gif", :id => 'search_spinner', :style => 'display:none;' %>
+  <%= image_tag "spinner-blue.gif", :id => 'livesearch_spinner', :style => 'display:none;' %>
 <% end %>
-<%= observe_field "live_search", :frequency => 1,
-    :url => live_search_articles_url,
-    :loading => "Element.show('search_spinner')",
-    :complete => "Element.hide('search_spinner')",
-    :update => "search-results",
-    :with => "'q=' + encodeURIComponent($F('live_search'))" -%>
+<div id="livesearch-results" class="results"></div>
+<script>
+(function() {
+  var searchInput = document.getElementById('live_search');
+  var spinner = document.getElementById('livesearch_spinner');
+  var results = document.getElementById('livesearch-results');
+  var timeout = null;
 
-<div id="search-results" class="results"></div>
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      clearTimeout(timeout);
+      timeout = setTimeout(function() {
+        var query = searchInput.value;
+        if (query.length > 0) {
+          spinner.style.display = 'inline';
+          fetch('<%= live_search_articles_url %>?q=' + encodeURIComponent(query))
+            .then(function(response) { return response.text(); })
+            .then(function(html) {
+              results.innerHTML = html;
+              spinner.style.display = 'none';
+            })
+            .catch(function() { spinner.style.display = 'none'; });
+        } else {
+          results.innerHTML = '';
+        }
+      }, 500);
+    });
+  }
+})();
+</script>

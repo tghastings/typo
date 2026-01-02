@@ -11,6 +11,12 @@ export default class extends Controller {
 
   connect() {
     console.log('Rich editor controller connected')
+    // Don't initialize if parent is hidden (editor not selected)
+    if (this.element.offsetParent === null) {
+      console.log('Rich editor parent is hidden, deferring initialization')
+      this.deferred = true
+      return
+    }
     this.loadQuill()
   }
 

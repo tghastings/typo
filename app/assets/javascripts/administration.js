@@ -595,6 +595,38 @@ function switchEditor(editor) {
 			content = $('article_body_and_extended_simple').value;
 		}
 
+		// Initialize Quill if it wasn't initialized (parent was hidden on page load)
+		var editorContainer = document.querySelector('#visual_editor [data-rich-editor-target="editor"]');
+		if (editorContainer && !editorContainer.quill && typeof Quill !== 'undefined') {
+			var quill = new Quill(editorContainer, {
+				theme: 'snow',
+				placeholder: 'Start writing...',
+				modules: {
+					toolbar: [
+						[{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+						['bold', 'italic', 'underline', 'strike'],
+						[{ 'list': 'ordered'}, { 'list': 'bullet' }],
+						[{ 'indent': '-1'}, { 'indent': '+1' }],
+						[{ 'align': [] }],
+						['blockquote', 'code-block'],
+						['link', 'image'],
+						[{ 'color': [] }, { 'background': [] }],
+						['clean']
+					]
+				}
+			});
+			editorContainer.quill = quill;
+			window.quillEditor = quill;
+
+			// Set up change handler to update hidden input
+			var hiddenInput = document.querySelector('#visual_editor [data-rich-editor-target="input"]');
+			if (hiddenInput) {
+				quill.on('text-change', function() {
+					hiddenInput.value = quill.root.innerHTML;
+				});
+			}
+		}
+
 		// Wait for Quill to initialize and set content
 		setTimeout(function() {
 			var editorElement = document.querySelector('#visual_editor [data-rich-editor-target="editor"]');

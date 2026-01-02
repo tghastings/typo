@@ -141,6 +141,9 @@ Rails.application.routes.draw do
     # Profile update route (POST to index)
     post 'profiles', to: 'profiles#index'
 
+    # Cache sweep route (POST to index)
+    post 'cache', to: 'cache#index'
+
     %w{advanced cache categories comments content profiles feedback general pages
        resources sidebar textfilters trackbacks users settings tags redirects seo post_types}.each do |ctrl|
       get "/#{ctrl}", to: "#{ctrl}#index", as: nil

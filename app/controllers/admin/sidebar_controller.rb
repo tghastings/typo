@@ -5,7 +5,7 @@ class Admin::SidebarController < Admin::BaseController
     Sidebar.where('active_position is null').delete_all
     flash_sidebars
     begin
-      @active = Sidebar.find(:all, :order => 'active_position ASC') unless @active
+      @active = Sidebar.where.not(active_position: nil).order('active_position ASC').to_a unless @active
     rescue => e
       logger.error e
       # Avoiding the view to crash
@@ -15,20 +15,27 @@ class Admin::SidebarController < Admin::BaseController
   end
 
   def set_active
+    # Handle empty or missing params
+    active_params = params[:active] || []
+
     # Get all available plugins
     klass_for = available.inject({}) do |hash, klass|
       hash.merge({ klass.short_name => klass })
     end
 
     # Get all already active plugins
-    activemap = flash_sidebars.inject({}) do |h, sb_id|
-      sb = Sidebar.find(sb_id.to_i)
-      sb ? h.merge(sb.html_id => sb_id) : h
+    activemap = flash_sidebars.to_a.inject({}) do |h, sb_id|
+      begin
+        sb = Sidebar.find(sb_id.to_i)
+        sb ? h.merge(sb.html_id => sb_id) : h
+      rescue ActiveRecord::RecordNotFound
+        h
+      end
     end
 
     # Figure out which plugins are referenced by the params[:active] array and
     # lay them out in a easy accessible sequential array
-    flash[:sidebars] = params[:active].map do |name|
+    flash[:sidebars] = active_params.map do |name|
       if klass_for.has_key?(name)
         new_sidebar_id = klass_for[name].create.id
         @new_item = Sidebar.find(new_sidebar_id)
@@ -37,6 +44,26 @@ class Admin::SidebarController < Admin::BaseController
         activemap[name]
       end
     end.compact
+
+    # Auto-save positions to database immediately
+    Sidebar.transaction do
+      # Clear all active positions first
+      Sidebar.where.not(active_position: nil).update_all(active_position: nil)
+
+      # Set new positions
+      flash[:sidebars].each_with_index do |sidebar_id, position|
+        Sidebar.where(id: sidebar_id).update_all(active_position: position)
+      end
+
+      # Clean up orphaned sidebars
+      Sidebar.where(active_position: nil).delete_all
+    end
+
+    respond_to do |format|
+      format.js
+      format.json { render json: { success: true, sidebars: flash[:sidebars] } }
+      format.html { redirect_to action: :index }
+    end
   end
 
   def remove
@@ -54,21 +81,22 @@ class Admin::SidebarController < Admin::BaseController
       ActiveRecord::Base.connection.execute("update sidebars set active_position=null")
       flash_sidebars.each do |id|
         sidebar = Sidebar.find(id)
-        sb_attribs = params[:configure][id.to_s] || {}
+        raw_attribs = params[:configure][id.to_s] || {}
+        sb_attribs = raw_attribs.respond_to?(:permit!) ? raw_attribs.permit!.to_h : raw_attribs.to_h
         # If it's a checkbox and unchecked, convert the 0 to false
         # This is ugly.  Anyone have an improvement?
         sidebar.fields.each do |field|
           sb_attribs[field.key] = field.canonicalize(sb_attribs[field.key])
         end
 
-        sidebar.update_attributes(:config => sb_attribs,
-                                  :active_position => position)
+        sidebar.update(config: sb_attribs.to_h, active_position: position)
         position += 1
       end
       Sidebar.where('active_position is null').delete_all
     end
-    PageCache.sweep_all
-    index
+    ::PageCache.sweep_all
+    flash[:success] = _("Sidebar changes published successfully")
+    redirect_to action: :index
   end
 
   protected
@@ -84,7 +112,7 @@ class Admin::SidebarController < Admin::BaseController
   def flash_sidebars
     unless flash[:sidebars]
       begin
-        active = Sidebar.find(:all, :order => 'active_position ASC')
+        active = Sidebar.where.not(active_position: nil).order('active_position ASC')
         flash[:sidebars] = active.map {|sb| sb.id }
       rescue => e
         logger.error e

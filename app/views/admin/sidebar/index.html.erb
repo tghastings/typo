@@ -1,16 +1,7 @@
 <% @page_heading = _('Sidebar') %>
 
 <p class='help-block'><%= _("Drag and drop to change the sidebar items displayed on this blog.  To remove items from the sidebar just click remove  Changes are saved immediately, but not activated until you click the 'Publish' button")%>.</p>
-<%= form_remote_tag(:url => {:action=>'publish',
-:method => :post },
-:loading => "new Element.show('update_spinner')",
-:success => "var g = new k.Growler({location : 'br'});
-g.info('Sidebar was successfully saved', {life: 3});
-new Element.hide('update_spinner')",
-:failure => "var g = new k.Growler({location : 'br'});
-g.error('Oops, something wrong happened', {life: 3});
-new Element.hide('update_spinner')") \
-do %>
+<%= form_with(url: { action: 'publish' }, method: :post, local: true) do %>
 
 <div class='actions'>
 	<%= cancel_or_save(_('Publish changes'))%>
@@ -21,7 +12,7 @@ do %>
 <div id="sidebar-config" class='row'>
 	<div id="available" class='span6 well'>
 		<h3><%= _("Available Items")%></h3>
-		<div id="available_box">
+		<div id="available_box" data-controller="sortable">
 			<% if @available.blank? %>
 			<p class='alert-message warning'><%= _("You have no plugins installed")%>.</p>
 			<% else %>
@@ -36,16 +27,12 @@ do %>
 			<%= image_tag "spinner-blue.gif", :id => 'update_spinner',
 			:style => 'display:none;' -%>
 		</h3>
-		<div id="active">
+		<div id="active" data-controller="sortable" data-sortable-url-value="/admin/sidebar/set_active">
 			<% if @active.blank? %>
 			<%= render :partial => 'target' %>
 			<% else %>
 			<%= render :partial => 'active', :collection => @active %>
 			<% end %>
-			<%= sortable_element "active", :url => {:action => 'set_active'},
-			:tag => 'div',
-			:handle => 'handle', :containment => ['active','available_box'],
-			:loading => "new Element.show('update_spinner')" %>
 		</div>
 	</div>
 
@@ -58,3 +45,111 @@ do %>
 
 <h2><%= _("Get more plugins") %></h2>
 <p><%= _("You can download and install sidebar plugins from our official %s. All you have to do is upload the theme directory in your vendor/plugins directory.", "<a href='https://github.com/fdv/typo/wiki/Sidebar-plugins'>#{_("plugin repository")}</a>") %></p>
+
+<script>
+var sidebarDragState = { element: null };
+
+function initSortable(containerId) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+
+  console.log('Initializing sortable for:', containerId);
+
+  // Remove old listeners by cloning (prevents duplicate handlers)
+  Array.from(container.children).forEach(function(item) {
+    if (!item.id) return;
+
+    item.draggable = true;
+    item.style.cursor = 'grab';
+
+    // Use named functions for event handlers
+    item.ondragstart = function(e) {
+      console.log('Drag started:', item.id);
+      sidebarDragState.element = item;
+      item.style.opacity = '0.4';
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', item.id);
+      var spinner = document.getElementById('update_spinner');
+      if (spinner) spinner.style.display = 'inline';
+    };
+
+    item.ondragover = function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (sidebarDragState.element && sidebarDragState.element !== item) {
+        var rect = item.getBoundingClientRect();
+        var mid = rect.top + rect.height / 2;
+        if (e.clientY < mid) {
+          item.parentNode.insertBefore(sidebarDragState.element, item);
+        } else {
+          item.parentNode.insertBefore(sidebarDragState.element, item.nextSibling);
+        }
+      }
+    };
+
+    item.ondragend = function(e) {
+      item.style.opacity = '1';
+      saveActiveItems();
+      sidebarDragState.element = null;
+    };
+  });
+
+  container.ondragover = function(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  container.ondrop = function(e) {
+    e.preventDefault();
+    if (sidebarDragState.element && e.target === container) {
+      container.appendChild(sidebarDragState.element);
+    }
+  };
+}
+
+function saveActiveItems() {
+  var active = document.getElementById('active');
+  if (!active) return;
+
+  var ids = Array.from(active.children)
+    .filter(function(el) { return el.id; })
+    .map(function(el) {
+      var id = el.id;
+      if (id.startsWith('active_')) return id.replace('active_', '');
+      if (id.startsWith('available_')) return id.replace('available_', '');
+      return id;
+    });
+
+  var body = ids.map(function(id) { return 'active[]=' + encodeURIComponent(id); }).join('&');
+
+  fetch('/admin/sidebar/set_active', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content,
+      'Accept': 'application/json'
+    },
+    body: body
+  }).then(function(response) {
+    if (response.ok) {
+      return response.json();
+    } else {
+      console.error('Failed to save sidebar:', response.status);
+      throw new Error('Failed to save');
+    }
+  }).then(function(data) {
+    console.log('Sidebar saved:', data);
+    var spinner = document.getElementById('update_spinner');
+    if (spinner) spinner.style.display = 'none';
+  }).catch(function(err) {
+    console.error('Error:', err);
+    var spinner = document.getElementById('update_spinner');
+    if (spinner) spinner.style.display = 'none';
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  initSortable('available_box');
+  initSortable('active');
+});
+</script>

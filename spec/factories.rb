@@ -143,7 +143,7 @@ FactoryBot.define do
     sp_global { true }
     default_allow_comments { true }
     email_from { 'scott@sigkill.org' }
-    theme { 'typographic' }
+    theme { 'scribbish' }
     text_filter { 'textile' }
     sp_article_auto_close { 0 }
     link_to_author { false }

@@ -1,0 +1,46 @@
+<%= form_tag @article.comment_url, id: 'commentform', class: 'comments' do %>
+
+<div id="preview" style="display:none"></div>
+
+<fieldset>
+  <legend><%= _("Leave a comment") %></legend>
+
+  <p>
+    <label for="comment_author"><%= _("Name") %></label>
+    <%= text_field "comment", "author", id: "comment_author", placeholder: _("Your name") %>
+    <small>(<%= link_to((_("show email/url") + " &raquo;").html_safe, "#", onclick: "document.getElementById('extra_fields').style.display = document.getElementById('extra_fields').style.display === 'none' ? 'block' : 'none'; return false;") %>)</small>
+  </p>
+
+  <div id="extra_fields" style="display:none;">
+    <p>
+      <label for="comment_email"><%= _("Email") %></label>
+      <%= text_field "comment", "email", id: "comment_email", type: "email", placeholder: _("your@email.com") %>
+    </p>
+    <p>
+      <label for="comment_url"><%= _("Website") %></label>
+      <%= text_field "comment", "url", id: "comment_url", type: "url", placeholder: "https://" %>
+    </p>
+  </div>
+
+  <p>
+    <label for="comment_body">
+      <%= _("Comment") %>
+      <% if this_blog.comment_text_filter.include? 'textile' %>
+        <small><%= link_to(_("Textile enabled"), "http://hobix.com/textile/", target: "_blank", rel: "noopener") %></small>
+      <% end %>
+      <% if this_blog.comment_text_filter.include? 'markdown' %>
+        <small><%= link_to(_("Markdown enabled"), "http://daringfireball.net/projects/markdown/", target: "_blank", rel: "noopener") %></small>
+      <% end %>
+    </label>
+    <%= text_area 'comment', 'body', id: "comment_body", placeholder: _("Write your comment here...") %>
+  </p>
+
+  <% if this_blog.use_recaptcha %>
+  <p><%= raw recaptcha_tags %></p>
+  <% end %>
+
+  <p>
+    <%= submit_tag _('Submit Comment'), :id => 'form-submit-button' %>
+  </p>
+</fieldset>
+<% end %>

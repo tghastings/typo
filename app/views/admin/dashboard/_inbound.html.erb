@@ -15,7 +15,7 @@
           _("made a link to you on"),
           link.date.strftime(this_blog.date_format),
           _("at"),
-          link.date.strftime(this_blog.time_format)) %>
+          link.date.strftime(this_blog.time_format)).html_safe %>
       </h5>
       <p><%= link.description.strip_html.slice(0, 300) %></p>
 	  <hr />

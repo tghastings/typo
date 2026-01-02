@@ -39,7 +39,7 @@ end
 
 describe CategoriesController, '#show' do
   before do
-    blog = Factory(:blog, :base_url => "http://myblog.net", :theme => "typographic",
+    blog = Factory(:blog, :base_url => "http://myblog.net", :theme => "scribbish",
                       :use_canonical_url => true, :blog_name => "My Shiny Weblog!")
     Blog.stub(:default) { blog }
     Trigger.stub(:fire) { }
@@ -113,7 +113,7 @@ end
 
 describe CategoriesController, "#show with a non-existent category" do
   before do
-    blog = stub_model(Blog, :base_url => "http://myblog.net", :theme => "typographic",
+    blog = stub_model(Blog, :base_url => "http://myblog.net", :theme => "scribbish",
                       :use_canonical_url => true)
     Blog.stub(:default) { blog }
     Trigger.stub(:fire) { }

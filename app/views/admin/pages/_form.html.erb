@@ -59,6 +59,13 @@
         </div>
       </div>
       <div class='clearfix'>
+        <label for="page_redirect_url"><%= _("External redirect URL")%></label>
+        <div class='input'>
+          <%= text_field 'page', 'redirect_url', :class => 'span5', :placeholder => 'https://example.com' %>
+          <span class='help-block'><%= _("If set, this page will redirect to the specified URL instead of displaying content.")%></span>
+        </div>
+      </div>
+      <div class='clearfix'>
         <label for="text_filter"><%= _("Article filter")%></label>
         <div class='input'>
           <select name="page[text_filter]" id="text_filter">

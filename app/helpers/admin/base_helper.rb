@@ -51,7 +51,8 @@ module Admin::BaseHelper
   def cancel(url = {:action => 'index'})
     # Convert hash to path for Rails 7 compatibility
     if url.is_a?(Hash) && url[:action]
-      url = url[:action] == 'index' ? request.path.sub(/\/[^\/]+$/, '') : "#{request.path.sub(/\/[^\/]+$/, '')}/#{url[:action]}"
+      ctrl = controller.controller_name rescue 'content'
+      url = url[:action] == 'index' ? "/admin/#{ctrl}" : "/admin/#{ctrl}/#{url[:action]}"
     end
     link_to _("Cancel"), url, :class => 'btn'
   end
@@ -111,7 +112,8 @@ module Admin::BaseHelper
   end
 
   def task_overview
-    index_path = request.path.sub(/\/[^\/]+$/, '')
+    ctrl = controller.controller_name rescue 'content'
+    index_path = "/admin/#{ctrl}"
     content_tag :li, link_to(_('Back to list'), index_path)
   end
 
@@ -207,12 +209,12 @@ module Admin::BaseHelper
     end
 
   def show_actions item
-    base_path = request.path.sub(/\/[^\/]*$/, '')
+    ctrl = controller.controller_name rescue 'content'
     html = <<-HTML
       <div class='action'>
         <small>#{link_to_published item}</small> |
-        <small>#{link_to _("Edit"), "#{base_path}/edit/#{item.id}"}</small> |
-        <small>#{link_to _("Delete"), "#{base_path}/destroy/#{item.id}"}</small> |
+        <small>#{link_to _("Edit"), "/admin/#{ctrl}/edit/#{item.id}"}</small> |
+        <small>#{link_to _("Delete"), "/admin/#{ctrl}/destroy/#{item.id}", data: { confirm: _("Are you sure?") }, method: :post}</small> |
         #{get_short_url item}
     </div>
     HTML
@@ -240,29 +242,28 @@ module Admin::BaseHelper
   end
 
   def macro_help_popup(macro, text)
-    unless current_user.editor == 'visual'
-      "<a href=\"/admin/textfilters/macro_help/#{macro.short_name}\" onclick=\"return popup(this, 'Typo Macro Help')\">#{text}</a>".html_safe
-    end
+    # Always show the link - the macro table is only visible in HTML mode anyway
+    "<a href=\"/admin/textfilters/macro_help/#{macro.short_name}\" onclick=\"return popup(this, 'Typo Macro Help')\">#{text}</a>".html_safe
   end
 
   def render_macros(macros)
-    result = link_to(_("Show help on Typo macros") + " (+/-)", "#", onclick: "$('#macros').toggle(); return false;").to_s
-    result << "<table id='macros' style='display: none;'>"
-    result << "<tr>"
-    result << "<th>#{_('Name')}</th>"
-    result << "<th>#{_('Description')}</th>"
-    result << "<th>#{_('Tag')}</th>"
-    result << "</tr>"
+    macros ||= []
+    result = "".html_safe
+    result << link_to(_("Show help on Typo macros") + " (+/-)", "#", onclick: "Element.toggle('macros'); return false;")
+    result << "<table id='macros' style='display: none;'>".html_safe
+    result << "<tr><th>#{_('Name')}</th><th>#{_('Description')}</th><th>#{_('Tag')}</th></tr>".html_safe
 
-    for macro in macros.sort_by { |f| f.short_name }
-      result << "<tr #{alternate_class}>"
-      result << "<td>#{macro_help_popup macro, macro.display_name}</td>"
-      result << "<td>#{h macro.description}</td>"
-      result << "<td><code>&lt;typo:#{h macro.short_name}&gt;</code></td>"
-      result << "</tr>"
+    # Filter out the meta-expanders, only show actual user-facing macros
+    user_macros = macros.reject { |f| f.short_name =~ /macropost|macropre/ }
+    for macro in user_macros.sort_by { |f| f.short_name }
+      result << "<tr>".html_safe
+      result << "<td>#{macro_help_popup macro, macro.display_name}</td>".html_safe
+      result << "<td>#{h macro.description}</td>".html_safe
+      result << "<td><code>&lt;typo:#{h macro.short_name}&gt;</code></td>".html_safe
+      result << "</tr>".html_safe
     end
-    result << "</table>"
-    result.html_safe
+    result << "</table>".html_safe
+    result
   end
 
   def build_editor_link(label, action, id, update, editor)

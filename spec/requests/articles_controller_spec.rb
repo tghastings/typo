@@ -9,7 +9,7 @@ RSpec.describe 'ArticlesController', type: :request do
       base_url: 'http://test.host',
       blog_name: 'Test Blog',
       blog_subtitle: 'A test blog subtitle',
-      theme: 'typographic',
+      theme: 'scribbish',
       limit_article_display: 10,
       limit_rss_display: 10,
       permalink_format: '/%year%/%month%/%day%/%title%'
@@ -748,6 +748,50 @@ RSpec.describe 'ArticlesController', type: :request do
         get '/pages/contact/sales'
         expect(response).to have_http_status(:success)
         expect(response.body).to include('Sales Contact Page')
+      end
+    end
+
+    context 'page with external redirect' do
+      before do
+        @redirect_page = Page.create!(
+          name: 'external-link',
+          title: 'External Link Page',
+          redirect_url: 'https://example.com/destination',
+          published: true,
+          user: @user,
+          state: 'published'
+        )
+      end
+
+      it 'redirects to external URL when redirect_url is set' do
+        get '/pages/external-link'
+        expect(response).to have_http_status(:moved_permanently)
+        expect(response).to redirect_to('https://example.com/destination')
+      end
+
+      it 'does not render page content for redirect pages' do
+        get '/pages/external-link'
+        expect(response.body).not_to include('External Link Page')
+      end
+    end
+
+    context 'page with redirect_url and body' do
+      before do
+        @redirect_with_body = Page.create!(
+          name: 'redirect-with-body',
+          title: 'Redirect With Body',
+          body: 'This content should not be displayed',
+          redirect_url: 'https://example.org/other',
+          published: true,
+          user: @user,
+          state: 'published'
+        )
+      end
+
+      it 'redirects even when body is present' do
+        get '/pages/redirect-with-body'
+        expect(response).to have_http_status(:moved_permanently)
+        expect(response).to redirect_to('https://example.org/other')
       end
     end
   end

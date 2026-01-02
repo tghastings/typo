@@ -2,9 +2,33 @@
   <label for="q"><%=  _('Live Search') %></label><input type="text" id="q" name="q" value="" size="15" />
 <%= image_tag "spinner-blue.gif", :id => 'search_spinner', :style => 'display:none;' %>
 <% end %>
-<%= observe_field "q", :frequency => 1,
-    :url => { :controller => "articles", :action => "live_search" },
-    :loading => "Element.show('search_spinner')",
-    :complete => "Element.hide('search_spinner')",
-    :update => "search-results",
-    :with => "'q=' + encodeURIComponent($F('q'))" -%>
+<div id="search-results" class="results"></div>
+<script>
+(function() {
+  var searchInput = document.getElementById('q');
+  var spinner = document.getElementById('search_spinner');
+  var results = document.getElementById('search-results');
+  var timeout = null;
+
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      clearTimeout(timeout);
+      timeout = setTimeout(function() {
+        var query = searchInput.value;
+        if (query.length > 0) {
+          spinner.style.display = 'inline';
+          fetch('<%= url_for(controller: "articles", action: "live_search") %>?q=' + encodeURIComponent(query))
+            .then(function(response) { return response.text(); })
+            .then(function(html) {
+              results.innerHTML = html;
+              spinner.style.display = 'none';
+            })
+            .catch(function() { spinner.style.display = 'none'; });
+        } else {
+          results.innerHTML = '';
+        }
+      }, 500);
+    });
+  }
+})();
+</script>

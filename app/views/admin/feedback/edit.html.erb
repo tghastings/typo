@@ -1,6 +1,6 @@
-<% @page_heading = _("Comments for %s", link_to(h(@comment.article.title), :controller => '/admin/content', :action => 'edit', :id => @comment.article.id).html_safe).html_safe %>
+<% @page_heading = _("Comments for %s", link_to(h(@comment.article.title), "/admin/content/edit/#{@comment.article.id}").html_safe).html_safe %>
 
-<%= form_tag :action => "update", :id => @comment.id do %>
+<%= form_tag "/admin/feedback/update/#{@comment.id}", method: :post do %>
 
 <%= error_messages_for 'comment' %>
 <%= hidden_field_tag 'article_id', @article.id %>

@@ -15,7 +15,7 @@
 	</div>
 
 	<% if this_blog.use_recaptcha %>
-	<div class='control-group'><%= raw recaptcha_tags :ajax => true %></div>
+	<div class='control-group'><%= raw recaptcha_tags %></div>
 	<% end %>
 	<div class='form-actions'>
 		<input type='submit' id='form-submit-button' class='btn btn-info' value="<%= _('comment') %>" />

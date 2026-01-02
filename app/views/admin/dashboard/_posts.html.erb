@@ -9,7 +9,7 @@
       <h5><%= sprintf("%s on %s at %s",
         link_to_permalink(post, post.title),
         post.published_at.strftime(this_blog.date_format),
-        post.published_at.strftime(this_blog.time_format)) %></h5>
+        post.published_at.strftime(this_blog.time_format)).html_safe %></h5>
       <p><%= post.body.strip_html.slice(0,300) if post.body %></p>
 	  <hr />
     </li>

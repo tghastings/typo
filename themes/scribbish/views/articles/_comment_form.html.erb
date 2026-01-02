@@ -1,11 +1,4 @@
-<%= form_remote_tag :url      => @article.comment_url,
-                    :position => :bottom,
-                    :update   => {:success => 'commentList'},
-                    :loading  => "loading()",
-                    :complete => "complete(request)",
-                    :failure  => "failure(request)",
-                    :html     => {:id => 'commentform', :class => 'comments' } \
-    do %>
+<%= form_tag @article.comment_url, id: 'commentform', class: 'comments' do %>
 
 <div id="preview" style="display:none"></div>
 
@@ -14,7 +7,7 @@
   <p>
     <label><%= _("Name")%>:<br />
       <%= text_field "comment", "author" %>
-      <small>(<%= link_to((_("leave url/email") + " &#187;").html_safe, "#", onclick: "$('#extra_fields').slideToggle(300); return false;") %>)</small>
+      <small>(<%= link_to((_("leave url/email") + " &#187;").html_safe, "#", onclick: "document.getElementById('extra_fields').style.display = document.getElementById('extra_fields').style.display === 'none' ? 'block' : 'none'; return false;") %>)</small>
     </label>
   </p>
 
@@ -42,16 +35,11 @@
   </p>
 
   <% if this_blog.use_recaptcha %>
-  <p><%= raw recaptcha_tags :ajax => true %></p>
+  <p><%= raw recaptcha_tags %></p>
   <% end %>
 
   <p>
-    <%= submit_to_remote('preview', _('Preview') + '!',
-                         :update => 'preview',
-                         :complete => "Element.show('preview')",
-                         :url    => @article.preview_comment_url) %>
-    <%= submit_tag _('Submit'), :id => 'form-submit-button',  :onclick => "$('commentform').onsubmit();this.disabled=true;Element.hide('preview');return false;" %>
-    <%= image_tag 'theme/spinner.gif', :id => 'comment_loading', :style => 'display:none' %>
+    <%= submit_tag _('Submit'), :id => 'form-submit-button' %>
   </p>
 </fieldset>
 <% end %>

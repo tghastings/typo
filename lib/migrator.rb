@@ -16,7 +16,21 @@ module Migrator
   end
 
   def self.max_schema_version
-    available_migrations.size
+    # Return the highest migration version number (timestamp)
+    available_migrations.last&.scan(/(\d+)_/)&.flatten&.first.to_i
+  end
+
+  def self.pending_migrations
+    context = ActiveRecord::MigrationContext.new(migrations_path)
+    context.migrations.select { |m| m.version > current_schema_version }
+  end
+
+  def self.pending_migration_names
+    pending_migrations.map { |m| m.name.humanize }
+  end
+
+  def self.needs_migration?
+    pending_migrations.any?
   end
 
   def self.db_supports_migrations?

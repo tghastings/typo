@@ -6,16 +6,14 @@ class ArchivesSidebar < Sidebar
   attr_accessor :archives
 
   def self.date_func
-    @date_func ||=
-      begin
-        if Content.connection.kind_of?(ActiveRecord::ConnectionAdapters::SQLiteAdapter)
-          "strftime('%Y', published_at) as year, strftime('%m', published_at) as month"
-        else
-          "extract(year from published_at) as year,extract(month from published_at) as month"
-        end
-      rescue NameError
-        "extract(year from published_at) as year,extract(month from published_at) as month"
-      end
+    adapter_name = Content.connection.adapter_name.downcase
+    if adapter_name.include?('sqlite')
+      "strftime('%Y', published_at) as year, strftime('%m', published_at) as month"
+    else
+      "extract(year from published_at) as year,extract(month from published_at) as month"
+    end
+  rescue
+    "strftime('%Y', published_at) as year, strftime('%m', published_at) as month"
   end
 
   def parse_request(contents, params)

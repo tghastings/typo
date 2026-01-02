@@ -136,6 +136,10 @@ class ArticlesController < ContentController
 
   def view_page
     if(@page = Page.find_by_name(Array(params[:name]).map { |c| c }.join("/"))) && @page.published?
+      if @page.external_redirect?
+        redirect_to @page.redirect_url, status: :moved_permanently, allow_other_host: true
+        return
+      end
       @page_title = @page.title
       @description = (this_blog.meta_description.empty?) ? "" : this_blog.meta_description
       @keywords = (this_blog.meta_keywords.empty?) ? "" : this_blog.meta_keywords

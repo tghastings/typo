@@ -7,7 +7,7 @@ describe 'Blog Integration' do
       base_url: 'http://test.host',
       blog_name: 'Test Blog',
       blog_subtitle: 'A test blog',
-      theme: 'typographic',
+      theme: 'scribbish',
       limit_article_display: 10,
       limit_rss_display: 10,
       permalink_format: '/%year%/%month%/%day%/%title%'

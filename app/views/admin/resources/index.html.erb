@@ -27,7 +27,7 @@
 			<%= link_to(_("Thumbnail"), "#{this_blog.base_url}/files/thumb_#{upload.filename}" ) %>
 				<%= link_to(_("Medium size"), "#{this_blog.base_url}/files/medium_#{upload.filename}" ) %> |
 				<%= link_to(_("Original size"), "#{this_blog.base_url}/files/#{upload.filename}" ) %> |
-        <%= link_to _("delete"), {:action => 'destroy', :id => upload.id, :search => params[:search], :page => params[:page] },  :confirm => _("Are you sure?"), :method => :post %>
+        <%= link_to _("delete"), "/admin/resources/destroy/#{upload.id}?search=#{params[:search]}&page=#{params[:page]}", data: { confirm: _("Are you sure?") }, method: :post %>
 			</small>
 		</p>
   <% else %>

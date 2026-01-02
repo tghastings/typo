@@ -16,5 +16,5 @@
 </td>
 
 <% if controller.action_name == 'index' %>
-<td><%= link_to comment.article.title, :controller => 'feedback', :action => 'article', :id => comment.article_id %></td>
+<td><%= link_to comment.article.title, "/admin/feedback/article/#{comment.article_id}" %></td>
 <% end %>

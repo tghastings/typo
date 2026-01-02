@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#993300">
+  <%= page_header %>
+  <title><%=h page_title %></title>
+  <%= stylesheet_link_tag '/stylesheets/theme/application.css', :media => 'all' %>
+</head>
+
+<body>
+<div id="container">
+  <header id="header">
+    <div class="header-left">
+      <h1><%= link_to this_blog.blog_name, this_blog.base_url %></h1>
+      <% if this_blog.blog_subtitle.present? %>
+        <h2><%= this_blog.blog_subtitle %></h2>
+      <% end %>
+    </div>
+    <nav class="header-nav">
+      <% if logged_in? %>
+        <%= link_to _("Admin"), admin_dashboard_path %> &middot; <%= link_to _("Log Out"), logout_path %>
+      <% else %>
+        <%= link_to _("Log In"), login_path %>
+      <% end %>
+    </nav>
+  </header>
+
+  <div id="page">
+    <main id="content" role="main">
+      <%= yield %>
+      <%= javascript_tag 'show_dates_as_local_time()' %>
+    </main>
+
+    <aside id="sidebar" role="complementary">
+      <%= render_sidebars %>
+    </aside>
+  </div>
+
+  <footer id="footer">
+    <p><%= link_to this_blog.blog_name, this_blog.base_url %></p>
+    <ul>
+      <li>
+        <%= _("Powered by %s", link_to('Typo', 'http://typosphere.org')) %> &middot;
+        <%= _("styled with %s", link_to('scribbish 2026', '#'))%>
+      </li>
+    </ul>
+  </footer>
+</div>
+</body>
+</html>

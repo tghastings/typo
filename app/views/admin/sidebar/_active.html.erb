@@ -1,4 +1,4 @@
-<div id="active_<%= active.html_id %>" class='alert-message block-message info'>
+<div id="active_<%= active.html_id %>" class='alert-message block-message info sidebar-item'>
   <h3 class='light'><%= active.display_name %></h3>
   <div class='widget-content'>
     <p><%= active.description %></p>
@@ -8,8 +8,7 @@
       </div>
       <%= link_to 'remove',
         { action: 'remove', id: active.id, element: "active_#{active.html_id}" },
-        remote: true,
-        data: { type: 'script' },
-        onclick: "$('#active_#{active.html_id}').fadeOut(); $('#update_spinner').show();" %>
+        data: { turbo: false },
+        onclick: "document.getElementById('active_#{active.html_id}').style.display='none'; document.getElementById('update_spinner').style.display='inline'; fetch('#{url_for(action: 'remove', id: active.id, element: "active_#{active.html_id}")}', {method: 'DELETE', headers: {'X-CSRF-Token': document.querySelector('[name=csrf-token]').content}}); return false;" %>
   </div>
 </div>

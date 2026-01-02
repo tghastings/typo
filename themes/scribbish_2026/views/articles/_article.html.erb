@@ -1,0 +1,40 @@
+<article class="atomentry" id="article-<%= article.id %>">
+  <header>
+    <h2 class="title">
+      <%= (controller.action_name.include? 'permalink') ? article.title : link_to_permalink(article, article.title) %>
+      <% if article.published_comments.size > 0 %>
+        <span class="comment_count"><%= article.published_comments.size %></span>
+      <% end %>
+    </h2>
+
+    <p class="author">
+      <%= _("Posted by") %> <cite><%= author_link(article) %></cite>
+      <abbr class="published" title="<%= article.published_at.xmlschema %>">
+        <time datetime="<%= article.published_at.iso8601 %>"><%= display_date_and_time article.published_at %></time>
+      </abbr>
+    </p>
+  </header>
+
+  <div class="content">
+    <%= render 'articles/protected_article_content', { :article => article } %>
+  </div>
+
+  <footer>
+    <ul class="meta">
+      <% unless article.categories.empty? %>
+        <li class="categories"><%= category_links(article).html_safe %></li>
+      <% end %>
+      <% unless article.tags.empty? %>
+        <li class="tags"><%= tag_links(article).html_safe %></li>
+      <% end %>
+      <li>
+        <% if logged_in? %><a href="/admin/content/edit/<%= article.id %>"><%= _("Edit") %></a> &middot; <% end %>
+        <% if article.allow_pings? %><%= trackbacks_link(article) %> &middot; <% end %>
+        <% if article.allow_comments? %><%= comments_link(article) %> &middot; <% end %>
+        <a href="<%= article.permalink_url %>" rel="bookmark"><%= _("permalink") %></a> &middot;
+        <a href="<%= @auto_discovery_url_rss %>">RSS</a> &middot;
+        <a href="<%= @auto_discovery_url_atom %>">Atom</a>
+      </li>
+    </ul>
+  </footer>
+</article>

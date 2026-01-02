@@ -12,7 +12,7 @@
     <div class='actions'>
       <%= link_to_destroy_with_profiles(@article) unless @article.id.nil? or @article.state.to_s.downcase == 'draft' %>
 	  <span id='destroy_link'><%= link_to_destroy_draft @article %></span>
-      <span id='preview_link'><%= link_to(_("Preview"), {:controller => '/articles', :action => 'preview', :id => @article.id}, {:target => 'new', :class => 'btn info'}) if @article.id %></span>
+      <span id='preview_link'><%= link_to(_("Preview"), "/previews/#{@article.id}", target: 'new', class: 'btn info') if @article.id %></span>
     </div>
     <div class='clearfix'>
         <%= _("Status:") %> <strong><%= @article.state.to_s.downcase %></strong> <a href="#" onclick="Element.toggle('status'); return false">Change</a>
@@ -116,7 +116,7 @@
         <script type="text/javascript">edToolbar('article_body_and_extended');</script>
       </div>
 
-      <div id ='visual_editor' <%= "style='display: none;'" if current_user.editor == 'simple'%> >
+      <div id ='visual_editor' <%= "style='display: none;'" if current_user.editor != 'visual'%> >
         <%= ckeditor_textarea('article', 'body_and_extended', {:class => 'large', :height => '300px', :rows => '20'}) %>
       </div>
 
@@ -152,3 +152,15 @@
 
 </div>
 
+<script>
+  // Initialize the correct editor on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    var editorValue = '<%= current_user.editor %>';
+    if (!editorValue || (editorValue !== 'visual' && editorValue !== 'simple')) {
+      editorValue = 'visual';
+    }
+    if (typeof switchEditor === 'function') {
+      switchEditor(editorValue);
+    }
+  });
+</script>

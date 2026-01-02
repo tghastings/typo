@@ -5,7 +5,7 @@ module SidebarHelper
         @sidebar = sb
         sb.parse_request(content_array, params)
         render_sidebar(sb)
-      end.join
+      end.join.html_safe
     rescue => e
       logger.error e
       _("It seems something went wrong. Maybe some of your sidebars are actually missing and you should either reinstall them or remove them manually

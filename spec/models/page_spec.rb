@@ -125,3 +125,72 @@ describe 'Given a valid page' do
     @page.default_text_filter.name.should == Blog.default.text_filter
   end
 end
+
+describe 'Page with external redirect' do
+  before(:each) do
+    Factory(:blog)
+  end
+
+  describe 'redirect_url field' do
+    it 'should allow setting a redirect_url' do
+      page = Page.new(title: 'Redirect Page', redirect_url: 'https://example.com')
+      page.redirect_url.should == 'https://example.com'
+    end
+
+    it 'should be valid with redirect_url and no body' do
+      page = Page.new(title: 'Redirect Page', redirect_url: 'https://example.com')
+      page.should be_valid
+    end
+
+    it 'should still require body when no redirect_url is set' do
+      page = Page.new(title: 'Regular Page')
+      page.should_not be_valid
+      page.errors[:body].should include("can't be blank")
+    end
+
+    it 'should still be valid with both body and redirect_url' do
+      page = Page.new(title: 'Both Page', body: 'Some content', redirect_url: 'https://example.com')
+      page.should be_valid
+    end
+  end
+
+  describe '#external_redirect?' do
+    it 'should return true when redirect_url is present' do
+      page = Page.new(title: 'Redirect', redirect_url: 'https://example.com')
+      page.external_redirect?.should be true
+    end
+
+    it 'should return false when redirect_url is blank' do
+      page = Page.new(title: 'Normal', body: 'content')
+      page.external_redirect?.should be false
+    end
+
+    it 'should return false when redirect_url is empty string' do
+      page = Page.new(title: 'Normal', body: 'content', redirect_url: '')
+      page.external_redirect?.should be false
+    end
+  end
+
+  describe 'redirect_url validation' do
+    it 'should accept valid http URLs' do
+      page = Page.new(title: 'Test', redirect_url: 'http://example.com')
+      page.should be_valid
+    end
+
+    it 'should accept valid https URLs' do
+      page = Page.new(title: 'Test', redirect_url: 'https://example.com/path?query=1')
+      page.should be_valid
+    end
+
+    it 'should reject invalid URLs' do
+      page = Page.new(title: 'Test', redirect_url: 'not-a-url')
+      page.should_not be_valid
+      page.errors[:redirect_url].should include('must be a valid URL starting with http:// or https://')
+    end
+
+    it 'should reject javascript URLs' do
+      page = Page.new(title: 'Test', redirect_url: 'javascript:alert(1)')
+      page.should_not be_valid
+    end
+  end
+end

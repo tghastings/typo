@@ -5,6 +5,7 @@
   <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
   <title><%= this_blog.blog_name %> – <%= controller.controller_name %></title>
   <meta http-equiv="imagetoolbar" content="no" />
+  <%= csrf_meta_tags %>
   <%= stylesheet_link_tag "bootstrap", "administration_structure", "lightbox" %>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css">
   <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
@@ -37,7 +38,15 @@
   <script>
     // Fallback Quill initialization without Stimulus
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('DOM loaded, initializing Quill...');
+      console.log('DOM loaded, checking for Quill editor...');
+
+      // Editor initialization is handled by the form template
+      // This is just a fallback for pages without the form's init script
+      var visualEditor = document.getElementById('visual_editor');
+      if (!visualEditor || visualEditor.style.display === 'none') {
+        console.log('Visual editor not visible, skipping Quill initialization');
+        return;
+      }
 
       // Find editor container
       var editorContainer = document.querySelector('[data-rich-editor-target="editor"]');
@@ -95,9 +104,9 @@
       <div class='container-fluid'>
         <%= link_to this_blog.blog_name, this_blog.base_url, { :class => 'brand' } %>
         <ul class="nav secondary-nav">
-          <li class="dropdown" data-controller="dropdown">
-            <a class="dropdown-toggle" href="#" data-action="click->dropdown#toggle"><%= _("Logged in as %s", current_user.nickname)%></a>
-            <ul class="dropdown-menu" data-dropdown-target="menu" style='display: none'>
+          <li class="dropdown">
+            <a class="dropdown-toggle" href="#" onclick="var menu = this.nextElementSibling; menu.style.display = menu.style.display === 'none' ? 'block' : 'none'; return false;"><%= _("Logged in as %s", current_user.nickname)%></a>
+            <ul class="dropdown-menu" style='display: none'>
               <li><%= link_to(_("New Article"), '/admin/content/new') %></li>
               <li><%= link_to _("Profile"), '/admin/profiles'  %></li>
               <li><%= link_to _("%s &raquo;", "Log out").html_safe, '/accounts/logout' %></li>
@@ -105,9 +114,9 @@
           </li>
         </ul>
         <ul class="nav secondary-nav">
-          <li class="dropdown" data-controller="dropdown">
-            <a class="dropdown-toggle" href="#" data-action="click->dropdown#toggle"><%= _("Help")%></a>
-            <ul class="dropdown-menu" data-dropdown-target="menu" style="display: none;">
+          <li class="dropdown">
+            <a class="dropdown-toggle" href="#" onclick="var menu = this.nextElementSibling; menu.style.display = menu.style.display === 'none' ? 'block' : 'none'; return false;"><%= _("Help")%></a>
+            <ul class="dropdown-menu" style="display: none;">
               <li><%= link_to _("Documentation"), "https://github.com/fdv/typo/wiki" %></li>
               <li><%= link_to _("Report a bug"), "https://github.com/fdv/typo/issues" %></li>
               <li><%= link_to _("In page plugins"), "https://github.com/fdv/typo/wiki/In-Page-Plugins" %></li>

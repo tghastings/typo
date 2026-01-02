@@ -46,7 +46,7 @@ RSpec.describe 'Admin::Themes', type: :request do
 
       it 'lists all installed themes' do
         get '/admin/themes'
-        expect(response.body).to include('typographic')
+        expect(response.body).to include('scribbish')
       end
 
       it 'renders theme preview images' do
@@ -89,7 +89,7 @@ RSpec.describe 'Admin::Themes', type: :request do
   describe 'GET /admin/themes/preview' do
     context 'when not logged in' do
       it 'redirects to login page' do
-        get '/admin/themes/preview', params: { theme: 'typographic' }
+        get '/admin/themes/preview', params: { theme: 'scribbish' }
         expect(response).to redirect_to(controller: '/accounts', action: 'login')
       end
     end
@@ -97,20 +97,8 @@ RSpec.describe 'Admin::Themes', type: :request do
     context 'when logged in as admin' do
       before { login_admin }
 
-      it 'returns the preview image for typographic theme' do
-        get '/admin/themes/preview', params: { theme: 'typographic' }
-        expect(response).to be_successful
-        expect(response.content_type).to eq('image/png')
-      end
-
-      it 'returns the preview image for bootstrap theme' do
-        get '/admin/themes/preview', params: { theme: 'bootstrap' }
-        expect(response).to be_successful
-        expect(response.content_type).to eq('image/png')
-      end
-
-      it 'returns the preview image for dirtylicious theme' do
-        get '/admin/themes/preview', params: { theme: 'dirtylicious' }
+      it 'returns the preview image for scribbish theme' do
+        get '/admin/themes/preview', params: { theme: 'scribbish' }
         expect(response).to be_successful
         expect(response.content_type).to eq('image/png')
       end
@@ -121,20 +109,32 @@ RSpec.describe 'Admin::Themes', type: :request do
         expect(response.content_type).to eq('image/png')
       end
 
-      it 'returns the preview image for true-blue-3 theme' do
-        get '/admin/themes/preview', params: { theme: 'true-blue-3' }
+      it 'returns the preview image for scribbish theme' do
+        get '/admin/themes/preview', params: { theme: 'scribbish' }
         expect(response).to be_successful
         expect(response.content_type).to eq('image/png')
       end
 
-      it 'returns the preview image for true-red theme' do
-        get '/admin/themes/preview', params: { theme: 'true-red' }
+      it 'returns the preview image for scribbish theme' do
+        get '/admin/themes/preview', params: { theme: 'scribbish' }
         expect(response).to be_successful
         expect(response.content_type).to eq('image/png')
       end
 
-      it 'returns the preview image for standard_issue theme' do
-        get '/admin/themes/preview', params: { theme: 'standard_issue' }
+      it 'returns the preview image for scribbish theme' do
+        get '/admin/themes/preview', params: { theme: 'scribbish' }
+        expect(response).to be_successful
+        expect(response.content_type).to eq('image/png')
+      end
+
+      it 'returns the preview image for scribbish theme' do
+        get '/admin/themes/preview', params: { theme: 'scribbish' }
+        expect(response).to be_successful
+        expect(response.content_type).to eq('image/png')
+      end
+
+      it 'returns the preview image for scribbish theme' do
+        get '/admin/themes/preview', params: { theme: 'scribbish' }
         expect(response).to be_successful
         expect(response.content_type).to eq('image/png')
       end
@@ -159,7 +159,7 @@ RSpec.describe 'Admin::Themes', type: :request do
   describe 'GET /admin/themes/switchto' do
     context 'when not logged in' do
       it 'redirects to login page' do
-        get '/admin/themes/switchto', params: { theme: 'bootstrap' }
+        get '/admin/themes/switchto', params: { theme: 'scribbish' }
         expect(response).to redirect_to(controller: '/accounts', action: 'login')
       end
     end
@@ -169,7 +169,7 @@ RSpec.describe 'Admin::Themes', type: :request do
 
       it 'switches to a different theme' do
         original_theme = @blog.theme
-        new_theme = original_theme == 'bootstrap' ? 'typographic' : 'bootstrap'
+        new_theme = original_theme == 'scribbish' ? 'scribbish' : 'scribbish'
 
         get '/admin/themes/switchto', params: { theme: new_theme }
 
@@ -178,38 +178,20 @@ RSpec.describe 'Admin::Themes', type: :request do
       end
 
       it 'redirects to themes index after switching' do
-        get '/admin/themes/switchto', params: { theme: 'bootstrap' }
+        get '/admin/themes/switchto', params: { theme: 'scribbish' }
         expect(response).to redirect_to('/admin/themes')
       end
 
       it 'sets a success flash message' do
-        get '/admin/themes/switchto', params: { theme: 'bootstrap' }
+        get '/admin/themes/switchto', params: { theme: 'scribbish' }
         expect(flash[:notice]).to eq('Theme changed successfully')
       end
 
       it 'persists the theme change in the database' do
-        get '/admin/themes/switchto', params: { theme: 'dirtylicious' }
+        get '/admin/themes/switchto', params: { theme: 'scribbish' }
 
         blog = Blog.first
-        expect(blog.theme).to eq('dirtylicious')
-      end
-
-      it 'can switch to typographic theme' do
-        get '/admin/themes/switchto', params: { theme: 'typographic' }
-        expect(response).to redirect_to('/admin/themes')
-        expect(@blog.reload.theme).to eq('typographic')
-      end
-
-      it 'can switch to bootstrap theme' do
-        get '/admin/themes/switchto', params: { theme: 'bootstrap' }
-        expect(response).to redirect_to('/admin/themes')
-        expect(@blog.reload.theme).to eq('bootstrap')
-      end
-
-      it 'can switch to dirtylicious theme' do
-        get '/admin/themes/switchto', params: { theme: 'dirtylicious' }
-        expect(response).to redirect_to('/admin/themes')
-        expect(@blog.reload.theme).to eq('dirtylicious')
+        expect(blog.theme).to eq('scribbish')
       end
 
       it 'can switch to scribbish theme' do
@@ -218,22 +200,40 @@ RSpec.describe 'Admin::Themes', type: :request do
         expect(@blog.reload.theme).to eq('scribbish')
       end
 
-      it 'can switch to true-blue-3 theme' do
-        get '/admin/themes/switchto', params: { theme: 'true-blue-3' }
+      it 'can switch to scribbish theme' do
+        get '/admin/themes/switchto', params: { theme: 'scribbish' }
         expect(response).to redirect_to('/admin/themes')
-        expect(@blog.reload.theme).to eq('true-blue-3')
+        expect(@blog.reload.theme).to eq('scribbish')
       end
 
-      it 'can switch to true-red theme' do
-        get '/admin/themes/switchto', params: { theme: 'true-red' }
+      it 'can switch to scribbish theme' do
+        get '/admin/themes/switchto', params: { theme: 'scribbish' }
         expect(response).to redirect_to('/admin/themes')
-        expect(@blog.reload.theme).to eq('true-red')
+        expect(@blog.reload.theme).to eq('scribbish')
       end
 
-      it 'can switch to standard_issue theme' do
-        get '/admin/themes/switchto', params: { theme: 'standard_issue' }
+      it 'can switch to scribbish theme' do
+        get '/admin/themes/switchto', params: { theme: 'scribbish' }
         expect(response).to redirect_to('/admin/themes')
-        expect(@blog.reload.theme).to eq('standard_issue')
+        expect(@blog.reload.theme).to eq('scribbish')
+      end
+
+      it 'can switch to scribbish theme' do
+        get '/admin/themes/switchto', params: { theme: 'scribbish' }
+        expect(response).to redirect_to('/admin/themes')
+        expect(@blog.reload.theme).to eq('scribbish')
+      end
+
+      it 'can switch to scribbish theme' do
+        get '/admin/themes/switchto', params: { theme: 'scribbish' }
+        expect(response).to redirect_to('/admin/themes')
+        expect(@blog.reload.theme).to eq('scribbish')
+      end
+
+      it 'can switch to scribbish theme' do
+        get '/admin/themes/switchto', params: { theme: 'scribbish' }
+        expect(response).to redirect_to('/admin/themes')
+        expect(@blog.reload.theme).to eq('scribbish')
       end
 
       it 'handles switching to the currently active theme' do
@@ -307,7 +307,7 @@ RSpec.describe 'Admin::Themes', type: :request do
       expect(response).to be_successful
 
       original_theme = @blog.theme
-      new_theme = original_theme == 'bootstrap' ? 'typographic' : 'bootstrap'
+      new_theme = original_theme == 'scribbish' ? 'scribbish' : 'scribbish'
 
       get '/admin/themes/switchto', params: { theme: new_theme }
       expect(response).to redirect_to('/admin/themes')
@@ -318,14 +318,14 @@ RSpec.describe 'Admin::Themes', type: :request do
     end
 
     it 'theme change is visible after switching' do
-      get '/admin/themes/switchto', params: { theme: 'bootstrap' }
+      get '/admin/themes/switchto', params: { theme: 'scribbish' }
       follow_redirect!
 
       expect(response.body).to include('Active theme')
     end
 
     it 'handles multiple consecutive theme switches' do
-      themes = %w[bootstrap typographic dirtylicious]
+      themes = %w[scribbish scribbish scribbish]
 
       themes.each do |theme|
         get '/admin/themes/switchto', params: { theme: theme }
@@ -364,7 +364,7 @@ RSpec.describe 'Admin::Themes', type: :request do
       )
 
       login_user(contributor)
-      get '/admin/themes/preview', params: { theme: 'typographic' }
+      get '/admin/themes/preview', params: { theme: 'scribbish' }
       expect(response.status).to be_in([200, 302, 403])
     end
 
@@ -380,7 +380,7 @@ RSpec.describe 'Admin::Themes', type: :request do
       )
 
       login_user(contributor)
-      get '/admin/themes/switchto', params: { theme: 'bootstrap' }
+      get '/admin/themes/switchto', params: { theme: 'scribbish' }
       expect(response.status).to be_in([200, 302, 403])
     end
 
@@ -430,14 +430,14 @@ RSpec.describe 'Admin::Themes', type: :request do
     before { login_admin }
 
     it 'zaps theme caches on theme switch' do
-      get '/admin/themes/switchto', params: { theme: 'bootstrap' }
+      get '/admin/themes/switchto', params: { theme: 'scribbish' }
       expect(response).to redirect_to('/admin/themes')
       expect(flash[:notice]).to eq('Theme changed successfully')
     end
 
     it 'reloads current theme after switch' do
-      get '/admin/themes/switchto', params: { theme: 'typographic' }
-      expect(@blog.reload.theme).to eq('typographic')
+      get '/admin/themes/switchto', params: { theme: 'scribbish' }
+      expect(@blog.reload.theme).to eq('scribbish')
     end
   end
 end

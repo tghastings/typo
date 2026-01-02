@@ -1,4 +1,220 @@
-<% unless sidebar.asins.empty? -%>
+<% unless sidebar.products.blank? -%>
 <h3 class='sidebar-title'><%= h sidebar.title %></h3>
-<div id="amazon_links"><% for asin in sidebar.asins -%><iframe src="http://rcm.amazon.com/e/cm?t=<%= @sidebar.associate_id %>&o=1&p=8&l=as1&asins=<%= asin %>&fc1=000000&IS2=1&lt1=_blank&lc1=0000ff&bc1=000000&bg1=ffffff&f=ifr" style="width:120px;height:240px;" scrolling="no" marginwidth="0" marginheight="0" frameborder="0"></iframe><% end -%></div>
+<div class="amazon-carousel" data-interval="5000">
+  <div class="amazon-carousel-inner">
+    <% sidebar.products.each_with_index do |(asin, info), index| -%>
+    <div class="amazon-carousel-item<%= ' active' if index == 0 %>" data-index="<%= index %>">
+      <a href="https://www.amazon.com/dp/<%= asin %>?tag=<%= sidebar.associate_id %>" target="_blank" rel="nofollow noopener">
+        <div class="amazon-carousel-image">
+          <img src="https://images-na.ssl-images-amazon.com/images/P/<%= asin %>.01._SCLZZZZZZZ_SX120_.jpg"
+               alt="<%= h(info[:title] || 'Book cover') %>"
+               onerror="this.onerror=null; if(!this.dataset.retry){this.dataset.retry='1';this.src='https://m.media-amazon.com/images/P/<%= asin %>.jpg';}else{this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%22180%22><rect fill=%22%23f0f0f0%22 width=%22120%22 height=%22180%22 rx=%224%22/><text x=%2260%22 y=%2295%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2212%22 font-family=%22sans-serif%22>Book</text></svg>';}" />
+          <% if info[:audible] -%>
+          <span class="amazon-audible-badge" title="Audiobook">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+              <path d="M12 3c-4.97 0-9 4.03-9 9v7c0 1.1.9 2 2 2h2v-8H5v-1c0-3.87 3.13-7 7-7s7 3.13 7 7v1h-2v8h2c1.1 0 2-.9 2-2v-7c0-4.97-4.03-9-9-9z"/>
+            </svg>
+          </span>
+          <% end -%>
+        </div>
+        <span class="amazon-carousel-title"><%= h(info[:title] || "View Product") %></span>
+      </a>
+    </div>
+    <% end -%>
+  </div>
+  <% if sidebar.products.size > 1 -%>
+  <div class="amazon-carousel-nav">
+    <button class="amazon-carousel-prev" aria-label="Previous">&lsaquo;</button>
+    <div class="amazon-carousel-dots">
+      <% sidebar.products.each_with_index do |(asin, info), index| -%>
+      <span class="amazon-carousel-dot<%= ' active' if index == 0 %>" data-index="<%= index %>"></span>
+      <% end -%>
+    </div>
+    <button class="amazon-carousel-next" aria-label="Next">&rsaquo;</button>
+  </div>
+  <% end -%>
+</div>
+
+<style>
+.amazon-carousel {
+  width: 100%;
+  position: relative;
+}
+.amazon-carousel-inner {
+  position: relative;
+  height: 200px;
+}
+.amazon-carousel-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+}
+.amazon-carousel-item.active {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+.amazon-carousel-item a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+  height: 100%;
+}
+.amazon-carousel-image {
+  position: relative;
+  width: 120px;
+  height: 160px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.amazon-carousel-image img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: box-shadow 0.2s ease;
+}
+.amazon-carousel-item a:hover .amazon-carousel-image img {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.amazon-audible-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(255,153,0,0.9);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.amazon-carousel-title {
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.4;
+  width: 100%;
+  padding: 0 5px;
+}
+.amazon-carousel-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 5px;
+}
+.amazon-carousel-prev,
+.amazon-carousel-next {
+  background: #f0f0f0;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.amazon-carousel-prev:hover,
+.amazon-carousel-next:hover {
+  background: #e0e0e0;
+}
+.amazon-carousel-dots {
+  display: flex;
+  gap: 6px;
+}
+.amazon-carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ddd;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+.amazon-carousel-dot:hover {
+  transform: scale(1.2);
+}
+.amazon-carousel-dot.active {
+  background: #666;
+}
+</style>
+
+<script>
+(function() {
+  const carousel = document.querySelector('.amazon-carousel');
+  if (!carousel || carousel.dataset.initialized) return;
+  carousel.dataset.initialized = 'true';
+
+  // Clear any existing global interval
+  if (window.amazonCarouselInterval) {
+    clearInterval(window.amazonCarouselInterval);
+  }
+
+  const items = carousel.querySelectorAll('.amazon-carousel-item');
+  const dots = carousel.querySelectorAll('.amazon-carousel-dot');
+  const prevBtn = carousel.querySelector('.amazon-carousel-prev');
+  const nextBtn = carousel.querySelector('.amazon-carousel-next');
+  const interval = parseInt(carousel.dataset.interval) || 5000;
+
+  if (items.length <= 1) return;
+
+  let current = 0;
+
+  function show(index) {
+    items.forEach((item, i) => {
+      item.classList.toggle('active', i === index);
+    });
+    dots.forEach((dot, i) => {
+      dot.classList.toggle('active', i === index);
+    });
+    current = index;
+  }
+
+  function next() {
+    show((current + 1) % items.length);
+  }
+
+  function prev() {
+    show((current - 1 + items.length) % items.length);
+  }
+
+  function startAutoplay() {
+    window.amazonCarouselInterval = setInterval(next, interval);
+  }
+
+  function resetAutoplay() {
+    clearInterval(window.amazonCarouselInterval);
+    startAutoplay();
+  }
+
+  if (prevBtn) prevBtn.addEventListener('click', () => { prev(); resetAutoplay(); });
+  if (nextBtn) nextBtn.addEventListener('click', () => { next(); resetAutoplay(); });
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => { show(i); resetAutoplay(); });
+  });
+
+  carousel.addEventListener('mouseenter', () => clearInterval(window.amazonCarouselInterval));
+  carousel.addEventListener('mouseleave', startAutoplay);
+
+  startAutoplay();
+})();
+</script>
 <% end -%>

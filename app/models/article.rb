@@ -41,7 +41,7 @@ class Article < Content
 
   before_create :set_defaults, :create_guid
   after_create :add_notifications
-  before_save :set_published_at, :ensure_settings_type, :set_permalink
+  before_save :set_published_at, :ensure_settings_type, :set_permalink, :regenerate_whiteboard
   after_save :post_trigger, :keywords_to_tags, :shorten_url, :send_pings, :send_notifications
 
   scope :category, ->(category_id) { joins(:categorizations).where('categorizations.category_id = ?', category_id) }
@@ -72,6 +72,14 @@ class Article < Content
   def set_permalink
     return if self.state == 'draft'
     self.permalink = self.title.to_permalink if self.permalink.blank?
+  end
+
+  def regenerate_whiteboard
+    if body_changed? || extended_changed?
+      self.whiteboard = {}
+      html(:body)
+      html(:extended) if extended.present?
+    end
   end
 
   def has_child?

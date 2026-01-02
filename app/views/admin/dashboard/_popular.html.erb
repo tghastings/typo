@@ -6,7 +6,7 @@
   <% else %>
     <% for article in @bestof -%>
     <li>
-      <h5><%= sprintf("%s (%s)", link_to_permalink(article, article.title), _("%d comments", article.comment_count)) %></h5>
+      <h5><%= sprintf("%s (%s)", link_to_permalink(article, article.title), _("%d comments", article.comment_count)).html_safe %></h5>
       <%= article.body.strip_html.slice(0,300) %>
 			<hr />
 		</li>
