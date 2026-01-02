@@ -1,6 +1,6 @@
 <% unless sidebar.products.blank? -%>
 <h3 class='sidebar-title'><%= h sidebar.title %></h3>
-<div class="amazon-carousel" data-interval="5000">
+<div class="amazon-carousel" data-interval="30000">
   <div class="amazon-carousel-inner">
     <% sidebar.products.each_with_index do |(asin, info), index| -%>
     <div class="amazon-carousel-item<%= ' active' if index == 0 %>" data-index="<%= index %>">

@@ -7,7 +7,7 @@ class Admin::TagsController < Admin::BaseController
 
   def edit
     @tag = Tag.find(params[:id])
-    @tag.attributes = params[:tag] if params[:tag].present?
+    @tag.attributes = tag_params if params[:tag].present?
 
     if request.post?
       old_name = @tag.name
@@ -30,4 +30,9 @@ class Admin::TagsController < Admin::BaseController
     redirect_to :action => 'index'
   end
 
+  private
+
+  def tag_params
+    params.require(:tag).permit(:display_name, :name)
+  end
 end

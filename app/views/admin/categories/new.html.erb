@@ -1,7 +1,7 @@
 <% @page_heading = _("Categories") %>
 
 <div class='left_form'>
-  <%= form_tag "/admin/categories/edit/#{@category.id}", method: :post do %>
+  <%= form_tag(@category.new_record? ? "/admin/categories/new" : "/admin/categories/edit/#{@category.id}", method: :post) do %>
   <%= error_messages_for 'category' %>
   <div class='clearfix'>
     <label for="category_name"><%= _("Name")%></label>

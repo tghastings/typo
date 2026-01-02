@@ -44,7 +44,7 @@ The ASIN is the 10-character product identifier found in Amazon URLs.
         # First, run the standard macro processing for <typo:amazon> tags
         text = super(blog, content, text, params)
 
-        # Then scan for Amazon URLs and extract ASINs with titles
+        # Then scan for Amazon URLs and extract ASINs
         if content
           text.scan(AMAZON_URL_REGEX).each do |match|
             title_slug, asin = match
@@ -52,14 +52,12 @@ The ASIN is the 10-character product identifier found in Amazon URLs.
 
             content.whiteboard[:amazon_products] ||= {}
             unless content.whiteboard[:amazon_products][asin]
-              # Convert URL slug to readable title (e.g., "My-Book-Title" -> "My Book Title")
-              title = title_slug ? title_slug.gsub('-', ' ').gsub(/\b\w/, &:upcase) : nil
+              # Detect Audible products from URL
+              is_audible = title_slug&.match?(/\bAudible\b/i)
 
-              # Detect Audible products and clean up title
-              is_audible = title&.match?(/\bAudible\b/i)
-              title = title&.gsub(/\bAudible\b/i, '')&.strip&.gsub(/\s+/, ' ') if is_audible
-
-              content.whiteboard[:amazon_products][asin] = { title: title, audible: is_audible }
+              # Don't use URL slug as title - it's unreliable
+              # User should use <typo:amazon title="..."> for proper titles
+              content.whiteboard[:amazon_products][asin] = { title: nil, audible: is_audible }
             end
           end
         end
@@ -79,8 +77,9 @@ The ASIN is the 10-character product identifier found in Amazon URLs.
           content.whiteboard[:amazon_products][asin] = { title: title }
         end
 
-        # Generate link to Amazon product
-        associate_id = 'justasummary-20'
+        # Generate link to Amazon product - use associate_id from Amazon sidebar config
+        amazon_sidebar = Sidebar.where(type: 'AmazonSidebar').first
+        associate_id = amazon_sidebar&.config&.dig('associate_id') || 'justasummary-20'
         url = "https://www.amazon.com/dp/#{asin}?tag=#{associate_id}"
 
         if text.present?

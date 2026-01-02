@@ -11,6 +11,12 @@ class AmazonSidebar < Sidebar
     all_products = {}
 
     contents.to_a.each do |item|
+      # Clear and regenerate amazon products to ensure fresh data
+      if item.respond_to?(:whiteboard) && item.respond_to?(:html)
+        item.whiteboard.delete(:amazon_products)
+        item.html(:body)
+      end
+
       if item.whiteboard[:amazon_products].is_a?(Hash)
         all_products.merge!(item.whiteboard[:amazon_products])
       end

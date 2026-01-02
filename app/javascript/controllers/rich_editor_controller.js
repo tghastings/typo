@@ -96,18 +96,41 @@ export default class extends Controller {
       ]
     }
 
-    // Full toolbar
-    return [
-      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'indent': '-1'}, { 'indent': '+1' }],
-      [{ 'align': [] }],
-      ['blockquote', 'code-block'],
-      ['link', 'image'],
-      [{ 'color': [] }, { 'background': [] }],
-      ['clean']
-    ]
+    // Full toolbar with custom Amazon button
+    return {
+      container: [
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'indent': '-1'}, { 'indent': '+1' }],
+        [{ 'align': [] }],
+        ['blockquote', 'code-block'],
+        ['link', 'image', 'amazon'],
+        [{ 'color': [] }, { 'background': [] }],
+        ['clean']
+      ],
+      handlers: {
+        'amazon': () => this.insertAmazonProduct()
+      }
+    }
+  }
+
+  insertAmazonProduct() {
+    const asin = prompt('Enter Amazon ASIN (10-character product ID from URL):')
+    if (!asin) return
+
+    const title = prompt('Enter book/product title:')
+    if (!title) return
+
+    const linkText = prompt('Enter link text (or leave blank to use title):', title)
+    const displayText = linkText || title
+
+    const amazonTag = `<typo:amazon asin="${asin}" title="${title}">${displayText}</typo:amazon>`
+
+    // Insert as plain text so it's visible in the editor
+    // The text filter will process it when the article is rendered
+    const range = this.quill.getSelection(true)
+    this.quill.insertText(range.index, amazonTag)
   }
 
   disconnect() {

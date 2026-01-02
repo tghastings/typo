@@ -13,6 +13,15 @@ class Article < Content
   validates :guid, uniqueness: true
   validates :title, presence: true
 
+  # Clear whiteboard when body changes so amazon products get re-extracted
+  before_save :clear_whiteboard_on_body_change
+
+  def clear_whiteboard_on_body_change
+    if body_changed? || extended_changed?
+      self.whiteboard = {}
+    end
+  end
+
   belongs_to :user, optional: true
 
   has_many :pings, -> { order('created_at ASC') }, dependent: :destroy

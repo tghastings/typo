@@ -19,10 +19,8 @@
 <% if @article.allow_pings? -%>
   <section class="trackbacks-section">
     <h3 id="trackbacks"><%= _("Trackbacks") %></h3>
-    <p>
-      <%= _("Use the following link to trackback from your own site") %>:<br />
-      <code><%= @article.trackback_url %></code>
-    </p>
+    <p><%= _("Use the following link to trackback from your own site") %>:</p>
+    <pre><code><%= @article.trackback_url %></code></pre>
 
     <% unless @article.published_trackbacks.blank? -%>
     <ol id="trackbacks-list" class="trackbacks">

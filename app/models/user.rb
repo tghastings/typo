@@ -147,7 +147,7 @@ class User < ActiveRecord::Base
   end
 
   def name
-    "#{firstname} #{lastname}".strip.presence || login
+    self[:name].presence || "#{firstname} #{lastname}".strip.presence || login
   end
 
   def permalink

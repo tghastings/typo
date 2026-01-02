@@ -1,3 +1,7 @@
+# Get the first user (tom) as publisher
+publisher = User.first
+puts "Publisher: #{publisher.login} (id: #{publisher.id})"
+
 # Create categories
 categories = {
   'Education' => 'Academic and learning-related content',
@@ -175,6 +179,10 @@ Article.find_each do |article|
   article.save if article.changed?
 end
 
+# Ensure all articles have the publisher set
+Article.where(user_id: nil).update_all(user_id: publisher.id)
+
 puts "\nDone! Created #{Category.count} categories and #{Tag.count} tags."
 puts "Articles with categories: #{Article.joins(:categories).distinct.count}"
 puts "Articles with tags: #{Article.joins(:tags).distinct.count}"
+puts "All articles published by: #{publisher.login}"

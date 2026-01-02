@@ -7,7 +7,7 @@ class Admin::UsersController < Admin::BaseController
 
   def new
     @user = User.new
-    @user.attributes = params[:user] if params[:user].present?
+    @user.attributes = user_params if params[:user].present?
     @user.text_filter = TextFilter.find_by_name(this_blog.text_filter)
     setup_profiles
     @user.name = @user.login
@@ -21,10 +21,10 @@ class Admin::UsersController < Admin::BaseController
     @user = params[:id] ? User.find_by_id(params[:id]) : current_user
 
     setup_profiles
-    @user.attributes = params[:user] if params[:user].present?
+    @user.attributes = user_params if params[:user].present?
     if request.post? and @user.save
-      if @user.id = current_user.id
-        current_user = @user
+      if @user.id == current_user.id
+        self.current_user = @user
       end
       flash[:notice] = _('User was successfully updated.')
       redirect_to :action => 'index'
@@ -43,5 +43,17 @@ class Admin::UsersController < Admin::BaseController
 
   def setup_profiles
     @profiles = Profile.order('id').all
+  end
+
+  def user_params
+    params.require(:user).permit(
+      :login, :password, :password_confirmation, :email,
+      :firstname, :lastname, :nickname, :name,
+      :profile_id, :state,
+      :editor, :text_filter_id,
+      :notify_via_email, :notify_on_new_articles, :notify_on_comments,
+      :url, :msn, :aim, :yahoo, :twitter, :jabber, :description,
+      :show_url, :show_msn, :show_aim, :show_yahoo, :show_twitter, :show_jabber
+    )
   end
 end

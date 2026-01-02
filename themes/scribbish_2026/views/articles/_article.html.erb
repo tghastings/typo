@@ -11,7 +11,7 @@
       <%= _("Posted by") %> <cite><%= author_link(article) %></cite>
       <abbr class="published" title="<%= article.published_at.xmlschema %>">
         <time datetime="<%= article.published_at.iso8601 %>"><%= display_date_and_time article.published_at %></time>
-      </abbr>
+      </abbr><% unless article.categories.empty? %> &middot; in <%= category_links(article, "").html_safe %><% end %><% unless article.tags.empty? %> &middot; <%= tag_links(article, "").html_safe %><% end %>
     </p>
   </header>
 
@@ -21,14 +21,8 @@
 
   <footer>
     <ul class="meta">
-      <% unless article.categories.empty? %>
-        <li class="categories"><%= category_links(article).html_safe %></li>
-      <% end %>
-      <% unless article.tags.empty? %>
-        <li class="tags"><%= tag_links(article).html_safe %></li>
-      <% end %>
       <li>
-        <% if logged_in? %><a href="/admin/content/edit/<%= article.id %>"><%= _("Edit") %></a> &middot; <% end %>
+        <% if logged_in? %><a href="/admin/content/edit/<%= article.id %>"><%= _("edit") %></a> &middot; <% end %>
         <% if article.allow_pings? %><%= trackbacks_link(article) %> &middot; <% end %>
         <% if article.allow_comments? %><%= comments_link(article) %> &middot; <% end %>
         <a href="<%= article.permalink_url %>" rel="bookmark"><%= _("permalink") %></a> &middot;

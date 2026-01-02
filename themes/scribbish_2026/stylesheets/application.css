@@ -12,7 +12,7 @@
   --color-text: #333;
   --color-text-muted: #666;
   --color-text-light: #999;
-  --color-background: #fff;
+  --color-background: #fdfcf8;
   --color-background-alt: #f8f7f6;
   --color-background-code: #1a1a1a;
   --color-border: #e5e5e5;
@@ -90,13 +90,13 @@ img {
 }
 
 a {
-  color: var(--color-primary);
-  text-decoration: none;
+  color: var(--color-text);
+  text-decoration: underline;
   transition: color var(--transition-fast);
 }
 
 a:hover, a:focus {
-  color: var(--color-primary-dark);
+  color: var(--color-primary);
   text-decoration: underline;
 }
 
@@ -138,7 +138,7 @@ cite {
 @media (min-width: 900px) {
   #page {
     grid-template-columns: 1fr var(--sidebar-width);
-    gap: 1.5rem;
+    gap: 2.5rem;
   }
 }
 
@@ -176,19 +176,23 @@ cite {
 
 .header-nav a {
   color: var(--color-text-muted);
+  text-decoration: none;
 }
 
 .header-nav a:hover {
   color: var(--color-primary);
+  text-decoration: none;
 }
 
 #header h1 {
   font-family: var(--font-serif);
-  font-size: var(--font-size-3xl);
+  font-size: var(--font-size-2xl);
   font-weight: 700;
-  letter-spacing: -0.03em;
+  font-variant: small-caps;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
   line-height: 1.1;
-  margin: 0 0 var(--space-sm) 0;
+  margin: 0 0 var(--space-xs) 0;
 }
 
 @media (min-width: 768px) {
@@ -199,17 +203,18 @@ cite {
 
 #header h1 a {
   color: var(--color-text);
-  text-decoration: none;
+  text-decoration: none !important;
 }
 
 #header h1 a:hover {
   color: var(--color-primary);
-  text-decoration: none;
+  text-decoration: none !important;
 }
 
 #header h2 {
-  font-family: var(--font-sans);
-  font-size: var(--font-size-base);
+  font-family: var(--font-serif);
+  font-size: var(--font-size-sm);
+  font-style: italic;
   font-weight: 400;
   color: var(--color-text-muted);
   margin: 0;
@@ -224,44 +229,54 @@ cite {
   hyphens: auto;
 }
 
-/* Typography in content */
+/* Typography in content - IEEE style */
 #content h1,
 #content h2,
 #content h3,
 #content h4,
 #content h5 {
-  font-family: var(--font-sans);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.3;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
   color: var(--color-text);
+  text-align: left;
 }
 
 #content h1 {
   font-size: var(--font-size-2xl);
+  font-variant: small-caps;
+  text-transform: lowercase;
   margin: 0 0 var(--space-md) 0;
 }
 
 #content h2 {
   font-size: var(--font-size-xl);
-  margin: var(--space-2xl) 0 var(--space-md) 0;
+  font-variant: small-caps;
+  text-transform: lowercase;
+  margin: var(--space-lg) 0 var(--space-sm) 0;
 }
 
 #content h3 {
   font-size: var(--font-size-lg);
-  margin: var(--space-xl) 0 var(--space-md) 0;
+  font-style: italic;
+  font-weight: 400;
+  margin: var(--space-md) 0 var(--space-sm) 0;
 }
 
 #content h4 {
   font-size: var(--font-size-base);
-  margin: var(--space-lg) 0 var(--space-sm) 0;
-  padding-bottom: var(--space-xs);
-  border-bottom: 1px solid var(--color-border-light);
+  font-style: italic;
+  font-weight: 400;
+  margin: var(--space-md) 0 var(--space-xs) 0;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 #content h5 {
   font-size: var(--font-size-base);
-  margin: var(--space-lg) 0 var(--space-sm) 0;
+  font-weight: 400;
+  margin: var(--space-sm) 0 var(--space-xs) 0;
 }
 
 #content p {
@@ -270,24 +285,35 @@ cite {
 
 #content ul,
 #content ol {
-  margin: 0 0 var(--space-md) var(--space-lg);
-  padding: 0;
+  margin: 0 0 var(--space-md) 0;
+  padding: 0 0 0 1.5rem;
 }
 
 #content li {
   margin-bottom: var(--space-sm);
+  padding-left: 0.5rem;
 }
 
 #content blockquote {
-  color: var(--color-text-muted);
-  border-left: 3px solid var(--color-primary);
-  margin: var(--space-md) 0;
-  padding: var(--space-sm) 0 var(--space-sm) var(--space-md);
+  color: var(--color-text);
+  border-left: none;
+  margin: var(--space-md) var(--space-lg);
+  padding: 0;
   font-style: italic;
+  font-size: var(--font-size-sm);
 }
 
 #content blockquote p:last-child {
   margin-bottom: 0;
+}
+
+#content .content a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+#content .content a:hover {
+  color: var(--color-primary-dark);
 }
 
 /* Code */
@@ -300,14 +326,15 @@ cite {
 }
 
 #content pre {
-  background: var(--color-background-code);
-  color: var(--color-code-text);
+  background: var(--color-background-alt);
+  color: var(--color-text);
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
-  line-height: 1.5;
+  line-height: 1.4;
   margin: var(--space-md) 0;
   padding: var(--space-md);
-  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+  border-radius: 0;
   overflow-x: auto;
 }
 
@@ -346,23 +373,25 @@ cite {
 .atomentry .title,
 .article .title {
   font-family: var(--font-serif);
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-3xl);
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   line-height: 1.2;
-  margin: 0 0 var(--space-md) 0;
+  margin: 0 0 var(--space-sm) 0;
+  text-align: center;
 }
 
 .atomentry .title a,
 .article .title a {
   color: var(--color-text);
-  text-decoration: none;
+  text-decoration: none !important;
   transition: color var(--transition-fast);
 }
 
 .atomentry .title a:hover,
 .article .title a:hover {
   color: var(--color-primary);
+  text-decoration: none !important;
 }
 
 .atomentry .title .comment_count,
@@ -376,8 +405,10 @@ cite {
 .atomentry .author,
 .article .author {
   color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
+  font-size: 1rem;
+  font-style: italic;
   margin-bottom: var(--space-md);
+  text-align: center;
 }
 
 .atomentry .author cite,
@@ -437,11 +468,13 @@ cite {
 .atomentry .meta a,
 .article .meta a {
   color: var(--color-text-muted);
+  text-decoration: none;
 }
 
 .atomentry .meta a:hover,
 .article .meta a:hover {
   color: var(--color-primary);
+  text-decoration: none;
 }
 
 /*--------------------------------------------------------------
@@ -624,7 +657,7 @@ cite {
  Sidebar
  --------------------------------------------------------------*/
 #sidebar {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
 }
 
 @media (max-width: 899px) {
@@ -635,12 +668,14 @@ cite {
 }
 
 #sidebar h3 {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-muted);
-  margin: 0 0 var(--space-md) 0;
+  font-family: var(--font-serif);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  font-variant: small-caps;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+  color: var(--color-text);
+  margin: 0 0 var(--space-sm) 0;
 }
 
 #sidebar h3 a {
@@ -675,6 +710,7 @@ cite {
 
 #sidebar li a:hover {
   color: var(--color-primary);
+  text-decoration: none;
 }
 
 #sidebar em {
@@ -770,10 +806,12 @@ cite {
 
 #footer a {
   color: var(--color-text-muted);
+  text-decoration: none;
 }
 
 #footer a:hover {
   color: var(--color-primary);
+  text-decoration: none;
 }
 
 /*--------------------------------------------------------------

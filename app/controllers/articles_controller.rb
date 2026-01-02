@@ -6,9 +6,10 @@ class ArticlesController < ContentController
   layout :theme_layout, :except => [:comment_preview, :trackback]
 
   cache_sweeper :blog_sweeper
-  caches_page :index, :read, :archives, :view_page, :redirect, :if => Proc.new {|c|
-    c.request.query_string == ''
-  }
+  # Disable page caching - it causes issues with dynamic sidebars like Amazon
+  # caches_page :index, :read, :archives, :view_page, :redirect, :if => Proc.new {|c|
+  #   c.request.query_string == ''
+  # }
 
   helper :'admin/base'
 

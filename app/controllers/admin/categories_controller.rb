@@ -36,8 +36,12 @@ class Admin::CategoriesController < Admin::BaseController
 
   def new_or_edit
     @categories = Category.all
-    @category = params[:id].present? ? Category.find(params[:id]) : Category.new
-    @category.attributes = params[:category] if params[:category].present?
+    @category = if action_name == 'edit' && params[:id].present?
+                  Category.find(params[:id])
+                else
+                  Category.new
+                end
+    @category.attributes = category_params if params[:category].present?
     if request.post?
       respond_to do |format|
         format.html { save_category }
@@ -80,4 +84,7 @@ class Admin::CategoriesController < Admin::BaseController
     redirect_to :action => 'new'
   end
 
+  def category_params
+    params.require(:category).permit(:name, :keywords, :permalink, :description, :position)
+  end
 end
