@@ -3,9 +3,10 @@ class GroupingController < ContentController
   layout :theme_layout
   cache_sweeper :blog_sweeper
 
-  caches_page :index, :show, :if => Proc.new {|c|
-    c.request.query_string == ''
-  }
+  # Disable page caching - it causes issues with dynamic sidebars like Amazon
+  # caches_page :index, :show, :if => Proc.new {|c|
+  #   c.request.query_string == ''
+  # }
 
   class << self
     def grouping_class(klass = nil)

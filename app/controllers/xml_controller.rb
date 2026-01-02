@@ -1,7 +1,8 @@
 class XmlController < ApplicationController
-  caches_page :feed, :if => Proc.new {|c|
-    c.request.query_string == ''
-  }
+  # Disable page caching for consistency
+  # caches_page :feed, :if => Proc.new {|c|
+  #   c.request.query_string == ''
+  # }
 
   NORMALIZED_FORMAT_FOR = {'atom' => 'atom', 'rss' => 'rss',
     'atom10' => 'atom', 'atom03' => 'atom', 'rss20' => 'rss',
