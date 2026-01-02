@@ -316,8 +316,8 @@ cite {
   color: var(--color-primary-dark);
 }
 
-/* Code */
-#content code {
+/* Inline code */
+#content code:not([class*="language-"]) {
   font-family: var(--font-mono);
   font-size: 0.9em;
   background: var(--color-background-alt);
@@ -325,12 +325,13 @@ cite {
   border-radius: var(--border-radius);
 }
 
-#content pre {
+/* Code blocks without Prism.js (fallback) */
+#content pre:not([class*="language-"]):not(.line-numbers) {
   background: var(--color-background-alt);
   color: var(--color-text);
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
-  line-height: 1.4;
+  line-height: 1.6;
   margin: var(--space-md) 0;
   padding: var(--space-md);
   border: 1px solid var(--color-border);
@@ -338,10 +339,162 @@ cite {
   overflow-x: auto;
 }
 
-#content pre code {
+#content pre:not([class*="language-"]) code {
   background: none;
   padding: 0;
   font-size: inherit;
+}
+
+/* Prism.js syntax highlighted code blocks - Dark Blue Theme */
+#content pre[class*="language-"],
+#content pre.line-numbers,
+pre[class*="language-"],
+pre.line-numbers {
+  background: #0a0e1a !important;
+  color: #e2e8f0 !important;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', monospace !important;
+  font-size: 14px !important;
+  line-height: 1.7 !important;
+  margin: 1.5em 0 !important;
+  padding: 1.5em !important;
+  border: none !important;
+  border-radius: 10px !important;
+  overflow-x: auto !important;
+  tab-size: 2 !important;
+  position: relative !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Critical: Push code content to the right of line numbers */
+#content pre.line-numbers > code,
+#content pre[class*="language-"] > code,
+pre.line-numbers > code,
+pre[class*="language-"] > code {
+  display: block !important;
+  padding-left: 50px !important;
+  padding-top: 20px !important;
+  background: none !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  font-family: inherit !important;
+}
+
+/* Line numbers - proper positioning */
+#content pre.line-numbers .line-numbers-rows,
+pre.line-numbers .line-numbers-rows,
+.line-numbers .line-numbers-rows {
+  position: absolute !important;
+  pointer-events: none !important;
+  top: 1.5em !important;
+  left: 0 !important;
+  width: 3em !important;
+  font-size: 100% !important;
+  line-height: 1.7 !important;
+  letter-spacing: -1px !important;
+  border-right: 1px solid #1e3a5f !important;
+  user-select: none !important;
+  padding-right: 0.8em !important;
+  text-align: right !important;
+  color: #4a6785 !important;
+  background: #0a0e1a !important;
+}
+
+/* Prism Tomorrow theme overrides for dark blue */
+#content .token.comment,
+#content .token.prolog,
+#content .token.doctype,
+#content .token.cdata,
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #6b8a9e !important;
+  background: none !important;
+  font-style: italic;
+}
+
+#content .token.punctuation,
+.token.punctuation {
+  color: #8ba4b8 !important;
+  background: none !important;
+}
+
+#content .token.property,
+#content .token.tag,
+#content .token.boolean,
+#content .token.number,
+#content .token.constant,
+#content .token.symbol,
+#content .token.deleted,
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #ff7b72 !important;
+  background: none !important;
+}
+
+#content .token.selector,
+#content .token.attr-name,
+#content .token.string,
+#content .token.char,
+#content .token.builtin,
+#content .token.inserted,
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #7ee787 !important;
+  background: none !important;
+}
+
+#content .token.operator,
+#content .token.entity,
+#content .token.url,
+.token.operator,
+.token.entity,
+.token.url {
+  color: #79c0ff !important;
+  background: none !important;
+}
+
+#content .token.atrule,
+#content .token.attr-value,
+#content .token.keyword,
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #ff7b72 !important;
+  background: none !important;
+}
+
+#content .token.function,
+#content .token.class-name,
+.token.function,
+.token.class-name {
+  color: #d2a8ff !important;
+  background: none !important;
+}
+
+#content .token.regex,
+#content .token.important,
+#content .token.variable,
+.token.regex,
+.token.important,
+.token.variable {
+  color: #ffa657 !important;
+  background: none !important;
+}
+
+/* Catch-all for any other tokens */
+#content [class*="token"],
+[class*="token"] {
+  background: none !important;
 }
 
 /*--------------------------------------------------------------

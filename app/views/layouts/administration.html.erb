@@ -7,126 +7,129 @@
   <meta http-equiv="imagetoolbar" content="no" />
   <%= csrf_meta_tags %>
   <%= stylesheet_link_tag "bootstrap", "administration_structure", "lightbox" %>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css">
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
-  <script>jQuery.noConflict();</script>
-  <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
-  <%= javascript_importmap_tags %>
+
+  <!-- CRITICAL: Protect native methods BEFORE Prototype.js loads -->
+  <script>
+    // Save native Array.from before Prototype.js can break it
+    window._nativeArrayFrom = Array.from.bind(Array);
+
+    // Protect Object.prototype - make any Prototype.js additions non-enumerable
+    // We'll check after Prototype.js loads
+    window._fixPrototypeJs = function() {
+      // Fix Array.from if Prototype.js broke it
+      var testSet = new Set([1, 2, 3]);
+      if (Array.from(testSet).length === 0) {
+        Array.from = function(iterable, mapFn, thisArg) {
+          if (iterable == null) return [];
+          // Try native first
+          var result = window._nativeArrayFrom(iterable, mapFn, thisArg);
+          if (result.length === 0 && iterable != null) {
+            // Fallback for iterables
+            if (typeof iterable[Symbol.iterator] === 'function') {
+              try {
+                result = [];
+                for (var item of iterable) {
+                  result.push(mapFn ? mapFn.call(thisArg, item) : item);
+                }
+              } catch (e) {}
+            }
+          }
+          return result;
+        };
+        console.log('Array.from fixed after Prototype.js');
+      }
+
+      // Make Prototype.js Object.prototype additions non-enumerable
+      ['inspect', 'toJSON', 'clone', 'toQueryString', 'keys', 'values'].forEach(function(method) {
+        if (Object.prototype.hasOwnProperty(method)) {
+          try {
+            Object.defineProperty(Object.prototype, method, { enumerable: false });
+          } catch (e) {}
+        }
+      });
+    };
+  </script>
+
   <%= javascript_include_tag "prototype", "builder", "effects", "controls", "dragdrop", "typo", "lightbox", "typo_carousel", "administration" %>
+
+  <!-- Fix Prototype.js damage before Stimulus loads -->
+  <script>window._fixPrototypeJs();</script>
+
+  <!-- CodeMirror 5 for syntax highlighting (loaded globally for reliability) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/theme/monokai.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/markdown/markdown.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/gfm/gfm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/ruby/ruby.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/css/css.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/xml/xml.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/mode/overlay.min.js"></script>
+
+  <!-- Load importmap for Stimulus controllers -->
+  <%= javascript_importmap_tags %>
   <%= calendar_date_select_includes %>
   <style type="text/css">
     #carousel-content .slide { width: <%= this_blog.image_thumb_size %>; }
 
-    /* Ensure editors are visible and properly sized */
-    #visual_editor .rich-editor-wrapper { margin-bottom: 10px; }
-    #visual_editor .ql-container { min-height: 300px; background: white; }
-    #visual_editor .ql-editor { min-height: 300px; }
-    #simple_editor textarea { min-height: 300px; width: 100%; background: white; }
-    .ql-toolbar { background: #f3f3f3; border: 1px solid #ccc !important; }
-
-    /* Amazon button in Quill toolbar */
-    .ql-amazon {
-      width: 28px !important;
-      font-size: 12px !important;
-      font-weight: bold !important;
+    /* Markdown editor styles */
+    .markdown-editor-container { margin-bottom: 15px; }
+    .markdown-textarea {
+      width: 100%;
+      min-height: 400px;
+      padding: 12px;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
     }
-    .ql-amazon::before {
-      content: 'amz';
+    .markdown-toolbar {
+      background: #f5f5f5;
+      border: 1px solid #ccc;
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      padding: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
     }
+    .toolbar-btn {
+      padding: 4px 8px;
+      border: 1px solid #ccc;
+      background: white;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .toolbar-btn:hover { background: #e9e9e9; }
+    .toolbar-group { display: flex; gap: 2px; margin-right: 10px; }
+    .toolbar-label { font-size: 11px; color: #666; margin-right: 4px; align-self: center; }
+    .preview-toggle { margin-left: auto; }
+    .markdown-preview {
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-top: none;
+      background: #fafafa;
+      min-height: 200px;
+    }
+    .editor-pane { border-radius: 0 0 4px 4px; }
 
     /* Fix footer positioning */
     footer {
       clear: both;
       position: relative;
       z-index: 1;
-      margin-left: 220px; /* Same as sidebar width */
+      margin-left: 220px;
       padding: 20px;
       text-align: center;
       background: #f5f5f5;
       border-top: 1px solid #ddd;
     }
   </style>
-  <script>
-    // Fallback Quill initialization without Stimulus
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('DOM loaded, checking for Quill editor...');
-
-      // Editor initialization is handled by the form template
-      // This is just a fallback for pages without the form's init script
-      var visualEditor = document.getElementById('visual_editor');
-      if (!visualEditor || visualEditor.style.display === 'none') {
-        console.log('Visual editor not visible, skipping Quill initialization');
-        return;
-      }
-
-      // Find editor container
-      var editorContainer = document.querySelector('[data-rich-editor-target="editor"]');
-      var hiddenInput = document.querySelector('[data-rich-editor-target="input"]');
-
-      if (editorContainer && typeof Quill !== 'undefined') {
-        console.log('Found editor container, creating Quill instance...');
-
-        var quill = new Quill(editorContainer, {
-          theme: 'snow',
-          placeholder: 'Start writing...',
-          modules: {
-            toolbar: {
-              container: [
-                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                ['bold', 'italic', 'underline', 'strike'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                [{ 'indent': '-1'}, { 'indent': '+1' }],
-                [{ 'align': [] }],
-                ['blockquote', 'code-block'],
-                ['link', 'image', 'amazon'],
-                [{ 'color': [] }, { 'background': [] }],
-                ['clean']
-              ],
-              handlers: {
-                'amazon': function() {
-                  var asin = prompt('Enter Amazon ASIN (10-character product ID from URL):');
-                  if (!asin) return;
-
-                  var title = prompt('Enter book/product title:');
-                  if (!title) return;
-
-                  var linkText = prompt('Enter link text (or leave blank to use title):', title);
-                  var displayText = linkText || title;
-
-                  var amazonTag = '<typo:amazon asin="' + asin + '" title="' + title + '">' + displayText + '</typo:amazon>';
-
-                  var range = quill.getSelection(true);
-                  quill.insertText(range.index, amazonTag);
-                }
-              }
-            }
-          }
-        });
-
-        console.log('Quill created!', quill);
-
-        // Store reference for switchEditor
-        editorContainer.quill = quill;
-        window.quillEditor = quill;
-
-        // Set initial content
-        if (hiddenInput && hiddenInput.value) {
-          quill.root.innerHTML = hiddenInput.value;
-        }
-
-        // Sync content to hidden input
-        quill.on('text-change', function() {
-          if (hiddenInput) {
-            hiddenInput.value = quill.root.innerHTML;
-          }
-        });
-      } else {
-        console.log('No editor container found or Quill not loaded');
-        console.log('Editor container:', editorContainer);
-        console.log('Quill:', typeof Quill);
-      }
-    });
-  </script>
 </head>
 <body>
   <div class='topbar'>

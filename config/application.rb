@@ -30,9 +30,12 @@ module TypoBlog
       #{config.root}/lib
     )
 
-    # Ignore action_web_service directory from Zeitwerk autoloader
-    # (legacy library with non-standard naming conventions)
+    # Ignore action_web_service and related files from Zeitwerk autoloader
+    # (legacy library with non-standard naming conventions and deprecated Rails APIs)
     Rails.autoloaders.main.ignore("#{config.root}/lib/action_web_service")
+    # Also ignore app/apis and backend_controller which depend on action_web_service
+    Rails.autoloaders.main.ignore("#{config.root}/app/apis")
+    Rails.autoloaders.main.ignore("#{config.root}/app/controllers/backend_controller.rb")
 
     # Add public/javascripts to asset paths for legacy assets
     config.assets.paths << Rails.root.join('public', 'javascripts')

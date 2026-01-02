@@ -1,34 +1,97 @@
+require "active_support/core_ext/integer/time"
+
 TypoBlog::Application.configure do
-  # Settings specified here will take precedence over those in config/environment.rb
+  # Settings specified here will take precedence over those in config/application.rb.
 
-  # The production environment is meant for finished, "live" apps.
-  # Code is not reloaded between requests
-  config.cache_classes = true
+  # Secret key base from environment variable
+  config.secret_key_base = ENV["SECRET_KEY_BASE"]
 
-  # Full error reports are disabled and caching is turned on
+  # Code is not reloaded between requests.
+  config.enable_reloading = false
+
+  # Eager load code on boot for better performance and memory savings.
+  config.eager_load = true
+
+  # Full error reports are disabled.
   config.consider_all_requests_local = false
-  config.action_controller.perform_caching             = false
 
-  # See everything in the log (default is :info)
-  # config.log_level = :debug
+  # Turn on fragment caching in view templates.
+  config.action_controller.perform_caching = true
 
-  # Use a different logger for distributed setups
-  # config.logger = SyslogLogger.new
+  # Cache assets for far-future expiry since they are all digest stamped.
+  config.public_file_server.headers = { "cache-control" => "public, max-age=#{1.year.to_i}" }
 
-  # Use a different cache store in production
+  # Enable serving of images, stylesheets, and JavaScripts from an asset server.
+  # config.asset_host = "http://assets.example.com"
+
+  # Store uploaded files on the local file system (see config/storage.yml for options).
+  # config.active_storage.service = :local
+
+  # Assume all access to the app is happening through a SSL-terminating reverse proxy.
+  config.assume_ssl = ENV["RAILS_ASSUME_SSL"] == "true"
+
+  # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
+  config.force_ssl = ENV["RAILS_FORCE_SSL"] == "true"
+
+  # Skip http-to-https redirect for the default health check endpoint.
+  # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
+
+  # Log to STDOUT with the current request id as a default log tag.
+  config.log_tags = [ :request_id ]
+  config.logger = ActiveSupport::TaggedLogging.logger(STDOUT)
+
+  # Change to "debug" to log everything (including potentially sensitive information!)
+  config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
+
+  # Prevent health checks from clogging up the logs.
+  config.silence_healthcheck_path = "/up"
+
+  # Don't log any deprecations.
+  config.active_support.report_deprecations = false
+
+  # Replace the default in-process memory cache store with a durable alternative.
   # config.cache_store = :mem_cache_store
 
-  # Enable serving of images, stylesheets, and javascripts from an asset server
-  # config.action_controller.asset_host = "http://assets.example.com"
+  # Replace the default in-process and non-durable queuing backend for Active Job.
+  # config.active_job.queue_adapter = :resque
 
-  # Disable delivery errors, bad email addresses will be ignored
+  # Disable caching for Action Mailer templates even if Action Controller caching is enabled.
+  config.action_mailer.perform_caching = false
+
+  # Ignore bad email addresses and do not raise email delivery errors.
+  # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false
 
-  # Enable threaded mode
-  # config.threadsafe!
+  # Set host for URL generation in mailer templates
+  config.action_mailer.default_url_options = { host: ENV.fetch("TYPO_HOST", "localhost") }
 
-  Migrator.offer_migration_when_available            = true
+  # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
+  # the I18n.default_locale when a translation cannot be found).
+  config.i18n.fallbacks = true
 
-  config.logger = Logger.new(STDOUT)
-  config.logger.level = Logger.const_get(([ENV['LOG_LEVEL'].to_s.upcase, "INFO"] & %w[DEBUG INFO WARN ERROR FATAL UNKNOWN]).compact.first)
+  # Do not dump schema after migrations.
+  config.active_record.dump_schema_after_migration = false
+
+  # Only use :id for inspections in production.
+  config.active_record.attributes_for_inspect = [ :id ]
+
+  # Enable DNS rebinding protection and other `Host` header attacks.
+  # config.hosts = [
+  #   "example.com",     # Allow requests from example.com
+  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
+  # ]
+  #
+  # Skip DNS rebinding protection for the default health check endpoint.
+  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
+  # Allow all hosts in Docker environment (configure properly for production)
+  config.hosts = nil
+
+  # Serve static files from the /public folder
+  config.public_file_server.enabled = ENV["RAILS_SERVE_STATIC_FILES"].present? || true
+
+  # Typo-specific settings
+  config.after_initialize do
+    Migrator.offer_migration_when_available = true if defined?(Migrator)
+  end
 end

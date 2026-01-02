@@ -1,15 +1,16 @@
 // Configure your import map in config/importmap.rb. Read more: https://github.com/rails/importmap-rails
+// Note: Prototype.js compatibility patches are in the layout (run BEFORE Prototype.js loads)
+console.log('application.js: Starting imports...')
 
 import "@hotwired/turbo-rails"
-import "./controllers"
+console.log('application.js: Turbo loaded')
 
-// Configure Turbo
-Turbo.session.drive = true
+import "controllers"
+console.log('application.js: Controllers loaded')
 
-// Turbo configuration for legacy compatibility
-document.addEventListener('turbo:load', () => {
-  // Re-initialize calendar date select if needed
-  if (typeof _calendar_date_select !== 'undefined') {
-    _calendar_date_select.load()
-  }
-})
+// DISABLE Turbo Drive - this app uses Prototype.js which doesn't work with Turbo's
+// partial page replacements. Turbo Drive intercepts clicks and does AJAX navigation,
+// but Prototype.js scripts expect full page loads.
+// Turbo Frames and Streams still work if needed.
+Turbo.session.drive = false
+console.log('Turbo Drive disabled for Prototype.js compatibility')

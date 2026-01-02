@@ -1,9 +1,10 @@
 import { Application } from "@hotwired/stimulus"
 
-const application = Application.start()
+// Create application but delay start
+const application = new Application()
+application.debug = true
+window.Stimulus = application
 
-// Configure Stimulus development experience
-application.debug = false
-window.Stimulus   = application
+console.log('Stimulus application created (not started yet)')
 
 export { application }

@@ -2,6 +2,12 @@ require 'base64'
 
 module Admin; end
 class Admin::ContentController < Admin::BaseController
+  # Simple struct for preview content with a whiteboard attribute
+  PreviewContent = Struct.new(:whiteboard) do
+    def initialize
+      super({})
+    end
+  end
   layout "administration", :except => [:show, :autosave]
 
   cache_sweeper :blog_sweeper
@@ -56,12 +62,32 @@ class Admin::ContentController < Admin::BaseController
   end
 
   def insert_editor
-    editor = 'visual'
-    editor = 'simple' if params[:editor].to_s == 'simple'
+    editor = case params[:editor].to_s
+             when 'simple' then 'simple'
+             when 'markdown' then 'markdown'
+             else 'visual'
+             end
     current_user.editor = editor
     current_user.save!
 
     render :partial => "#{editor}_editor"
+  end
+
+  def preview_markdown
+    content = params[:content] || ""
+    text_filter_name = params[:text_filter] || 'markdown'
+    text_filter = TextFilter.find_by(name: text_filter_name) || TextFilter.find_by(name: 'markdown')
+
+    # Create a temporary content object for text filter processing
+    temp_content = PreviewContent.new
+
+    rendered = if text_filter
+                 text_filter.filter_text_for_content(this_blog, content, temp_content)
+               else
+                 content
+               end
+
+    render html: rendered.html_safe
   end
 
   def category_add; do_add_or_remove_fu; end

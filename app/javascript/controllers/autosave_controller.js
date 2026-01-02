@@ -10,8 +10,18 @@ export default class extends Controller {
   }
 
   connect() {
-    this.startAutosave()
-    this.updateStatus("Autosave enabled")
+    // Only start autosave if we have a form target
+    if (this.hasFormTarget) {
+      this.startAutosave()
+      this.updateStatus("Autosave enabled")
+    } else {
+      // Try to find the form as a parent element
+      this.formElement = this.element.closest('form')
+      if (this.formElement) {
+        this.startAutosave()
+        this.updateStatus("Autosave enabled")
+      }
+    }
   }
 
   disconnect() {
@@ -30,19 +40,22 @@ export default class extends Controller {
     }
   }
 
-  async save() {
-    try {
-      // Sync CKEditor content if it exists
-      if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.article__body_and_extended_editor) {
-        const content = CKEDITOR.instances.article__body_and_extended_editor.getData()
-        const textarea = document.getElementById('article__body_and_extended_editor')
-        if (textarea) {
-          textarea.value = content
-        }
-      }
+  get form() {
+    return this.hasFormTarget ? this.formTarget : this.formElement
+  }
 
-      const formData = new FormData(this.formTarget)
-      const url = this.urlValue || this.formTarget.action.replace(/\/(new|edit).*$/, '/autosave')
+  async save() {
+    const form = this.form
+    if (!form) {
+      return // No form available
+    }
+
+    try {
+      // Sync CodeMirror/Quill content to hidden inputs if they exist
+      // (Editors should handle their own syncing via input events)
+
+      const formData = new FormData(form)
+      const url = this.urlValue || form.action.replace(/\/(new|edit).*$/, '/autosave')
 
       this.updateStatus("Saving...")
 

@@ -45,6 +45,13 @@ TextFilter.find_or_create_by!(id: 2) do |tf|
   tf.name = "markdown"
   tf.params = ""
 end
+TextFilter.find_or_create_by!(id: 3) do |tf|
+  tf.description = "Markdown with SmartyPants"
+  tf.filters = ["smartypants"]
+  tf.markup = "markdown"
+  tf.name = "markdown smartypants"
+  tf.params = ""
+end
 TextFilter.find_or_create_by!(id: 5) do |tf|
   tf.description = "Textile"
   tf.filters = ""

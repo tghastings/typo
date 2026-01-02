@@ -98,44 +98,11 @@ module ApplicationHelper
     link_to name, url, html_options
   end
 
-  # Modern rich text editor using Quill (replaces CKEditor)
+  # Legacy CKEditor helper - now deprecated, use markdown editor instead
+  # Kept for backward compatibility but returns empty string
   def ckeditor_textarea(object, field, options = {})
-    rich_editor(object, field, options)
-  end
-
-  def rich_editor(object, field, options = {})
-    var = instance_variable_get("@#{object}")
-    value = var ? (var.send(field.to_sym) || "") : ""
-
-    id = "#{object}__#{field}_editor"  # Use double underscore to differentiate from simple editor
-    editor_div_id = "#{id}_container"
-    height = options[:height] || '300px'
-    css_class = options[:class] || ''
-    toolbar = options[:toolbar] || 'full'
-
-    content_tag(:div,
-      data: {
-        controller: "rich-editor",
-        rich_editor_placeholder_value: options[:placeholder] || "Start writing...",
-        rich_editor_toolbar_value: toolbar
-      },
-      class: "rich-editor-wrapper #{css_class}") do
-
-      # Hidden input to store the actual value - this will be submitted with the form
-      hidden_field = hidden_field_tag("#{object}[#{field}]", value,
-        id: id,
-        data: { rich_editor_target: "input" }
-      )
-
-      # Editor container
-      editor_div = content_tag(:div, "",
-        id: editor_div_id,
-        data: { rich_editor_target: "editor" },
-        style: "height: #{height}; border: 1px solid #ccc; border-radius: 4px;"
-      )
-
-      hidden_field + editor_div
-    end
+    # CKEditor has been removed - use markdown editor via render 'admin/shared/markdown_editor'
+    ""
   end
 
   # Backward compatibility for error_messages_for (removed in Rails 4+)

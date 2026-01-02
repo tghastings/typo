@@ -1,7 +1,11 @@
 function autosave_request(e) {
   new Form.Observer (e, 30, function(element, value) {
-			if ($('current_editor').value == 'visual') {
-				$('article__body_and_extended_editor').value = CKEDITOR.instances.article__body_and_extended_editor.getData();;
+			if ($('current_editor') && $('current_editor').value == 'visual') {
+				// Sync Quill editor content to hidden field (replaces CKEDITOR)
+				var editorElement = document.querySelector('#visual_editor [data-rich-editor-target="editor"]');
+				if (editorElement && editorElement.quill && $('article__body_and_extended_editor')) {
+					$('article__body_and_extended_editor').value = editorElement.quill.root.innerHTML;
+				}
 			}
 
       new Ajax.Request(e.action.gsub(/\/new\/{0,1}/, '/autosave/') , {
@@ -573,104 +577,9 @@ function edShowExtraCookie() {
 	return false;
 }
 
-// Switch between visual and simple editor modes
+// Legacy switchEditor function - no longer used
+// The markdown editor is now the only editor
 function switchEditor(editor) {
-	// Update current editor field
-	if ($('current_editor')) {
-		$('current_editor').value = editor;
-	}
-
-	if (editor == 'visual') {
-		// Switch to visual (Quill) editor
-		if ($('quicktags')) $('quicktags').style.display = 'none';
-		if ($('simple_editor')) $('simple_editor').style.display = 'none';
-		if ($('visual_editor')) $('visual_editor').style.display = 'block';
-		if ($('s')) $('s').className = '';
-		if ($('f')) $('f').className = 'active';
-		if ($('text_filter')) $('text_filter').value = 'none';
-
-		// Get content from simple editor textarea
-		var content = '';
-		if ($('article_body_and_extended_simple')) {
-			content = $('article_body_and_extended_simple').value;
-		}
-
-		// Initialize Quill if it wasn't initialized (parent was hidden on page load)
-		var editorContainer = document.querySelector('#visual_editor [data-rich-editor-target="editor"]');
-		if (editorContainer && !editorContainer.quill && typeof Quill !== 'undefined') {
-			var quill = new Quill(editorContainer, {
-				theme: 'snow',
-				placeholder: 'Start writing...',
-				modules: {
-					toolbar: [
-						[{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-						['bold', 'italic', 'underline', 'strike'],
-						[{ 'list': 'ordered'}, { 'list': 'bullet' }],
-						[{ 'indent': '-1'}, { 'indent': '+1' }],
-						[{ 'align': [] }],
-						['blockquote', 'code-block'],
-						['link', 'image'],
-						[{ 'color': [] }, { 'background': [] }],
-						['clean']
-					]
-				}
-			});
-			editorContainer.quill = quill;
-			window.quillEditor = quill;
-
-			// Set up change handler to update hidden input
-			var hiddenInput = document.querySelector('#visual_editor [data-rich-editor-target="input"]');
-			if (hiddenInput) {
-				quill.on('text-change', function() {
-					hiddenInput.value = quill.root.innerHTML;
-				});
-			}
-		}
-
-		// Wait for Quill to initialize and set content
-		setTimeout(function() {
-			var editorElement = document.querySelector('#visual_editor [data-rich-editor-target="editor"]');
-			if (editorElement && editorElement.quill) {
-				editorElement.quill.root.innerHTML = content;
-				// Update the hidden field that gets submitted
-				if ($('article__body_and_extended_editor')) {
-					$('article__body_and_extended_editor').value = content;
-				}
-			}
-		}, 100);
-
-		if ($('carousel-wrapper')) $('carousel-wrapper').style.display = 'none';
-
-	} else if (editor == 'simple') {
-		// Switch to simple (HTML) editor
-		if ($('quicktags')) $('quicktags').style.display = 'block';
-		if ($('simple_editor')) $('simple_editor').style.display = 'block';
-		if ($('s')) $('s').className = 'active';
-		if ($('f')) $('f').className = '';
-
-		// Get user's default text filter
-		if ($('user_textfilter') && $('text_filter')) {
-			$('text_filter').value = $('user_textfilter').value;
-		}
-
-		// Get content from Quill editor if it exists
-		var content = '';
-		var editorElement = document.querySelector('#visual_editor [data-rich-editor-target="editor"]');
-		if (editorElement && editorElement.quill) {
-			content = editorElement.quill.root.innerHTML;
-		} else if ($('article__body_and_extended_editor')) {
-			content = $('article__body_and_extended_editor').value;
-		}
-
-		// Set content in simple editor textarea
-		if ($('article_body_and_extended_simple')) {
-			$('article_body_and_extended_simple').value = content;
-		}
-
-		if ($('visual_editor')) {
-			$('visual_editor').style.display = 'none';
-		}
-
-		if ($('carousel-wrapper')) $('carousel-wrapper').style.display = 'block';
-	}
+	// No-op: markdown editor is now the only editor
+	console.log('switchEditor is deprecated - markdown editor is now used');
 }

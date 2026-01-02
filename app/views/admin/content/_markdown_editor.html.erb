@@ -1,0 +1,6 @@
+<%= render 'admin/shared/markdown_editor',
+    object_name: 'article',
+    field_name: 'body_and_extended',
+    content: @article&.body_and_extended || '',
+    text_filter: @article&.text_filter&.name || 'markdown',
+    show_more_button: true %>

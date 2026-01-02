@@ -30,11 +30,14 @@ class ThemeController < ContentController
     src = this_blog.current_theme.path + "/#{type}/#{file}"
     return (render plain: "Not Found", status: 404) unless File.exist? src
 
-    if perform_caching
-      cache_page File.read(src)
-    end
+    # Set proper content-type header explicitly
+    response.headers['Content-Type'] = mime
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
 
-    send_file(src, :type => mime, :disposition => 'inline', :stream => true)
+    send_data File.read(src), type: mime, disposition: 'inline'
   end
 
   def mime_for(filename)

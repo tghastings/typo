@@ -3,21 +3,22 @@ class SetupController < ApplicationController
   layout 'accounts'
 
   def index
+    @blog = Blog.table_exists? ? Blog.first_or_initialize : Blog.new
     return if not request.post?
 
-    this_blog.blog_name = params[:setting][:blog_name]
-    this_blog.base_url = blog_base_url
+    @blog.blog_name = params[:setting][:blog_name]
+    @blog.base_url = blog_base_url
 
     @user = User.new(:login => 'admin', :email => params[:setting][:email])
     @user.password = generate_password
     @user.name = @user.login
 
-    unless this_blog.valid? and @user.valid?
+    unless @blog.valid? and @user.valid?
       redirect_to :action => 'index'
       return
     end
 
-    return unless this_blog.save
+    return unless @blog.save
 
     session[:tmppass] = @user.password
 

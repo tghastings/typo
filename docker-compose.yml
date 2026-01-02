@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # Typo Blog with SQLite (simple setup)
+  typo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - RAILS_ENV=production
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE:-changeme_in_production}
+      - RAILS_LOG_TO_STDOUT=true
+      - RAILS_SERVE_STATIC_FILES=true
+    volumes:
+      - typo_db:/app/db
+      - typo_uploads:/app/public/uploads
+      - typo_logs:/app/log
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Alternative: Typo with PostgreSQL (uncomment to use)
+  # typo-pg:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - RAILS_ENV=production
+  #     - SECRET_KEY_BASE=${SECRET_KEY_BASE:-changeme_in_production}
+  #     - DATABASE_URL=postgres://typo:typo@postgres:5432/typo_production
+  #     - RAILS_LOG_TO_STDOUT=true
+  #     - RAILS_SERVE_STATIC_FILES=true
+  #   volumes:
+  #     - typo_uploads:/app/public/uploads
+  #     - typo_logs:/app/log
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+
+  # postgres:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     - POSTGRES_USER=typo
+  #     - POSTGRES_PASSWORD=typo
+  #     - POSTGRES_DB=typo_production
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U typo"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   restart: unless-stopped
+
+volumes:
+  typo_db:
+  typo_uploads:
+  typo_logs:
+  # postgres_data:

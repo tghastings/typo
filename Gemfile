@@ -14,8 +14,11 @@ end
 
 # Core dependencies
 gem 'rexml'  # Required in Ruby 3+
+gem 'xmlrpc'  # Required for XML-RPC support in Ruby 3+
 gem 'htmlentities'
 gem 'bluecloth', '~> 2.2'
+gem 'kramdown', '~> 2.4'           # Modern Markdown with fenced code blocks
+gem 'kramdown-parser-gfm', '~> 1.1' # GitHub Flavored Markdown support
 gem 'coderay', '~> 1.1'
 gem 'kaminari'
 gem 'RedCloth', '~> 4.3'
@@ -58,7 +61,6 @@ group :development, :test do
   gem 'cucumber-rails', require: false
   gem 'cucumber', '~> 9.0'
   gem 'debug'
-  gem 'xmlrpc'  # Required for ping/XML-RPC tests in Ruby 3+
 end
 
 group :development do

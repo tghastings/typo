@@ -18,11 +18,32 @@ class Admin::ResourcesController < Admin::BaseController
 
         @message = _('File uploaded: ')+ file.size.to_s
         flash[:notice] = @message
+
+        respond_to do |format|
+          format.html { redirect_to action: 'index' }
+          format.json do
+            render json: {
+              url: "/files/#{@up.filename}",
+              thumbnail: "/files/thumb_#{@up.filename}",
+              medium: "/files/medium_#{@up.filename}",
+              id: @up.id,
+              filename: @up.filename,
+              mime: @up.mime
+            }
+          end
+        end
+        return
       end
-    rescue
-      @message = "'" + _('Unable to upload') + " #{file.original_filename}'"
+    rescue => e
+      @message = "'" + _('Unable to upload') + " #{file&.original_filename}'"
       @up.destroy unless @up.nil?
-      raise
+
+      respond_to do |format|
+        format.html { raise }
+        format.json do
+          render json: { error: @message }, status: :unprocessable_entity
+        end
+      end
     end
   end
 

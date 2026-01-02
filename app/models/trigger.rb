@@ -9,6 +9,7 @@ class Trigger < ActiveRecord::Base
     end
 
     def fire
+      return true unless table_exists?
       where('due_at <= ?', Time.now).destroy_all
       true
     end

@@ -1,0 +1,73 @@
+<div class="markdown-editor-container"
+     data-controller="markdown-editor"
+     data-markdown-editor-upload-url-value="<%= url_for(controller: 'admin/resources', action: 'upload') %>"
+     data-markdown-editor-text-filter-value="<%= local_assigns[:text_filter] || 'markdown' %>">
+
+  <!-- Toolbar -->
+  <div class="markdown-toolbar" data-markdown-editor-target="toolbar">
+    <div class="toolbar-group">
+      <button type="button" data-action="markdown-editor#insertBold" title="Bold (Ctrl+B)" class="toolbar-btn">
+        <strong>B</strong>
+      </button>
+      <button type="button" data-action="markdown-editor#insertItalic" title="Italic (Ctrl+I)" class="toolbar-btn">
+        <em>I</em>
+      </button>
+      <button type="button" data-action="markdown-editor#insertLink" title="Link (Ctrl+K)" class="toolbar-btn">
+        Link
+      </button>
+      <button type="button" data-action="markdown-editor#insertImage" title="Insert Image" class="toolbar-btn">
+        Img
+      </button>
+      <button type="button" data-action="markdown-editor#insertHeading" title="Heading" class="toolbar-btn">
+        H
+      </button>
+      <button type="button" data-action="markdown-editor#insertQuote" title="Block Quote" class="toolbar-btn">
+        &ldquo;
+      </button>
+      <button type="button" data-action="markdown-editor#insertList" title="Unordered List" class="toolbar-btn">
+        &bull;
+      </button>
+      <button type="button" data-action="markdown-editor#insertOrderedList" title="Ordered List" class="toolbar-btn">
+        1.
+      </button>
+    </div>
+
+    <div class="toolbar-group toolbar-typo-macros">
+      <span class="toolbar-label">Typo:</span>
+      <button type="button" data-action="markdown-editor#insertTypoCode" title="Code block with syntax highlighting" class="toolbar-btn">
+        Code
+      </button>
+      <button type="button" data-action="markdown-editor#insertTypoAmazon" title="Amazon product link" class="toolbar-btn">
+        Amazon
+      </button>
+      <button type="button" data-action="markdown-editor#insertTypoLightbox" title="Lightbox image" class="toolbar-btn">
+        Lightbox
+      </button>
+    </div>
+
+    <% if local_assigns[:show_more_button] != false %>
+    <div class="toolbar-group toolbar-more">
+      <button type="button" data-action="markdown-editor#insertMore" title="Insert Read More divider" class="toolbar-btn">
+        &lt;!--more--&gt;
+      </button>
+    </div>
+    <% end %>
+
+    <button type="button" data-action="markdown-editor#togglePreview" title="Toggle Preview (Ctrl+P)" class="toolbar-btn preview-toggle">
+      Preview
+    </button>
+  </div>
+
+  <!-- Editor Container -->
+  <div class="editor-pane"
+       data-markdown-editor-target="editor"
+       data-action="dragover->markdown-editor#handleDragOver dragleave->markdown-editor#handleDragLeave drop->markdown-editor#handleDrop">
+    <div class="editor-loading">Loading editor...</div>
+  </div>
+
+  <!-- Hidden input for form submission -->
+  <%= hidden_field_tag "#{local_assigns[:object_name] || 'article'}[#{local_assigns[:field_name] || 'body_and_extended'}]",
+      local_assigns[:content] || '',
+      id: "#{local_assigns[:object_name] || 'article'}_#{local_assigns[:field_name] || 'body_and_extended'}_markdown",
+      data: { markdown_editor_target: 'input' } %>
+</div>

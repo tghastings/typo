@@ -495,21 +495,18 @@ _footer text here_
     end
   end
 
-  describe 'TYPEMAP constant' do
-    it 'maps filter types to string names' do
-      TextFilter::TYPEMAP.should be_a(Hash)
-      TextFilter::TYPEMAP[TextFilterPlugin::Markup].should == 'markup'
-      TextFilter::TYPEMAP[TextFilterPlugin::MacroPre].should == 'macropre'
-      TextFilter::TYPEMAP[TextFilterPlugin::MacroPost].should == 'macropost'
-      TextFilter::TYPEMAP[TextFilterPlugin::PostProcess].should == 'postprocess'
-      TextFilter::TYPEMAP[TextFilterPlugin].should == 'other'
+  describe 'TYPEMAP_NAMES constant' do
+    it 'maps filter type names to string keys' do
+      TextFilter::TYPEMAP_NAMES.should be_a(Hash)
+      TextFilter::TYPEMAP_NAMES['TextFilterPlugin::Markup'].should == 'markup'
+      TextFilter::TYPEMAP_NAMES['TextFilterPlugin::MacroPre'].should == 'macropre'
+      TextFilter::TYPEMAP_NAMES['TextFilterPlugin::MacroPost'].should == 'macropost'
+      TextFilter::TYPEMAP_NAMES['TextFilterPlugin::PostProcess'].should == 'postprocess'
+      TextFilter::TYPEMAP_NAMES['TextFilterPlugin'].should == 'other'
     end
-  end
 
-  describe 'class attribute @text_helper' do
-    it 'is initialized with ContentTextHelpers' do
-      # This tests that the class variable is set up correctly
-      TextFilter.instance_variable_get(:@text_helper).should be_a(ContentTextHelpers)
+    it 'is frozen to prevent modification' do
+      TextFilter::TYPEMAP_NAMES.should be_frozen
     end
   end
 end

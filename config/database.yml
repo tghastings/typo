@@ -1,20 +1,36 @@
-development:
-  adapter: sqlite3
-  database: db/db_development
+# Database configuration for Typo Blog
+# Supports SQLite for development/simple deployments and PostgreSQL for production
+
+default: &default
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   timeout: 5000
 
-test: &test
+development:
+  <<: *default
+  adapter: sqlite3
+  database: db/db_development
+
+test:
+  <<: *default
   adapter: sqlite3
   database: db/db_test
   timeout: 60000
-  pool: 5
 
+# Production supports both SQLite and PostgreSQL
+# Use DATABASE_URL environment variable for PostgreSQL:
+#   DATABASE_URL=postgres://user:pass@host:5432/dbname
+# Or leave unset to use SQLite
 production:
-  adapter: postgresql
-  database: db_production
-  timeout: 5000
+  <<: *default
+  <% if ENV['DATABASE_URL'] %>
+  url: <%= ENV['DATABASE_URL'] %>
+  <% else %>
+  adapter: sqlite3
+  database: storage/db_production.sqlite3
+  <% end %>
 
 cucumber:
-  <<: *test
-cucumber:
-  <<: *test
+  <<: *default
+  adapter: sqlite3
+  database: db/db_test
+  timeout: 60000

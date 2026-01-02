@@ -123,18 +123,19 @@ module ActionWebService # :nodoc:
         end
     end
 
-    module InstanceMethods # :nodoc:
-      def self.included(base)
-        base.class_eval do
-          alias_method_chain :perform_invocation, :interception
-        end
-      end
-
-      def perform_invocation_with_interception(method_name, params, &block)
+    # Module to prepend for interception functionality
+    module Interception # :nodoc:
+      def perform_invocation(method_name, params, &block)
         return if before_invocation(method_name, params, &block) == false
-        return_value = perform_invocation_without_interception(method_name, params)
+        return_value = super(method_name, params)
         after_invocation(method_name, params, return_value)
         return_value
+      end
+    end
+
+    module InstanceMethods # :nodoc:
+      def self.included(base)
+        base.prepend(Interception)
       end
 
       def perform_invocation(method_name, params)

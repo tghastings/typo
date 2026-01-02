@@ -20,24 +20,32 @@ class TextFilter < ActiveRecord::Base
     available_filters.select { |filter| TextFilterPlugin::Macro > filter }
   end
 
-  TYPEMAP={TextFilterPlugin::Markup => "markup",
-           TextFilterPlugin::MacroPre => "macropre",
-           TextFilterPlugin::MacroPost => "macropost",
-           TextFilterPlugin::PostProcess => "postprocess",
-           TextFilterPlugin => "other"}
+  # Use string keys to avoid class identity issues during Rails development reloading
+  TYPEMAP_NAMES = {
+    "TextFilterPlugin::Markup" => "markup",
+    "TextFilterPlugin::MacroPre" => "macropre",
+    "TextFilterPlugin::MacroPost" => "macropost",
+    "TextFilterPlugin::PostProcess" => "postprocess",
+    "TextFilterPlugin" => "other"
+  }.freeze
 
   def self.available_filter_types
-    filters=available_filters
+    filters = available_filters
     @cached_filter_types ||= {}
 
     unless @cached_filter_types[filters]
-      types={"macropre" => [],
-             "macropost" => [],
-             "markup" => [],
-             "postprocess" => [],
-             "other" => []}
+      types = {
+        "macropre" => [],
+        "macropost" => [],
+        "markup" => [],
+        "postprocess" => [],
+        "other" => []
+      }
 
-      filters.each { |filter| types[TYPEMAP[filter.superclass]].push(filter) }
+      filters.each do |filter|
+        type_name = TYPEMAP_NAMES[filter.superclass.name] || "other"
+        types[type_name].push(filter)
+      end
 
       @cached_filter_types[filters] = types
     end

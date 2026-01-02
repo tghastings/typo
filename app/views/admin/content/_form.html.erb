@@ -100,30 +100,8 @@
 
     <%= render('images', { :images => @images}) unless @images.empty? %>
 
-    <div id='editor-menu'>
-		<ul class="tabs">
-			<li id="f" class='<%= "active" if current_user.editor == 'visual' %>'>
-				<%= build_editor_link("Visual", 'insert_editor', 'fck', 'visual_editor', 'visual') %>
-			</li>
-			<li id="s" class='<%= "active" if current_user.editor == 'simple' %> '>
-				<%= build_editor_link("HTML", 'insert_editor', 'simple', 'simple_editor', 'simple') %>
-			</li>
-		</ul>
-    </div>
-
     <div id="editor">
-      <div id='quicktags' style='<%= "display: none;" if current_user.editor == 'visual' %>'>
-        <script type="text/javascript">edToolbar('article_body_and_extended');</script>
-      </div>
-
-      <div id ='visual_editor' <%= "style='display: none;'" if current_user.editor != 'visual'%> >
-        <%= ckeditor_textarea('article', 'body_and_extended', {:class => 'large', :height => '300px', :rows => '20'}) %>
-      </div>
-
-      <div id='simple_editor' class='input_text' <%= "style='display: none;'" if current_user.editor == 'visual'%> >
-        <%= text_area('article', 'body_and_extended', {:class => 'large', :height => '300px', :rows => '20', :id => 'article_body_and_extended_simple'}) %>
-        <%= render_macros(@macros) %>
-      </div>
+      <%= render 'markdown_editor' %>
     </div>
 
 		<h4><%= _("Tags") %></h4>
@@ -152,15 +130,3 @@
 
 </div>
 
-<script>
-  // Initialize the correct editor on page load
-  document.addEventListener('DOMContentLoaded', function() {
-    var editorValue = '<%= current_user.editor %>';
-    if (!editorValue || (editorValue !== 'visual' && editorValue !== 'simple')) {
-      editorValue = 'visual';
-    }
-    if (typeof switchEditor === 'function') {
-      switchEditor(editorValue);
-    }
-  });
-</script>
