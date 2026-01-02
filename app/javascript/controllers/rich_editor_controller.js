@@ -10,10 +10,8 @@ export default class extends Controller {
   }
 
   connect() {
-    console.log('Rich editor controller connected')
     // Don't initialize if parent is hidden (editor not selected)
     if (this.element.offsetParent === null) {
-      console.log('Rich editor parent is hidden, deferring initialization')
       this.deferred = true
       return
     }
@@ -32,7 +30,6 @@ export default class extends Controller {
       }
 
       if (typeof Quill === 'undefined') {
-        console.error('Quill failed to load after 5 seconds')
         return
       }
     }
@@ -42,11 +39,8 @@ export default class extends Controller {
 
   initializeEditor() {
     if (this.quill) {
-      console.log('Quill already initialized')
       return // Already initialized
     }
-
-    console.log('Initializing Quill editor...', this.editorTarget)
 
     const toolbarOptions = this.getToolbarConfig()
 
@@ -59,8 +53,6 @@ export default class extends Controller {
           toolbar: toolbarOptions
         }
       })
-
-      console.log('Quill initialized successfully!', this.quill)
 
       // Attach Quill instance to the editor element for legacy code access
       this.editorTarget.quill = this.quill
@@ -83,7 +75,7 @@ export default class extends Controller {
       // Make Quill work with Turbo
       this.element.setAttribute('data-turbo-permanent', '')
     } catch (error) {
-      console.error('Failed to initialize Quill:', error)
+      // Quill initialization failed
     }
   }
 

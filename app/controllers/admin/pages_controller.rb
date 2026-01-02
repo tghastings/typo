@@ -47,14 +47,12 @@ class Admin::PagesController < Admin::BaseController
     redirect_to :action => 'index'    
   end
 
-  # TODO Duplicate with Admin::ContentController
   def insert_editor
-    editor = 'visual'
-    editor = 'simple' if params[:editor].to_s == 'simple'
-    current_user.editor = editor
+    # All editors now use the unified markdown editor
+    current_user.editor = 'markdown'
     current_user.save!
 
-    render :partial => "#{editor}_editor"
+    render :partial => "admin/shared/markdown_editor"
   end
 
 end

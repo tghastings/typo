@@ -7,6 +7,9 @@
   <meta http-equiv="imagetoolbar" content="no" />
   <%= csrf_meta_tags %>
   <%= stylesheet_link_tag "bootstrap", "administration_structure", "lightbox" %>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&display=swap" rel="stylesheet">
 
   <!-- CRITICAL: Protect native methods BEFORE Prototype.js loads -->
   <script>
@@ -187,7 +190,7 @@
   </div>
 
   <footer>
-    <%= link_to(this_blog.blog_name, this_blog.base_url) %> <%= _("is proudly powered by")%> Typo <%=h TYPO_VERSION %>
+    <%= link_to(this_blog.blog_name, this_blog.base_url) %> <%= _("is proudly powered by")%> Typo of Theseus <%=h TYPO_VERSION %>
   </footer>
 </body>
 </html>

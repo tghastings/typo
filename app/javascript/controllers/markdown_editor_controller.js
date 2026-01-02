@@ -32,7 +32,7 @@ export default class extends Controller {
     if (typeof CodeMirror !== "undefined") {
       this.initializeCodeMirror(initialContent)
     } else {
-      console.warn("CodeMirror not loaded, falling back to textarea")
+      // CodeMirror not loaded, using fallback textarea
       this.initializeFallbackEditor(initialContent)
     }
 
@@ -76,8 +76,8 @@ export default class extends Controller {
       }
     })
 
-    // Set editor height
-    this.cm.setSize(null, 400)
+    // Set editor height to fill container
+    this.cm.setSize(null, "100%")
 
     // Sync changes to hidden input
     this.cm.on("change", () => {
@@ -91,7 +91,6 @@ export default class extends Controller {
     this.cm.on("drop", (cm, event) => this.handleDrop(event))
     this.cm.on("paste", (cm, event) => this.handlePaste(event))
 
-    console.log("CodeMirror markdown editor initialized with syntax highlighting")
   }
 
   // Fallback to simple textarea if CodeMirror fails to load

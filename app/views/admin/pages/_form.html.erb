@@ -19,7 +19,7 @@
 
 <div class='editor-left'>
   <p class='input_text'>
-    <%= text_field 'page', 'title', :class => 'span1', :style => ' width: 99%', :placeholder => _('Title')  %>
+    <%= text_field 'page', 'title', :placeholder => _('Title') %>
   </p>
 
   <%= render('images', { :images => @images}) unless @images.empty? %>

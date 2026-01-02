@@ -14,7 +14,6 @@ export default class extends Controller {
   }
 
   connect() {
-    console.log('Sortable controller connected to:', this.element.id)
     this.makeSortable()
     // Allow container to receive drops
     this.element.addEventListener('dragover', this.handleContainerDragOver.bind(this))
@@ -37,7 +36,6 @@ export default class extends Controller {
   }
 
   handleDragStart(event) {
-    console.log('Drag started:', event.currentTarget.id)
     window.sortableDragState.element = event.currentTarget
     event.currentTarget.style.opacity = '0.4'
     event.dataTransfer.effectAllowed = 'move'

@@ -62,15 +62,11 @@ class Admin::ContentController < Admin::BaseController
   end
 
   def insert_editor
-    editor = case params[:editor].to_s
-             when 'simple' then 'simple'
-             when 'markdown' then 'markdown'
-             else 'visual'
-             end
-    current_user.editor = editor
+    # All editors now use the unified markdown editor
+    current_user.editor = 'markdown'
     current_user.save!
 
-    render :partial => "#{editor}_editor"
+    render :partial => "markdown_editor"
   end
 
   def preview_markdown

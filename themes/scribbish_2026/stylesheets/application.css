@@ -245,14 +245,14 @@ cite {
 
 #content h1 {
   font-size: var(--font-size-2xl);
-  font-variant: small-caps;
+  font-variant-caps: petite-caps;
   text-transform: lowercase;
   margin: 0 0 var(--space-md) 0;
 }
 
 #content h2 {
   font-size: var(--font-size-xl);
-  font-variant: small-caps;
+  font-variant-caps: petite-caps;
   text-transform: lowercase;
   margin: var(--space-lg) 0 var(--space-sm) 0;
 }
@@ -348,8 +348,10 @@ cite {
 /* Prism.js syntax highlighted code blocks - Dark Blue Theme */
 #content pre[class*="language-"],
 #content pre.line-numbers,
+#content pre:has(> code[class*="language-"]),
 pre[class*="language-"],
-pre.line-numbers {
+pre.line-numbers,
+pre:has(> code[class*="language-"]) {
   background: #0a0e1a !important;
   color: #e2e8f0 !important;
   font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', monospace !important;
@@ -368,8 +370,10 @@ pre.line-numbers {
 /* Critical: Push code content to the right of line numbers */
 #content pre.line-numbers > code,
 #content pre[class*="language-"] > code,
+#content pre > code[class*="language-"],
 pre.line-numbers > code,
-pre[class*="language-"] > code {
+pre[class*="language-"] > code,
+pre > code[class*="language-"] {
   display: block !important;
   padding-left: 50px !important;
   padding-top: 20px !important;
@@ -526,7 +530,7 @@ pre.line-numbers .line-numbers-rows,
 .atomentry .title,
 .article .title {
   font-family: var(--font-serif);
-  font-size: var(--font-size-3xl);
+  font-size: 1.75em !important;
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1.2;

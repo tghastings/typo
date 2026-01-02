@@ -7,6 +7,8 @@
   <%= page_header %>
   <title><%=h page_title %></title>
   <%= stylesheet_link_tag '/stylesheets/theme/application.css', :media => 'all' %>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.ico">
 
   <!-- Prism.js for syntax highlighting with line numbers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
@@ -46,7 +48,7 @@
     <p><%= link_to this_blog.blog_name, this_blog.base_url %></p>
     <ul>
       <li>
-        <%= _("Powered by %s", link_to('Typo', 'http://typosphere.org')) %> &middot;
+        <%= _("Powered by %s", link_to('Typo of Theseus', 'https://github.com/tghastings/typo')) %> &middot;
         <%= _("styled with %s", link_to('scribbish 2026', '#'))%>
       </li>
     </ul>

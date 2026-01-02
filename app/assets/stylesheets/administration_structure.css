@@ -62,25 +62,10 @@ footer {
 	padding-top: 18px;
 }
 
-/* Editor */
-#editor {
-	float: left; 
-	width: 100%;
-}
-
-.editor-left {
-	margin-right: 340px;
-}
-
+/* Editor Layout */
 .editor-right {
 	float: right;
-	width: 280px;
-}
-
-.editor-right .actions {
-	padding-left: 0;
-	padding-right: 0;
-	text-align: right;
+	width: 300px;
 }
 
 .pills:after {
@@ -117,8 +102,33 @@ footer {
 	width: 99%;
 }
 
-#article_title {
-	font-size: 19px;
+#article_title,
+#page_title {
+	font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+	font-size: 20px;
+	font-weight: 600;
+	padding: 16px 20px;
+	border: 1px solid #ddd;
+	border-radius: 6px;
+	width: 100% !important;
+	box-sizing: border-box;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	background: #fff;
+	color: #1a1a1a;
+}
+
+#article_title:focus,
+#page_title:focus {
+	border-color: #0069D6;
+	box-shadow: 0 0 0 3px rgba(0, 105, 214, 0.15);
+	outline: none;
+}
+
+#article_title::placeholder,
+#page_title::placeholder {
+	color: #aaa;
+	font-weight: 400;
+	font-size: 20px;
 }
 
 .separator {
@@ -224,15 +234,30 @@ label.editor {
 	margin-bottom: 10px;
 }
 
-/* Markdown Editor */
+/* Markdown Editor - Simple reliable sizing */
+#editor {
+  height: 550px !important;
+  margin-bottom: 20px;
+}
+
 .markdown-editor-container {
   display: flex;
   flex-direction: column;
-  height: 500px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  height: 100% !important;
+  min-height: 500px !important;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
   overflow: hidden;
   background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Make CodeMirror fill the editor pane */
+.editor-pane,
+.editor-pane .cm-editor {
+  flex: 1 !important;
+  height: 100% !important;
+  min-height: 400px !important;
 }
 
 .markdown-toolbar {
@@ -291,32 +316,174 @@ label.editor {
   margin-left: 4px;
 }
 
-/* Editor Pane (full width, no preview) */
+/* Editor Pane - MUST fill container */
 .editor-pane {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+  height: 100% !important;
 }
 
-.editor-pane .cm-editor {
-  height: 100%;
-  font-size: 14px;
+/* CodeMirror 5 - Beautiful Writing Font */
+.CodeMirror {
+  flex: 1 1 auto !important;
+  height: 100% !important;
+  font-family: 'Inter', 'Segoe UI', 'Aptos', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 17px !important;
+  line-height: 1.8 !important;
+  color: #1a1a1a !important;
+  background: #fff !important;
 }
 
-.editor-pane .cm-scroller {
-  overflow: auto;
+.CodeMirror-scroll {
+  padding: 8px 4px !important;
 }
 
-.editor-pane .cm-content {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+.CodeMirror pre.CodeMirror-line,
+.CodeMirror pre.CodeMirror-line-like {
+  font-family: 'Inter', 'Segoe UI', 'Aptos', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 17px !important;
+  line-height: 1.8 !important;
+  letter-spacing: -0.01em !important;
+  padding: 0 4px !important;
+}
+
+.CodeMirror-lines {
+  padding: 4px 0 !important;
+}
+
+.CodeMirror-gutters {
+  background: #fafafa !important;
+  border-right: 1px solid #eee !important;
+  padding-right: 8px;
+}
+
+.CodeMirror-linenumber {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 13px !important;
+  color: #bbb !important;
+  padding: 0 8px !important;
+}
+
+.CodeMirror-cursor {
+  border-left: 2px solid #333 !important;
+}
+
+.CodeMirror-selected {
+  background: #d7e8fc !important;
+}
+
+.CodeMirror-focused .CodeMirror-selected {
+  background: #b5d5ff !important;
 }
 
 .editor-loading {
   padding: 20px;
   color: #999;
   font-style: italic;
+}
+
+/* Preview Pane - Scrollable */
+.markdown-preview {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 24px;
+  background: #fff;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #333;
+}
+
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3,
+.markdown-preview h4 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.markdown-preview h1 { font-size: 1.8em; }
+.markdown-preview h2 { font-size: 1.5em; }
+.markdown-preview h3 { font-size: 1.25em; }
+.markdown-preview h4 { font-size: 1.1em; }
+
+.markdown-preview p {
+  margin: 0 0 1em 0;
+}
+
+.markdown-preview pre {
+  background: #f6f8fa;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  padding: 16px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 1em 0;
+}
+
+.markdown-preview code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  font-size: 0.9em;
+}
+
+.markdown-preview pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.markdown-preview :not(pre) > code {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.markdown-preview blockquote {
+  border-left: 4px solid #ddd;
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  color: #666;
+  background: #f9f9f9;
+}
+
+.markdown-preview ul,
+.markdown-preview ol {
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+.markdown-preview li {
+  margin: 0.25em 0;
+}
+
+.markdown-preview img {
+  max-width: 100%;
+  height: auto;
+}
+
+.markdown-preview a {
+  color: #0069D6;
+}
+
+.markdown-preview hr {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: 2em 0;
+}
+
+/* Preview Toggle Button Active State */
+.preview-toggle.active {
+  background: #0069D6 !important;
+  color: #fff !important;
+  border-color: #0069D6 !important;
 }
 
 
@@ -328,9 +495,8 @@ label.editor {
 
 /* Responsive: Adjust editor height on small screens */
 @media (max-width: 900px) {
-  .markdown-editor-container {
-    height: auto;
-    min-height: 500px;
+  #editor {
+    height: 500px;
   }
 }
 
@@ -354,4 +520,287 @@ label.editor {
 
 .cm-editor.cm-focused .cm-selectionBackground {
   background: #b4d5fe !important;
+}
+
+/* =====================================================
+   ADMIN PANEL - POLISHED UI
+   ===================================================== */
+
+/* Title Field Spacing */
+.editor-left > div > div:first-child {
+  margin-bottom: 20px;
+}
+
+
+/* Right Sidebar Wells */
+.editor-right .well {
+  background: linear-gradient(to bottom, #ffffff, #fafafa);
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.editor-right .well h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Primary Action Buttons */
+.editor-right .actions.primary-actions {
+  padding: 16px 0 0 0;
+  margin-top: 16px;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 10px;
+}
+
+.editor-right .btn,
+.editor-right input[type="submit"].btn {
+  display: inline-block;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  text-decoration: none;
+  text-align: center;
+}
+
+/* Publish Button - Green */
+.editor-right .btn.primary,
+.editor-right input[type="submit"][name="commit"] {
+  background: linear-gradient(to bottom, #34c759, #28a745);
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.editor-right input[type="submit"][name="commit"]:hover {
+  background: linear-gradient(to bottom, #28a745, #218838);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Save Draft Button - Gray */
+.editor-right #save_draft {
+  background: linear-gradient(to bottom, #6c757d, #5a6268);
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);
+}
+
+.editor-right #save_draft:hover {
+  background: linear-gradient(to bottom, #5a6268, #495057);
+  box-shadow: 0 4px 8px rgba(108, 117, 125, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Secondary Actions (Preview/Delete) */
+.editor-right .actions.secondary-actions {
+  padding: 12px 0 0 0;
+  margin-top: 12px;
+  border-top: 1px dashed #e0e0e0;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.editor-right .btn-preview,
+.editor-right .actions.secondary-actions .btn {
+  background: #fff;
+  color: #0069D6;
+  border: 1px solid #0069D6;
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.editor-right .btn-preview:hover,
+.editor-right .actions.secondary-actions .btn:hover {
+  background: #0069D6;
+  color: #fff;
+}
+
+/* Danger Button for Delete */
+.editor-right .actions.secondary-actions a[data-method="delete"],
+.editor-right .actions.secondary-actions .btn-danger {
+  background: #fff;
+  color: #dc3545;
+  border: 1px solid #dc3545;
+}
+
+.editor-right .actions.secondary-actions a[data-method="delete"]:hover,
+.editor-right .actions.secondary-actions .btn-danger:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+/* Clearfix sections in wells */
+.editor-right .well .clearfix {
+  padding: 12px 0;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+}
+
+.editor-right .well .clearfix:last-of-type {
+  border-bottom: none;
+}
+
+.editor-right .well .clearfix strong {
+  color: #222;
+  font-weight: 600;
+}
+
+.editor-right .well .clearfix > a {
+  color: #0069D6;
+  font-size: 12px;
+  margin-left: 8px;
+  text-decoration: none;
+  opacity: 0.8;
+}
+
+.editor-right .well .clearfix > a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* Input lists styling */
+.editor-right .inputs-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+}
+
+.editor-right .inputs-list li {
+  padding: 6px 0;
+}
+
+.editor-right .inputs-list label {
+  font-weight: normal;
+  color: #555;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-right .inputs-list input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+/* Tags section */
+.editor-left h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  margin: 0 0 10px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Tags input */
+#article_keywords,
+#page_name {
+  padding: 14px 16px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#article_keywords:focus,
+#page_name:focus {
+  border-color: #0069D6;
+  box-shadow: 0 0 0 3px rgba(0, 105, 214, 0.12);
+  outline: none;
+}
+
+/* Excerpt textarea */
+#article_excerpt {
+  padding: 14px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 120px;
+  transition: all 0.2s ease;
+  background: #fff;
+  line-height: 1.6;
+}
+
+#article_excerpt:focus {
+  border-color: #0069D6;
+  box-shadow: 0 0 0 3px rgba(0, 105, 214, 0.12);
+  outline: none;
+}
+
+/* Help text */
+.help-block {
+  font-size: 13px;
+  color: #888;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* Separator/Section styling */
+.separator {
+  background: #fafafa;
+  padding: 16px 20px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  margin-top: 16px;
+  box-sizing: border-box;
+}
+
+/* Constrain editor-left content */
+.editor-left {
+  margin-right: 320px;
+  overflow: hidden;
+}
+
+.editor-left > div {
+  max-width: 100%;
+}
+
+.editor-left .separator,
+.editor-left .class,
+.editor-left input[type="text"],
+.editor-left textarea {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Categories Well */
+.editor-right .well:last-of-type {
+  margin-bottom: 0;
+}
+
+/* Autosave Status - Subtle sidebar indicator */
+.autosave-status-container {
+  margin-top: 16px;
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.autosave-status-container #autosave {
+  font-size: 12px;
+  color: #888;
+  font-family: 'Inter', sans-serif;
+}
+
+.autosave-status-container #autosave:empty {
+  display: none;
 }

@@ -1,19 +1,13 @@
 <input type="hidden" name="current_editor" id="current_editor" value="<%= current_user.editor %>" />
 <input type="hidden" name="user_textfilter" id="user_textfilter" value="<%= current_user.text_filter_name %>" />
 <div id="article_id_field"></div>
-<div id="autosave" data-autosave-target="status"></div>
 <div id="article_keywords_auto_complete" class="auto_complete"></div>
 
 <%= error_messages_for 'article' %>
 
 <div class='editor-right'>
-  <div class='well'>
+  <div class='well publish-well'>
     <h4><%= _("Publish settings") %></h4>
-    <div class='actions'>
-      <%= link_to_destroy_with_profiles(@article) unless @article.id.nil? or @article.state.to_s.downcase == 'draft' %>
-	  <span id='destroy_link'><%= link_to_destroy_draft @article %></span>
-      <span id='preview_link'><%= link_to(_("Preview"), "/previews/#{@article.id}", target: 'new', class: 'btn info') if @article.id %></span>
-    </div>
     <div class='clearfix'>
         <%= _("Status:") %> <strong><%= @article.state.to_s.downcase %></strong> <a href="#" onclick="Element.toggle('status'); return false">Change</a>
       <ul class='inputs-list'>
@@ -79,10 +73,17 @@
       </ul>
     </div>
 
-    <div class='actions'>
-      <input id='save_draft' type="submit" value="<%= _('Save as draft') %>" name="article[draft]" class='btn info' />
+    <div class='actions primary-actions'>
+      <input id='save_draft' type="submit" value="<%= _('Save as draft') %>" name="article[draft]" class='btn' />
       <%= save( _("Publish")) %>
     </div>
+    <% if @article.id %>
+    <div class='actions secondary-actions'>
+      <span id='preview_link'><%= link_to(_("Preview"), "/previews/#{@article.id}", target: 'new', class: 'btn btn-preview') %></span>
+      <span id='destroy_link'><%= link_to_destroy_draft @article %></span>
+      <%= link_to_destroy_with_profiles(@article) unless @article.state.to_s.downcase == 'draft' %>
+    </div>
+    <% end %>
   </div>
 
   <div class='well'>
@@ -90,12 +91,16 @@
     <%= render 'categories' %>
   </div>
   <%= get_post_types %>
+
+  <div class='autosave-status-container'>
+    <div id="autosave" data-autosave-target="status"></div>
+  </div>
 </div>
 
 <div class='editor-left'>
   <div>
     <div>
-      <%= text_field 'article', 'title', :class => 'span1', :style => ' width: 99%', :placeholder => _('Title') %>
+      <%= text_field 'article', 'title', :placeholder => _('Title') %>
     </div>
 
     <%= render('images', { :images => @images}) unless @images.empty? %>

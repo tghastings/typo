@@ -124,19 +124,19 @@ describe Admin::PagesController do
   end
 
   describe 'insert_editor action' do
-    it 'should render _simple_editor' do
+    it 'should render _markdown_editor for any editor param' do
       get(:insert_editor, :editor => 'simple')
-      expect(response).to render_template('_simple_editor')
+      expect(response).to render_template('admin/shared/_markdown_editor')
     end
 
-    it 'should render _visual_editor' do
+    it 'should render _markdown_editor for visual param' do
       get(:insert_editor, :editor => 'visual')
-      expect(response).to render_template('_visual_editor')
+      expect(response).to render_template('admin/shared/_markdown_editor')
     end
 
-    it 'should render _visual_editor even if editor param is set to unknow editor' do
-      get(:insert_editor, :editor => 'unknow')
-      expect(response).to render_template('_visual_editor')
+    it 'should render _markdown_editor even if editor param is set to unknown editor' do
+      get(:insert_editor, :editor => 'unknown')
+      expect(response).to render_template('admin/shared/_markdown_editor')
     end
   end
 end

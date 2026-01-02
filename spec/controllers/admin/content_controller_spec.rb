@@ -191,19 +191,19 @@ describe Admin::ContentController do
       request.session = { :user_id => @user.id }
     end
 
-    it 'should render _simple_editor' do
+    it 'should render _markdown_editor for any editor param' do
       get(:insert_editor, :editor => 'simple')
-      expect(response).to render_template('_simple_editor')
+      expect(response).to render_template('_markdown_editor')
     end
 
-    it 'should render _visual_editor' do
+    it 'should render _markdown_editor for visual param' do
       get(:insert_editor, :editor => 'visual')
-      expect(response).to render_template('_visual_editor')
+      expect(response).to render_template('_markdown_editor')
     end
 
-    it 'should render _visual_editor even if editor param is set to unknow editor' do
-      get(:insert_editor, :editor => 'unknow')
-      expect(response).to render_template('_visual_editor')
+    it 'should render _markdown_editor even if editor param is set to unknown editor' do
+      get(:insert_editor, :editor => 'unknown')
+      expect(response).to render_template('_markdown_editor')
     end
   end
 
@@ -344,12 +344,12 @@ describe Admin::ContentController do
       extended="*foo*"
       post :new, 'article' => { :title => "another test", :body => body, :extended => extended}
       expect(response).to redirect_to(action: 'index')
-      new_article = Article.find(:first, :order => "created_at DESC")
+      new_article = Article.order("created_at DESC").first
       expect(new_article.body).to eq(body)
       expect(new_article.extended).to eq(extended)
       expect(new_article.text_filter.name).to eq("markdown")
-      expect(new_article.html(:body)).to eq("<p>body via <em>markdown</em></p>")
-      expect(new_article.html(:extended)).to eq("<p><em>foo</em></p>")
+      expect(new_article.html(:body).strip).to eq("<p>body via <em>markdown</em></p>")
+      expect(new_article.html(:extended).strip).to eq("<p><em>foo</em></p>")
     end
 
     describe "publishing a published article with an autosaved draft" do
