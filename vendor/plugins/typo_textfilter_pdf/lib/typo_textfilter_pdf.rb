@@ -130,13 +130,14 @@ External PDF:
              data-pdf-slideshow-interval-value="#{interval}"
              data-pdf-slideshow-start-page-value="#{start_page}">
 
-          #{title_html(title)}
-
-          <div class="pdf-slideshow-viewport" data-pdf-slideshow-target="viewport">
-            <canvas data-pdf-slideshow-target="canvas"></canvas>
-            <div class="pdf-slideshow-loading" data-pdf-slideshow-target="loading">
-              <div class="pdf-slideshow-spinner"></div>
-              <span>Loading PDF...</span>
+          <div class="pdf-slideshow-frame">
+            #{title_html(title)}
+            <div class="pdf-slideshow-viewport" data-pdf-slideshow-target="viewport">
+              <canvas data-pdf-slideshow-target="canvas"></canvas>
+              <div class="pdf-slideshow-loading" data-pdf-slideshow-target="loading">
+                <div class="pdf-slideshow-spinner"></div>
+                <span>Loading...</span>
+              </div>
             </div>
           </div>
 

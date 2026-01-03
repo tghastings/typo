@@ -28,6 +28,7 @@ gem 'uuidtools', '~> 2.2'
 gem 'flickraw-cached'
 gem 'rubypants', '~> 0.7'
 gem 'rake'
+gem 'htmlbeautifier', '~> 1.4'  # Beautiful HTML output
 gem 'acts_as_list'
 gem 'acts_as_tree'
 gem 'recaptcha', '~> 5.0'

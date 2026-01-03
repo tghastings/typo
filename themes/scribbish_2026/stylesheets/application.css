@@ -81,6 +81,7 @@ body {
   background: var(--color-background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  border-top: 5px solid #333;
 }
 
 img {
@@ -151,23 +152,16 @@ cite {
   justify-content: space-between;
   align-items: baseline;
   gap: var(--space-md);
-  margin-bottom: var(--space-xl);
-  padding-bottom: var(--space-md);
+  margin-bottom: var(--space-2xl);
+  padding-bottom: var(--space-lg);
   border-bottom: 1px solid var(--color-border);
 }
 
 @media (min-width: 768px) {
   #header {
-    margin-bottom: var(--space-2xl);
-    padding-bottom: var(--space-lg);
+    margin-bottom: var(--space-3xl);
+    padding-bottom: var(--space-xl);
   }
-}
-
-.header-left {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-md);
 }
 
 .header-nav {
@@ -187,18 +181,10 @@ cite {
 #header h1 {
   font-family: var(--font-serif);
   font-size: var(--font-size-2xl);
-  font-weight: 700;
-  font-variant: small-caps;
-  text-transform: lowercase;
-  letter-spacing: 0.02em;
+  font-weight: 400;
+  letter-spacing: 0.01em;
   line-height: 1.1;
-  margin: 0 0 var(--space-xs) 0;
-}
-
-@media (min-width: 768px) {
-  #header h1 {
-    margin: 0;
-  }
+  margin: 0;
 }
 
 #header h1 a {
@@ -214,11 +200,12 @@ cite {
 #header h2,
 #header .header-subtitle {
   font-family: var(--font-serif);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   font-style: italic;
   font-weight: 400;
   color: var(--color-text-muted);
   margin: 0;
+  letter-spacing: 0.03em;
 }
 
 /*--------------------------------------------------------------
@@ -252,26 +239,34 @@ cite {
 }
 
 #content h2 {
-  font-size: var(--font-size-xl);
-  font-variant-caps: petite-caps;
+  font-size: var(--font-size-lg);
+  font-variant: small-caps;
   text-transform: lowercase;
-  margin: var(--space-lg) 0 var(--space-sm) 0;
+  text-align: center;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  margin: var(--space-xl) 0 var(--space-md) 0;
 }
 
 #content h3 {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-base);
   font-style: italic;
   font-weight: 400;
-  margin: var(--space-md) 0 var(--space-sm) 0;
+  margin: var(--space-lg) 0 var(--space-sm) 0;
 }
 
 #content h4 {
   font-size: var(--font-size-base);
   font-style: italic;
   font-weight: 400;
-  margin: var(--space-md) 0 var(--space-xs) 0;
+  display: inline;
+  margin: 0;
   padding-bottom: 0;
   border-bottom: none;
+}
+
+#content h4 + p {
+  display: inline;
 }
 
 #content h5 {
@@ -357,12 +352,15 @@ pre:has(> code[class*="language-"]) {
   color: #e2e8f0 !important;
   font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', monospace !important;
   font-size: 14px !important;
-  line-height: 1.7 !important;
-  margin: 1.5em 0 !important;
-  padding: 1.5em !important;
+  line-height: 1.6 !important;
+  margin: 1em 0 !important;
+  padding: 0.75em 1em !important;
   border: none !important;
   border-radius: 10px !important;
-  overflow-x: auto !important;
+  overflow-x: visible !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
   tab-size: 2 !important;
   position: relative !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
@@ -377,7 +375,7 @@ pre[class*="language-"] > code,
 pre > code[class*="language-"] {
   display: block !important;
   padding-left: 50px !important;
-  padding-top: 20px !important;
+  padding-top: 0.5em !important;
   background: none !important;
   font-size: inherit !important;
   line-height: inherit !important;
@@ -390,11 +388,11 @@ pre.line-numbers .line-numbers-rows,
 .line-numbers .line-numbers-rows {
   position: absolute !important;
   pointer-events: none !important;
-  top: 1.5em !important;
+  top: 0.75em !important;
   left: 0 !important;
   width: 3em !important;
   font-size: 100% !important;
-  line-height: 1.7 !important;
+  line-height: 1.6 !important;
   letter-spacing: -1px !important;
   border-right: 1px solid #1e3a5f !important;
   user-select: none !important;
@@ -402,6 +400,38 @@ pre.line-numbers .line-numbers-rows,
   text-align: right !important;
   color: #4a6785 !important;
   background: #0a0e1a !important;
+}
+
+/* Copy button for code blocks */
+.code-copy-btn {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 4px;
+  padding: 0.4em;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, background 0.2s;
+  color: #8899aa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+pre:hover .code-copy-btn {
+  opacity: 1;
+}
+
+.code-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.code-copy-btn.copied {
+  color: #4ade80;
 }
 
 /* Prism Tomorrow theme overrides for dark blue */
@@ -565,7 +595,7 @@ pre.line-numbers .line-numbers-rows,
   color: var(--color-text-muted);
   font-size: 1rem;
   font-style: italic;
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-xl);
   text-align: center;
 }
 

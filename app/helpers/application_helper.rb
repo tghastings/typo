@@ -196,7 +196,7 @@ module ApplicationHelper
   end
 
   def meta_tag(name, value)
-    tag :meta, :name => name, :content => value unless value.blank?
+    "<meta name=\"#{CGI.escapeHTML(name.to_s)}\" content=\"#{CGI.escapeHTML(value.to_s)}\">".html_safe unless value.blank?
   end
 
   def date(date)
@@ -249,7 +249,7 @@ module ApplicationHelper
       output << "<span class=\"#{key.to_s.downcase}\">#{h(value)}</span>"
     end if flash
 
-    output.join("<br />\n")
+    output.join("<br>\n")
   end
 
   def feed_title
@@ -280,11 +280,11 @@ module ApplicationHelper
   def google_analytics
     unless this_blog.google_analytics.empty?
       <<-HTML
-      <script type="text/javascript">
+      <script>
       var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-      document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+      document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js'%3E%3C/script%3E"));
       </script>
-      <script type="text/javascript">
+      <script>
       var pageTracker = _gat._getTracker("#{this_blog.google_analytics}");
       pageTracker._trackPageview();
       </script>
@@ -297,43 +297,59 @@ module ApplicationHelper
   end
 
   def use_canonical
-    "<link rel='canonical' href='#{@canonical_url}' />".html_safe unless @canonical_url.nil?
+    "<link rel='canonical' href='#{@canonical_url}'>".html_safe unless @canonical_url.nil?
   end
 
   def page_header
+    # Collect whiteboard includes from content
     page_header_includes = content_array.collect { |c| c.whiteboard }.collect do |w|
       w.select {|k,v| k =~ /^page_header_/}.collect do |(k,v)|
-        v = v.chomp
-        # trim the same number of spaces from the beginning of each line
-        # this way plugins can indent nicely without making ugly source output
-        spaces = /\A[ \t]*/.match(v)[0].gsub(/\t/, "  ")
-        v.gsub!(/^#{spaces}/, '  ') # add 2 spaces to line up with the assumed position of the surrounding tags
+        v.to_s.strip
       end
-    end.flatten.uniq
-    (
-    <<-HTML
-  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-  #{ meta_tag 'ICBM', this_blog.geourl_location unless this_blog.geourl_location.blank? }
-  #{ meta_tag 'description', @description unless @description.blank? }
-  #{ meta_tag 'robots', 'noindex, follow' unless @noindex.nil? }
-  #{ meta_tag 'google-site-verification', this_blog.google_verification unless this_blog.google_verification.blank?}
-  <meta name="generator" content="Typo #{TYPO_VERSION}" />
-  #{ show_meta_keyword }
-  <link rel="EditURI" type="application/rsd+xml" title="RSD" href="/xml/rsd" />
-  <link rel="alternate" type="application/atom+xml" title="Atom" href="#{ feed_atom }" />
-  <link rel="alternate" type="application/rss+xml" title="RSS" href="#{ feed_rss }" />
-  #{ javascript_importmap_tags }
-  #{ javascript_include_tag 'cookies', 'typo' }
-  #{ stylesheet_link_tag 'coderay', 'user-styles' }
-  #{ javascript_include_lang }
-  #{ javascript_tag "window._token = '#{form_authenticity_token}'"}
-  #{ page_header_includes.join("\n") }
-  #{ use_canonical  if this_blog.use_canonical_url }
-  <script type="text/javascript">#{ @content_for_script }</script>
-  #{ this_blog.custom_tracking_field unless this_blog.custom_tracking_field.blank? }
-  #{ google_analytics }
-    HTML
-    ).chomp.html_safe
+    end.flatten.uniq.reject(&:blank?)
+
+    # Build output - middleware will beautify it
+    lines = []
+
+    # Meta tags
+    lines << meta_tag('ICBM', this_blog.geourl_location) unless this_blog.geourl_location.blank?
+    lines << meta_tag('description', @description) unless @description.blank?
+    lines << meta_tag('robots', 'noindex, follow') unless @noindex.nil?
+    lines << meta_tag('google-site-verification', this_blog.google_verification) unless this_blog.google_verification.blank?
+    lines << "<meta name=\"generator\" content=\"Typo #{TYPO_VERSION}\">"
+    lines << show_meta_keyword
+
+    # Links
+    lines << "<link rel=\"EditURI\" type=\"application/rsd+xml\" title=\"RSD\" href=\"/xml/rsd\">"
+    lines << "<link rel=\"alternate\" type=\"application/atom+xml\" title=\"Atom\" href=\"#{feed_atom}\">"
+    lines << "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"#{feed_rss}\">"
+
+    # JavaScript
+    lines << javascript_importmap_tags.to_s.strip
+    lines << javascript_include_tag('cookies', 'typo').to_s.strip
+
+    # Stylesheets
+    lines << stylesheet_link_tag('coderay', 'user-styles').to_s.strip
+
+    # Optional includes
+    lines << javascript_include_lang
+    lines << javascript_tag("window._token = '#{form_authenticity_token}'").to_s.strip
+
+    # Plugin includes
+    page_header_includes.each { |inc| lines << inc }
+
+    # Canonical URL
+    lines << use_canonical if this_blog.use_canonical_url
+
+    # Custom tracking
+    lines << this_blog.custom_tracking_field.to_s.strip unless this_blog.custom_tracking_field.blank?
+
+    # Google Analytics
+    lines << google_analytics
+
+    # Join and return, removing trailing slashes from void elements
+    output = lines.compact.reject { |l| l.to_s.strip.empty? }.join("\n")
+    output.gsub(%r{ />}, '>').html_safe
   end
 
   def feed_atom

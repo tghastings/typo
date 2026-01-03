@@ -10,6 +10,7 @@ require_relative '../vendor/plugins/typo_login_system/lib/access_control'
 require_relative '../vendor/plugins/typo_login_system/lib/login_system'
 require_relative '../vendor/plugins/localization/lib/localization'
 require_relative '../lib/typo_version'
+require_relative '../lib/middleware/html_beautifier_middleware'
 require_relative '../vendor/plugins/calendar_date_select/lib/calendar_date_select/calendar_date_select'
 require_relative '../vendor/plugins/calendar_date_select/lib/calendar_date_select/form_helpers'
 require_relative '../vendor/plugins/calendar_date_select/lib/calendar_date_select/includes_helper'
@@ -57,6 +58,9 @@ module TypoBlog
     config.time_zone = 'UTC'
 
     # Active Storage is configured in config/storage.yml
+
+    # Beautify HTML output for pristine view-source experience
+    config.middleware.use HtmlBeautifierMiddleware
   end
 end
 

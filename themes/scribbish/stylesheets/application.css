@@ -25,3 +25,26 @@ a img { border: none; padding: 0; margin: 0; }
 
 a:link,  a:visited { color: #930; }
 a:hover, a:active  { color: #fff; background: #000; }
+
+/* Code blocks - wrap long lines instead of horizontal scroll */
+pre[class*="language-"] {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+pre[class*="language-"] code {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Keep line numbers aligned when wrapping */
+.line-numbers .line-numbers-rows {
+  border-right: 1px solid #555;
+  padding-right: 8px;
+}
+
+.line-numbers-rows > span {
+  padding-right: 8px;
+}

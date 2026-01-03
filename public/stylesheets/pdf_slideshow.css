@@ -1,372 +1,148 @@
-/* PDF Slideshow Plugin Styles */
+/* PDF Slideshow - Picture Frame Style */
 
 .pdf-slideshow-container {
-  position: relative;
-  width: 100%;
-  max-width: 100%;
-  height: 500px;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  border-radius: 12px;
-  overflow: hidden;
-  margin: 1.5rem 0;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  max-width: 760px;
+  margin: 2.5rem auto;
 }
 
-.pdf-slideshow-container:fullscreen {
-  width: 100vw;
-  height: 100vh;
-  max-width: none;
-  border-radius: 0;
-  background: #0a0a14;
-}
-
-/* Title */
+/* Title - inside the frame */
 .pdf-slideshow-title {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  padding: 16px 24px;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
-  color: #fff;
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  z-index: 10;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  text-align: center;
+  margin: -8px 0 20px 0;
+  color: #666;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
-/* Viewport */
+/* The frame - cream mat with equal padding */
+.pdf-slideshow-frame {
+  background: #f5f0e6;
+  padding: 28px;
+  border: 1px solid #e0d9c8;
+}
+
+/* Viewport - the inner area */
 .pdf-slideshow-viewport {
   position: relative;
-  width: 100%;
-  height: calc(100% - 70px);
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0f0f1a;
-  overflow: hidden;
+  min-height: 400px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
 
 .pdf-slideshow-viewport canvas {
-  max-width: 100%;
-  max-height: 100%;
   display: block;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  max-width: 100%;
 }
 
-/* Loading State */
+/* Loading */
 .pdf-slideshow-loading {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  color: #8892b0;
+  color: #999;
+  font-size: 13px;
+  text-align: center;
 }
 
 .pdf-slideshow-spinner {
-  width: 48px;
-  height: 48px;
-  border: 3px solid rgba(100, 150, 255, 0.2);
-  border-top-color: #64a0ff;
+  width: 20px;
+  height: 20px;
+  margin: 0 auto 8px;
+  border: 2px solid #ddd;
+  border-top-color: #888;
   border-radius: 50%;
-  animation: pdf-spin 1s linear infinite;
+  animation: pdf-spin 0.7s linear infinite;
 }
 
 @keyframes pdf-spin {
   to { transform: rotate(360deg); }
 }
 
-/* Controls */
+/* Controls - below frame */
 .pdf-slideshow-controls {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 70px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
-  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%);
-  padding: 0 24px;
+  gap: 24px;
+  margin-top: 14px;
 }
 
 .pdf-slideshow-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #888;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(4px);
 }
 
 .pdf-slideshow-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.08);
-}
-
-.pdf-slideshow-btn:active:not(:disabled) {
-  transform: scale(0.95);
+  color: #333;
 }
 
 .pdf-slideshow-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-  transform: none;
+  color: #ccc;
+  cursor: default;
 }
 
 .pdf-slideshow-btn svg {
+  width: 18px;
+  height: 18px;
   fill: currentColor;
 }
 
-.pdf-slideshow-prev,
-.pdf-slideshow-next {
-  width: 52px;
-  height: 52px;
-}
-
-.pdf-slideshow-prev svg,
-.pdf-slideshow-next svg {
-  width: 28px;
-  height: 28px;
-}
-
-/* Counter */
 .pdf-slideshow-counter {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #fff;
-  font-size: 18px;
-  font-weight: 500;
-  min-width: 100px;
-  justify-content: center;
-  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: #888;
 }
 
 .pdf-slideshow-separator {
-  color: rgba(255, 255, 255, 0.4);
+  margin: 0 3px;
+  color: #ccc;
 }
 
-/* Keyboard Hint */
-.pdf-slideshow-keyboard-hint {
-  position: absolute;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 8px 16px;
-  background: rgba(0, 0, 0, 0.8);
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 12px;
-  border-radius: 6px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-  white-space: nowrap;
-  backdrop-filter: blur(4px);
+/* Hide extras */
+.pdf-slideshow-keyboard-hint,
+.pdf-slideshow-fullscreen {
+  display: none;
 }
 
-.pdf-slideshow-container:hover .pdf-slideshow-keyboard-hint,
-.pdf-slideshow-container:focus-within .pdf-slideshow-keyboard-hint {
-  opacity: 1;
-}
-
-.pdf-slideshow-container:fullscreen .pdf-slideshow-keyboard-hint {
-  bottom: 90px;
-}
-
-/* Error States */
+/* Error */
 .pdf-slideshow-error {
-  padding: 20px;
-  background: linear-gradient(135deg, #2d1b1b 0%, #1f1414 100%);
-  border: 1px solid #5c2a2a;
-  border-radius: 12px;
-  color: #ff8080;
-  margin: 1.5rem 0;
-}
-
-.pdf-slideshow-error p {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.pdf-slideshow-error strong {
-  color: #ff6b6b;
-}
-
-.pdf-slideshow-error-display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: #ff8080;
+  max-width: 760px;
+  margin: 2.5rem auto;
+  padding: 24px;
+  background: #f5f0e6;
   text-align: center;
-  padding: 40px;
+  color: #666;
 }
 
-.pdf-slideshow-error-display svg {
-  margin-bottom: 16px;
-  opacity: 0.8;
-}
-
-.pdf-slideshow-error-display p {
-  margin: 0;
-  font-size: 14px;
-  max-width: 400px;
-  line-height: 1.5;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
+/* Mobile */
+@media (max-width: 640px) {
   .pdf-slideshow-container {
-    height: 400px;
-    border-radius: 0;
-    margin: 1rem -15px;
-    width: calc(100% + 30px);
+    margin: 1.5rem 0;
   }
-
-  .pdf-slideshow-controls {
-    height: 60px;
-    gap: 16px;
+  .pdf-slideshow-frame {
+    padding: 16px;
   }
-
-  .pdf-slideshow-btn {
-    width: 42px;
-    height: 42px;
-  }
-
-  .pdf-slideshow-prev,
-  .pdf-slideshow-next {
-    width: 46px;
-    height: 46px;
-  }
-
-  .pdf-slideshow-counter {
-    font-size: 16px;
-    min-width: 80px;
-  }
-
-  .pdf-slideshow-keyboard-hint {
-    display: none;
-  }
-
-  .pdf-slideshow-title {
-    font-size: 16px;
-    padding: 12px 16px;
+  .pdf-slideshow-viewport {
+    min-height: 280px;
   }
 }
 
-@media (max-width: 480px) {
-  .pdf-slideshow-container {
-    height: 300px;
-  }
-
-  .pdf-slideshow-controls {
-    height: 54px;
-    gap: 12px;
-  }
-
-  .pdf-slideshow-btn {
-    width: 38px;
-    height: 38px;
-  }
-
-  .pdf-slideshow-prev,
-  .pdf-slideshow-next {
-    width: 42px;
-    height: 42px;
-  }
-
-  .pdf-slideshow-fullscreen {
-    display: none;
-  }
-}
-
-/* Touch-friendly adjustments */
-@media (hover: none) {
-  .pdf-slideshow-keyboard-hint {
-    display: none;
-  }
-
-  .pdf-slideshow-btn:active {
-    background: rgba(255, 255, 255, 0.3);
-  }
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .pdf-slideshow-container {
-    border: 2px solid #fff;
-  }
-
-  .pdf-slideshow-btn {
-    border: 2px solid #fff;
-  }
-
-  .pdf-slideshow-counter {
-    font-weight: 700;
-  }
-}
-
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .pdf-slideshow-spinner {
-    animation: none;
-  }
-
-  .pdf-slideshow-btn {
-    transition: none;
-  }
-
-  .pdf-slideshow-keyboard-hint {
-    transition: none;
-  }
-}
-
-/* Dark mode (already dark, but ensure consistency) */
-@media (prefers-color-scheme: dark) {
-  .pdf-slideshow-error {
-    background: linear-gradient(135deg, #2d1b1b 0%, #1f1414 100%);
-  }
-}
-
-/* Light mode adjustments for error box */
-@media (prefers-color-scheme: light) {
-  .pdf-slideshow-error {
-    background: #fff0f0;
-    border-color: #ffcccc;
-    color: #cc3333;
-  }
-
-  .pdf-slideshow-error strong {
-    color: #aa0000;
-  }
-}
-
-/* Print styles */
 @media print {
-  .pdf-slideshow-container {
-    display: none;
-  }
+  .pdf-slideshow-container { display: none; }
+}
 
-  .pdf-slideshow-error {
-    background: #fff;
-    border: 1px solid #ccc;
-    color: #333;
-  }
+@media (prefers-reduced-motion: reduce) {
+  .pdf-slideshow-spinner { animation: none; }
 }

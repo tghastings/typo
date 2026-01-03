@@ -17,8 +17,10 @@ class Admin::CacheController < Admin::BaseController
         # Clear Rails cache store
         Rails.cache.clear
 
-        # Clear Typo page cache
-        PageCache.sweep_all
+        # Clear Typo page cache files directly
+        if cache_dir.present? && File.exist?(cache_dir) && cache_dir != "#{Rails.root}/public"
+          FileUtils.rm_rf(Dir.glob("#{cache_dir}/*"))
+        end
 
         flash.now[:notice] = _("Cache was successfully sweeped")
       rescue => e
