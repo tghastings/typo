@@ -3,7 +3,7 @@
   <div class="flickr-container">
     <div class="flickr-photos">
 <% sidebar.photos.each_with_index do |photo, index| %>
-      <a href="#" data-flickr-lightbox data-full-src="<%= photo.url_s || sidebar.photo_url(photo) %>" data-title="<%= photo.title %>" title="<%= photo.title %>">
+      <a href="#" data-flickr-lightbox data-full-src="<%= photo.url_m || photo.url_s || sidebar.photo_url(photo) %>" data-title="<%= photo.title %>" title="<%= photo.title %>">
         <img src="<%= sidebar.photo_url(photo) %>" alt="<%= photo.title %>" loading="lazy">
       </a>
 <% end %>
