@@ -11,6 +11,9 @@ Rails.application.routes.draw do
   # match 'ckeditor/command', to: 'ckeditor#command', format: false, via: [:get, :post]
   # match 'ckeditor/upload', to: 'ckeditor#upload', format: false, via: [:get, :post]
 
+  # Serve uploaded files directly (bypasses Active Storage for compatibility)
+  get 'files/:filename', to: 'files#show', as: 'serve_file', constraints: { filename: /[^\/]+/ }
+
   # Archive routes
   match ':year/:month', to: 'articles#index', constraints: { year: /\d{4}/, month: /\d{1,2}/ }, as: 'articles_by_month', format: false, via: :get
   match ':year/:month/page/:page', to: 'articles#index', constraints: { year: /\d{4}/, month: /\d{1,2}/ }, as: 'articles_by_month_page', format: false, via: :get

@@ -46,6 +46,9 @@ TypoBlog::Application.configure do
   # Annotate rendered view with file names
   # config.action_view.annotate_rendered_view_with_filenames = true
 
+  # Store files on disk in test environment
+  config.active_storage.service = :test
+
   # Configure Migrator if defined
   config.after_initialize do
     if defined?(Migrator)

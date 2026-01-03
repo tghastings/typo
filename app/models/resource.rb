@@ -1,13 +1,8 @@
-require 'tempfile'
-require 'mini_magick'
-
 class Resource < ActiveRecord::Base
-  # The database column is 'upload' but the model uses 'filename'
-  alias_attribute :filename, :upload
+  has_one_attached :file
 
-  validates_uniqueness_of :filename
-  after_destroy :delete_filename_on_disk
-  before_validation :uniq_filename_on_disk, :on => :create
+  # Legacy alias for old code that uses 'filename'
+  alias_attribute :filename, :upload
 
   belongs_to :article, optional: true
 
@@ -19,69 +14,38 @@ class Resource < ActiveRecord::Base
   scope :without_images_by_filename, -> { without_images.by_filename }
   scope :images_by_created_at, -> { images.by_created_at }
 
-  def fullpath(file = nil)
-    "#{::Rails.root.to_s}/public/files/#{file.nil? ? filename : file}"
+  # Get the URL for the attached file
+  def url
+    return nil unless file.attached?
+    Rails.application.routes.url_helpers.rails_blob_path(file, only_path: true)
   end
 
-  def write_to_disk(up)
-    begin
-      # create the public/files dir if it doesn't exist
-      FileUtils.mkdir(fullpath('')) unless File.directory?(fullpath(''))
-      if up.kind_of?(Tempfile) and !up.local_path.nil? and File.exist?(up.local_path)
-        File.chmod(0600, up.local_path)
-        FileUtils.copy(up.local_path, fullpath)
-      elsif up.kind_of?(ActionDispatch::Http::UploadedFile)
-        File.chmod(0600, up.path)
-        FileUtils.copy(up.path, fullpath)
-      else
-        bytes = up
-        if up.kind_of?(StringIO)
-          up.rewind
-          bytes = up.read
-        end
-        File.open(fullpath, "wb") { |f| f.write(bytes) }
-      end
-      File.chmod(0644, fullpath)
-      self.size = File.stat(fullpath).size rescue 0
-      create_thumbnail
-      update
-      self
-    rescue
-      raise
-    end
+  # Get a variant URL for images (thumbnail or medium)
+  def variant_url(size = :thumb)
+    return nil unless file.attached?
+    return nil unless mime&.include?('image')
+
+    dimensions = case size.to_sym
+                 when :thumb then [100, 100]
+                 when :medium then [500, 500]
+                 else [100, 100]
+                 end
+
+    Rails.application.routes.url_helpers.rails_representation_path(
+      file.variant(resize_to_limit: dimensions),
+      only_path: true
+    )
+  rescue
+    url # Fallback to original if variant fails
   end
 
-  def create_thumbnail
-    blog = Blog.default
-    return unless self.mime =~ /image/
-    return unless File.exist?(fullpath("#{self.filename}"))
-    begin
-      img_orig = MiniMagick::Image.from_file(fullpath(self.filename))
-
-      ['medium', 'thumb'].each do |size|
-        next if File.exist?(fullpath("#{size}_#{self.filename}"))
-        resize = blog.send("image_#{size.to_s}_size").to_s
-        img_orig = img_orig.resize("#{resize}x#{resize}")
-        img_orig.write(fullpath("#{size}_#{self.filename}"))
-      end
-   rescue
-      nil
-  end
+  # Legacy support: fullpath for old code
+  def fullpath(file_name = nil)
+    "#{::Rails.root.to_s}/public/files/#{file_name.nil? ? filename : file_name}"
   end
 
-  protected
-  def uniq_filename_on_disk
-    i = 0
-    raise if filename.empty?
-    tmpfile = File.basename(filename.gsub(/\\/, '/')).gsub(/[^\w\.\-]/,'_')
-    filename = tmpfile
-    while File.exist?(fullpath(tmpfile))
-      i += 1
-      tmpfile = filename.sub(/^(.*?)(\.[^\.]+)?$/, '\1'+"#{i}"+'\2')
-    end
-    self.filename = tmpfile
-  end
-  def delete_filename_on_disk
-    File.unlink(fullpath(filename)) if File.exist?(fullpath(filename))
+  # Legacy support: Check if file exists (for old code)
+  def file_exists?
+    file.attached?
   end
 end

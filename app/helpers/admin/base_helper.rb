@@ -280,17 +280,25 @@ module Admin::BaseHelper
   end
 
   def show_thumbnail_for_editor(image)
-    thumb = "#{::Rails.root.to_s}/public/files/thumb_#{image.filename}"
-    picture = "#{this_blog.base_url}/files/#{image.filename}"
+    # Use Active Storage for file URLs
+    if image.file.attached?
+      file_url = rails_blob_path(image.file, only_path: true)
 
-    image.create_thumbnail unless File.exist? thumb
+      # Use variant for thumbnail if image is variable
+      if image.file.variable?
+        thumbnail_url = rails_representation_path(image.file.variant(resize_to_limit: [100, 100]), only_path: true)
+      else
+        thumbnail_url = file_url
+      end
+    else
+      # Fallback for legacy files without attachments
+      file_url = "#{this_blog.base_url}/files/#{image.filename}"
+      thumbnail_url = "#{this_blog.base_url}/images/thumb_blank.jpg"
+    end
 
-    # If something went wrong with thumbnail generation, we just display a place holder
-    thumbnail = (File.exist? thumb) ? "#{this_blog.base_url}/files/thumb_#{image.filename}" : "#{this_blog.base_url}/images/thumb_blank.jpg"
-
-    picture = "<a onclick=\"edInsertImageFromCarousel('article_body_and_extended', '#{this_blog.base_url}/files/#{image.filename}');\" />"
-    picture << "<img class='tumb' src='#{thumbnail}' "
-    picture << "alt='#{this_blog.base_url}/files/#{image.filename}' />"
+    picture = "<a onclick=\"edInsertImageFromCarousel('article_body_and_extended', '#{file_url}');\" />"
+    picture << "<img class='tumb' src='#{thumbnail_url}' "
+    picture << "alt='#{image.filename}' />"
     picture << "</a>"
     picture.html_safe
   end

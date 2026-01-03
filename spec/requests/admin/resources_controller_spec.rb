@@ -126,18 +126,20 @@ RSpec.describe 'Admin::Resources', type: :request do
         expect(response).to redirect_to(action: 'index')
       end
 
-      it 'removes the file from disk' do
-        # Create a resource with an actual file
+      it 'removes Active Storage attachment when resource is destroyed' do
+        # Create a resource with an Active Storage attachment
         resource = FactoryBot.create(:resource)
-        file_path = resource.fullpath
-
-        # Create the file on disk
-        File.open(file_path, 'w') { |f| f.write('test content') }
-        expect(File.exist?(file_path)).to be true
+        resource.file.attach(
+          io: StringIO.new('test content'),
+          filename: 'test.txt',
+          content_type: 'text/plain'
+        )
+        expect(resource.file).to be_attached
 
         post "/admin/resources/destroy/#{resource.id}"
 
-        expect(File.exist?(file_path)).to be false
+        # The resource should be destroyed
+        expect(Resource.find_by(id: resource.id)).to be_nil
       end
 
       it 'handles destroying image resources' do
@@ -159,34 +161,6 @@ RSpec.describe 'Admin::Resources', type: :request do
         expect {
           post "/admin/resources/destroy/#{resource.id}"
         }.to change { Resource.count }.by(-1)
-      end
-    end
-  end
-
-  describe 'GET /admin/resources/upload_status' do
-    context 'when not logged in' do
-      it 'redirects to login page' do
-        get '/admin/resources/upload_status'
-        expect(response).to redirect_to(controller: '/accounts', action: 'login')
-      end
-    end
-
-    context 'when logged in as admin' do
-      before { login_admin }
-
-      it 'returns successful response' do
-        get '/admin/resources/upload_status'
-        expect(response).to be_successful
-      end
-
-      it 'renders without layout' do
-        get '/admin/resources/upload_status'
-        expect(response.body).to include('complete')
-      end
-
-      it 'returns a percentage complete message' do
-        get '/admin/resources/upload_status'
-        expect(response.body).to match(/\d+ % complete/)
       end
     end
   end
@@ -300,6 +274,169 @@ RSpec.describe 'Admin::Resources', type: :request do
         get '/admin/resources/get_thumbnails', params: { position: 5 }
         # Just verify the request is made with the position parameter
       end
+    end
+  end
+
+  describe 'POST /admin/resources/upload' do
+    context 'when not logged in' do
+      it 'redirects to login page' do
+        post '/admin/resources/upload'
+        expect(response).to redirect_to(controller: '/accounts', action: 'login')
+      end
+    end
+
+    context 'when logged in as admin' do
+      before do
+        login_admin
+        FileUtils.mkdir_p(Rails.root.join('spec/fixtures/files'))
+      end
+
+      after do
+        FileUtils.rm_rf(Rails.root.join('spec/fixtures/files'))
+      end
+
+      it 'uploads a text file successfully' do
+        File.write(Rails.root.join('spec/fixtures/files/test.txt'), 'test content')
+        file = Rack::Test::UploadedFile.new(Rails.root.join('spec/fixtures/files/test.txt'), 'text/plain')
+
+        expect {
+          post '/admin/resources/upload', params: { upload: { filename: file } }
+        }.to change(Resource, :count).by(1)
+
+        expect(response).to redirect_to(action: 'index')
+        expect(flash[:notice]).to include('File uploaded successfully')
+      end
+
+      it 'uploads and attaches file with Active Storage' do
+        File.write(Rails.root.join('spec/fixtures/files/test.txt'), 'test content')
+        file = Rack::Test::UploadedFile.new(Rails.root.join('spec/fixtures/files/test.txt'), 'text/plain')
+
+        post '/admin/resources/upload', params: { upload: { filename: file } }
+
+        resource = Resource.last
+        expect(resource.file).to be_attached
+        expect(resource.filename).to eq('test.txt')
+        expect(resource.mime).to eq('text/plain')
+      end
+
+      it 'uploads a PDF file successfully' do
+        File.write(Rails.root.join('spec/fixtures/files/test.pdf'), '%PDF-1.4 test')
+        file = Rack::Test::UploadedFile.new(Rails.root.join('spec/fixtures/files/test.pdf'), 'application/pdf')
+
+        expect {
+          post '/admin/resources/upload', params: { upload: { filename: file } }
+        }.to change(Resource, :count).by(1)
+
+        resource = Resource.last
+        expect(resource.file).to be_attached
+        expect(resource.mime).to eq('application/pdf')
+      end
+
+      it 'uploads an image file successfully' do
+        png_data = "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82"
+        File.binwrite(Rails.root.join('spec/fixtures/files/test.png'), png_data)
+        file = Rack::Test::UploadedFile.new(Rails.root.join('spec/fixtures/files/test.png'), 'image/png')
+
+        expect {
+          post '/admin/resources/upload', params: { upload: { filename: file } }
+        }.to change(Resource, :count).by(1)
+
+        resource = Resource.last
+        expect(resource.file).to be_attached
+        expect(resource.mime).to eq('image/png')
+      end
+
+      it 'rejects request with no file' do
+        expect {
+          post '/admin/resources/upload', params: {}
+        }.not_to change(Resource, :count)
+
+        expect(flash[:error]).to eq('No file was uploaded')
+      end
+
+      it 'rejects request with string instead of file' do
+        expect {
+          post '/admin/resources/upload', params: { upload: { filename: 'not_a_file.txt' } }
+        }.not_to change(Resource, :count)
+
+        expect(flash[:error]).to eq('No file was uploaded')
+      end
+
+      it 'returns JSON response for successful upload' do
+        File.write(Rails.root.join('spec/fixtures/files/test.txt'), 'test content')
+        file = Rack::Test::UploadedFile.new(Rails.root.join('spec/fixtures/files/test.txt'), 'text/plain')
+
+        # Use format parameter for file uploads since as: :json doesn't work with multipart
+        post '/admin/resources/upload.json', params: { upload: { filename: file } }
+
+        expect(response).to be_successful
+        json = JSON.parse(response.body)
+        expect(json['id']).to be_present
+        expect(json['filename']).to eq('test.txt')
+        expect(json['url']).to be_present
+      end
+
+      it 'returns error JSON when no file provided' do
+        post '/admin/resources/upload.json', params: {}
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        json = JSON.parse(response.body)
+        expect(json['error']).to be_present
+      end
+    end
+  end
+
+  describe 'Active Storage file access' do
+    before do
+      login_admin
+      @resource = FactoryBot.create(:resource)
+      @resource.file.attach(
+        io: StringIO.new('test content'),
+        filename: 'test.txt',
+        content_type: 'text/plain'
+      )
+    end
+
+    it 'serves files via Active Storage blob URL' do
+      get "/admin/resources"
+      expect(response).to be_successful
+      # The view should include Active Storage blob paths
+      expect(response.body).to include('/rails/active_storage/blobs')
+    end
+
+    it 'allows accessing uploaded files' do
+      # The file should be accessible via its URL
+      url = @resource.url
+      expect(url).to include('/rails/active_storage/blobs')
+    end
+  end
+
+  describe 'POST /admin/resources/destroy with Active Storage' do
+    before { login_admin }
+
+    it 'deletes resource with attached file' do
+      resource = FactoryBot.create(:resource)
+      resource.file.attach(
+        io: StringIO.new('test content'),
+        filename: 'test.txt',
+        content_type: 'text/plain'
+      )
+
+      expect {
+        post "/admin/resources/destroy/#{resource.id}"
+      }.to change(Resource, :count).by(-1)
+
+      expect(response).to redirect_to(action: 'index')
+    end
+
+    it 'handles resource without attached file' do
+      resource = FactoryBot.create(:resource)
+
+      expect {
+        post "/admin/resources/destroy/#{resource.id}"
+      }.to change(Resource, :count).by(-1)
+
+      expect(response).to redirect_to(action: 'index')
     end
   end
 

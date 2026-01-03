@@ -24,6 +24,9 @@ module TypoBlog
     # Setup the cache path
     config.cache_store = :file_store, Rails.root.join('public/cache/')
 
+    # Page cache directory for Typo's page caching system
+    config.action_controller.page_cache_directory = Rails.root.join('public/cache').to_s
+
     # Autoload paths
     config.autoload_paths += %W(
       #{config.root}/app/apis
@@ -53,8 +56,7 @@ module TypoBlog
     # Time zone
     config.time_zone = 'UTC'
 
-    # Disable some Rails 7 defaults that require setup
-    config.active_storage.service_configurations = {}
+    # Active Storage is configured in config/storage.yml
   end
 end
 

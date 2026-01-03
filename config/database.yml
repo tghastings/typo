@@ -26,7 +26,7 @@ production:
   url: <%= ENV['DATABASE_URL'] %>
   <% else %>
   adapter: sqlite3
-  database: storage/db_production.sqlite3
+  database: prod_db/db_production.sqlite3
   <% end %>
 
 cucumber:

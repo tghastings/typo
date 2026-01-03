@@ -17,6 +17,7 @@ pin "controllers/fade_out_controller", to: "controllers/fade_out_controller.js"
 pin "controllers/flash_controller", to: "controllers/flash_controller.js"
 pin "controllers/markdown_editor_controller", to: "controllers/markdown_editor_controller.js"
 pin "controllers/sortable_controller", to: "controllers/sortable_controller.js"
+pin "controllers/pdf_slideshow_controller", to: "controllers/pdf_slideshow_controller.js"
 
 # Marked.js for markdown preview rendering (lightweight, fast CDN)
 pin "marked", to: "https://cdn.jsdelivr.net/npm/marked@12.0.0/lib/marked.esm.js"

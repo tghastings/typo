@@ -18,20 +18,33 @@
 <% for upload in @resources -%>
 <tr <%= alternate_class -%>>
   <td>
-  <% if upload.mime =~ /image/ %>
-    <a href='<%= "#{this_blog.base_url}/files/#{upload.filename}" %>' rel='lightbox'>
-      <%= show_thumbnail(upload) %>
-    </a>
-		<p>
-			<small>
-			<%= link_to(_("Thumbnail"), "#{this_blog.base_url}/files/thumb_#{upload.filename}" ) %>
-				<%= link_to(_("Medium size"), "#{this_blog.base_url}/files/medium_#{upload.filename}" ) %> |
-				<%= link_to(_("Original size"), "#{this_blog.base_url}/files/#{upload.filename}" ) %> |
-        <%= link_to _("delete"), "/admin/resources/destroy/#{upload.id}?search=#{params[:search]}&page=#{params[:page]}", data: { confirm: _("Are you sure?") }, method: :post %>
-			</small>
-		</p>
+  <% if upload.file.attached? %>
+    <% if upload.mime =~ /image/ %>
+      <a href='<%= rails_blob_path(upload.file, only_path: true) %>' rel='lightbox'>
+        <% if upload.file.variable? %>
+          <%= image_tag upload.file.variant(resize_to_limit: [100, 100]), alt: upload.filename %>
+        <% else %>
+          <%= image_tag rails_blob_path(upload.file, only_path: true), width: 100, alt: upload.filename %>
+        <% end %>
+      </a>
+      <p>
+        <small>
+          <% if upload.file.variable? %>
+            <%= link_to(_("Thumbnail"), rails_representation_path(upload.file.variant(resize_to_limit: [100, 100]), only_path: true)) %> |
+            <%= link_to(_("Medium size"), rails_representation_path(upload.file.variant(resize_to_limit: [500, 500]), only_path: true)) %> |
+          <% end %>
+          <%= link_to(_("Original size"), rails_blob_path(upload.file, only_path: true)) %> |
+          <%= link_to _("delete"), "/admin/resources/destroy/#{upload.id}?search=#{params[:search]}&page=#{params[:page]}", data: { confirm: _("Are you sure?") }, method: :post %>
+        </small>
+      </p>
+    <% else %>
+      <%= link_to(upload.filename, rails_blob_path(upload.file, only_path: true), rel: 'lightbox') -%>
+      <small>
+        | <%= link_to _("delete"), "/admin/resources/destroy/#{upload.id}?search=#{params[:search]}&page=#{params[:page]}", data: { confirm: _("Are you sure?") }, method: :post %>
+      </small>
+    <% end %>
   <% else %>
-    <%= link_to("#{upload.filename}", "#{this_blog.base_url}/files/#{upload.filename}", {:rel => 'lightbox'}) -%>
+    <span class="text-muted"><%= upload.filename %> (no file attached)</span>
   <% end %>
   </td>
   <td>

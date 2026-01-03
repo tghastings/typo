@@ -1,69 +1,76 @@
 class Admin::ResourcesController < Admin::BaseController
-  # Note: upload_status_for from upload_progress gem removed (deprecated)
-
   cache_sweeper :blog_sweeper
 
   def upload
-    begin
-      if request.post?
-        file = params[:upload][:filename]
-        unless file.content_type
-          mime = 'text/plain'
-        else
-          mime = file.content_type.chomp
+    if request.post?
+      uploaded_file = params.dig(:upload, :filename) || params[:file]
+
+      unless uploaded_file.respond_to?(:original_filename)
+        flash[:error] = _('No file was uploaded')
+        respond_to do |format|
+          format.html { redirect_to action: 'index' }
+          format.json { render json: { error: 'No file was uploaded' }, status: :unprocessable_entity }
         end
-        @up = Resource.create(:filename => file.original_filename, :mime => mime, :created_at => Time.now)
+        return
+      end
 
-        @up.write_to_disk(file)
+      mime = uploaded_file.content_type.presence || 'application/octet-stream'
 
-        @message = _('File uploaded: ')+ file.size.to_s
-        flash[:notice] = @message
+      @resource = Resource.new(
+        upload: uploaded_file.original_filename,
+        mime: mime,
+        size: uploaded_file.size
+      )
+
+      if @resource.save
+        @resource.file.attach(uploaded_file)
+
+        flash[:notice] = _('File uploaded successfully: ') + uploaded_file.original_filename
 
         respond_to do |format|
           format.html { redirect_to action: 'index' }
           format.json do
             render json: {
-              url: "/files/#{@up.filename}",
-              thumbnail: "/files/thumb_#{@up.filename}",
-              medium: "/files/medium_#{@up.filename}",
-              id: @up.id,
-              filename: @up.filename,
-              mime: @up.mime
+              url: @resource.url,
+              thumbnail: @resource.variant_url(:thumb),
+              medium: @resource.variant_url(:medium),
+              id: @resource.id,
+              filename: @resource.filename,
+              mime: @resource.mime
             }
           end
         end
-        return
-      end
-    rescue => e
-      @message = "'" + _('Unable to upload') + " #{file&.original_filename}'"
-      @up.destroy unless @up.nil?
-
-      respond_to do |format|
-        format.html { raise }
-        format.json do
-          render json: { error: @message }, status: :unprocessable_entity
+      else
+        flash[:error] = _('Unable to save file')
+        respond_to do |format|
+          format.html { redirect_to action: 'index' }
+          format.json { render json: { error: 'Unable to save' }, status: :unprocessable_entity }
         end
       end
+    end
+  rescue => e
+    Rails.logger.error "Upload error: #{e.message}"
+    flash[:error] = _('Unable to upload file')
+
+    respond_to do |format|
+      format.html { redirect_to action: 'index' }
+      format.json { render json: { error: e.message }, status: :unprocessable_entity }
     end
   end
 
   def update
     @resource = Resource.find(params[:resource][:id])
-    @resource.attributes = params[:resource] if params[:resource].present?
+    @resource.attributes = resource_params if params[:resource].present?
 
-    if request.post? and @resource.save
+    if request.post? && @resource.save
       flash[:notice] = _('Metadata was successfully updated.')
     else
       flash[:error] = _('Not all metadata was defined correctly.')
-      @resource.errors.each do |meta_key,val|
-        flash[:error] << "<br />" + val
+      @resource.errors.each do |error|
+        flash[:error] << "<br />" + error.full_message
       end
     end
-    redirect_to :action => 'index'
-  end
-
-  def upload_status
-    render :inline => "<%= upload_progress.completed_percent rescue 0 %> % " + _("complete"), :layout => false
+    redirect_to action: 'index'
   end
 
   def index
@@ -73,20 +80,39 @@ class Admin::ResourcesController < Admin::BaseController
 
   def get_thumbnails
     position = params[:position].to_i
-    @resources = Resource.without_images.by_created_at.limit("#{position}, 10")
-    render 'get_thumbnails', :layout => false
+    @resources = Resource.without_images.by_created_at.offset(position).limit(10)
+    render 'get_thumbnails', layout: false
   end
 
   def destroy
-    begin
-      @record = Resource.find(params[:id])
-      mime = @record.mime
-      return(render 'admin/shared/destroy') unless request.post?
-      
-      @record.destroy
-      redirect_to :action => 'index'
-    rescue
-      raise
+    @record = Resource.find(params[:id])
+    return(render 'admin/shared/destroy') unless request.post?
+
+    @record.destroy
+    flash[:notice] = _('File deleted successfully')
+    redirect_to action: 'index'
+  rescue ActiveRecord::RecordNotFound
+    flash[:error] = _('File not found')
+    redirect_to action: 'index'
+  end
+
+  # Serve files directly - bypasses Active Storage routing
+  def serve
+    resource = Resource.find_by(upload: params[:filename])
+
+    if resource&.file&.attached?
+      send_data resource.file.download,
+                filename: resource.filename,
+                type: resource.mime,
+                disposition: 'inline'
+    else
+      head :not_found
     end
+  end
+
+  private
+
+  def resource_params
+    params.require(:resource).permit(:upload, :mime, :article_id)
   end
 end

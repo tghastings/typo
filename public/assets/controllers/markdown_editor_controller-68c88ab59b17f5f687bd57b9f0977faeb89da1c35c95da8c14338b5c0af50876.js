@@ -518,4 +518,4 @@ export default class extends Controller {
       alert("Image upload failed. Please try again.")
     }
   }
-}
+};

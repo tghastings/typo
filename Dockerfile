@@ -60,13 +60,13 @@ FROM base AS production
 COPY --from=build /usr/local/bundle /usr/local/bundle
 COPY --from=build /app /app
 
-# Create non-root user for security
-RUN useradd -m -s /bin/bash rails && \
+# Create non-root user for security with UID 1000 for volume compatibility
+RUN useradd -m -s /bin/bash -u 1000 rails && \
     chown -R rails:rails /app
 
-# Create necessary directories
-RUN mkdir -p /app/db /app/log /app/tmp/pids /app/tmp/cache /app/tmp/sockets /app/public/uploads && \
-    chown -R rails:rails /app/db /app/log /app/tmp /app/public/uploads
+# Create necessary directories (including storage for Active Storage)
+RUN mkdir -p /app/db /app/log /app/tmp/pids /app/tmp/cache /app/tmp/sockets /app/public/uploads /app/storage && \
+    chown -R rails:rails /app/db /app/log /app/tmp /app/public/uploads /app/storage
 
 # Switch to non-root user
 USER rails

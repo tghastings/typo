@@ -4,6 +4,19 @@ set -e
 # Remove any stale PID file
 rm -f /app/tmp/pids/server.pid
 
+# Ensure storage directories exist and are writable
+echo "Checking storage directories..."
+mkdir -p /app/storage /app/tmp/cache /app/log /app/public/uploads
+
+# Test write permissions for Active Storage
+if ! touch /app/storage/.write_test 2>/dev/null; then
+    echo "WARNING: /app/storage is not writable. Active Storage uploads will fail."
+    echo "If using Docker volumes, ensure proper permissions on the host directory."
+else
+    rm -f /app/storage/.write_test
+    echo "Storage directory is writable"
+fi
+
 # Generate secret key if not set
 if [ -z "$SECRET_KEY_BASE" ]; then
     export SECRET_KEY_BASE=$(bundle exec rails secret)
@@ -48,6 +61,13 @@ fi
 if bundle exec rails runner "exit(Blog.count == 0 ? 0 : 1)" 2>/dev/null; then
     echo "Seeding database..."
     bundle exec rails db:seed || true
+fi
+
+# Clear Rails cache if requested
+if [ "$CLEAR_CACHE" = "true" ]; then
+    echo "Clearing Rails cache..."
+    bundle exec rails runner "Rails.cache.clear rescue nil; PageCache.sweep_all rescue nil" 2>/dev/null || true
+    echo "Cache cleared"
 fi
 
 echo "Starting Typo Blog..."

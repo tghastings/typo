@@ -28,4 +28,4 @@ try {
   application.start()
 } catch (err) {
   console.error('[Stimulus] Failed to start:', err)
-}
+};

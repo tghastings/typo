@@ -5,3 +5,6 @@
 # Mime::Type.register_alias "text/html", :iphone
 Mime::Type.register_alias "application/xml",     :googlesitemap
 Mime::Type.register       "application/rsd+xml", :rsd
+
+# Ensure CSS files are served with correct MIME type
+Rack::Mime::MIME_TYPES['.css'] = 'text/css'
