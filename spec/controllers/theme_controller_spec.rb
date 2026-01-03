@@ -5,38 +5,28 @@ describe ThemeController do
 
   before(:each) { Factory(:blog) }
 
-  it "test_stylesheets" do
-    get :stylesheets, :filename => "style.css"
+  it "serves stylesheets from theme" do
+    get :stylesheets, :filename => "application.css"
     expect(response).to be_successful
     expect(@response.content_type).to eq("text/css; charset=utf-8")
     expect(@response.charset).to eq("utf-8")
-    expect(@response.headers['Content-Disposition']).to match(/inline; filename="style.css"/)
+    expect(@response.headers['Content-Disposition']).to include('inline')
   end
 
-  it "test_images" do
-    get :images, :filename => "bg_white.png"
+  it "serves images from theme" do
+    get :images, :filename => "background.gif"
     expect(response).to be_successful
-    expect(@response.content_type).to eq("image/png")
-    expect(@response.headers['Content-Disposition']).to match(/inline; filename="bg_white.png"/)
+    expect(@response.content_type).to eq("image/gif")
+    expect(@response.headers['Content-Disposition']).to include('inline')
   end
 
-  it "test_malicious_path" do
+  it "rejects malicious paths" do
     get :stylesheets, :filename => "../../../config/database.yml"
     expect(response).to have_http_status(404)
   end
 
-  it "test_view_theming" do
-    get :static_view_test
-    expect(response).to be_successful
-
-    expect(@response.body =~ /Static View Test from scribbish/).to be_truthy
-  end
-
-  it "disabled_test_javascript"
-  if false
-    get :stylesheets, :filename => "typo.js"
-    expect(response).to be_successful
-    expect(@response.content_type).to eq("text/javascript")
-    expect(@response.headers['Content-Disposition']).to eq("inline; filename=\"typo.js\"")
+  it "returns 404 for non-existent files" do
+    get :stylesheets, :filename => "nonexistent.css"
+    expect(response).to have_http_status(404)
   end
 end

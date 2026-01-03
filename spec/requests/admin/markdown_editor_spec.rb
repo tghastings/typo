@@ -7,20 +7,16 @@ RSpec.describe 'Markdown Editor', type: :request do
     setup_blog_and_admin
   end
 
-  # Preview functionality removed - we only want markdown editing, no HTML preview
-
   describe 'Markdown Editor Interface' do
     before { login_admin }
 
-    it 'does not include preview pane in markdown editor' do
+    it 'includes the markdown editor container' do
       get '/admin/content/insert_editor', params: { editor: 'markdown' }
-      expect(response.body).not_to include('preview-pane')
-      expect(response.body).not_to include('Preview')
+      expect(response.body).to include('markdown-editor-container')
     end
 
-    it 'includes only the editor pane' do
+    it 'includes the editor pane' do
       get '/admin/content/insert_editor', params: { editor: 'markdown' }
-      expect(response.body).to include('editor-pane')
       expect(response.body).to include('markdown-editor')
     end
 
@@ -29,10 +25,9 @@ RSpec.describe 'Markdown Editor', type: :request do
       expect(response.body).to include('markdown-toolbar')
     end
 
-    it 'does not load preview-related JavaScript' do
+    it 'includes preview toggle button' do
       get '/admin/content/insert_editor', params: { editor: 'markdown' }
-      # Should not have preview URL
-      expect(response.body).not_to include('preview-url-value')
+      expect(response.body).to include('Preview')
     end
   end
 

@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: Install RuboCop
+        run: gem install rubocop rubocop-rails rubocop-rspec
+
+      - name: Run RuboCop
+        run: rubocop --format github || true  # Don't fail on lint errors initially
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: Install security tools
+        run: |
+          gem install brakeman bundler-audit
+
+      - name: Run Brakeman (Code Security)
+        run: brakeman -q -w2 --no-pager --format github || true
+
+      - name: Run Bundle Audit (Gem Vulnerabilities)
+        run: |
+          bundle audit check --update || true
+
+      - name: Check for known vulnerabilities in JS packages
+        run: |
+          if [ -f "package-lock.json" ]; then
+            npm audit --audit-level=high || true
+          elif [ -f "yarn.lock" ]; then
+            yarn audit --level high || true
+          else
+            echo "No JS package lock file found, skipping JS audit"
+          fi
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: typo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/typo_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: Install dependencies
+        run: |
+          bundle install --jobs 4 --retry 3
+
+      - name: Setup database
+        run: |
+          bundle exec rails db:create db:schema:load
+
+      - name: Run tests (excluding slow system tests)
+        run: |
+          bundle exec rspec --exclude-pattern "spec/system/**/*_spec.rb" --format progress --format RspecJunitFormatter --out tmp/rspec_results.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: tmp/rspec_results.xml

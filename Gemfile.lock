@@ -310,6 +310,8 @@ GEM
       rspec-mocks (~> 3.13)
       rspec-support (~> 3.13)
     rspec-support (3.13.6)
+    rspec_junit_formatter (0.6.0)
+      rspec-core (>= 2, < 4, != 2.12.0)
     rubypants (0.7.1)
     rubyzip (3.2.2)
     sassc (2.4.0)
@@ -409,6 +411,7 @@ DEPENDENCIES
   rexml
   rspec-collection_matchers
   rspec-rails (~> 6.0)
+  rspec_junit_formatter
   rubypants (~> 0.7)
   sassc-rails
   selenium-webdriver

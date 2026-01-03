@@ -22,13 +22,13 @@ RSpec.describe "Manual Login Test", type: :request do
     puts "Location: #{response.location}"
     puts "Session user_id: #{session[:user_id]}"
 
-    # Should redirect to admin dashboard
+    # Should redirect to admin
     expect(response).to have_http_status(302)
-    expect(response).to redirect_to('/admin/dashboard')
+    expect(response).to redirect_to('/admin')
     expect(session[:user_id]).to eq(admin_user.id)
   end
 
-  it "can access admin dashboard after login" do
+  it "can access admin after login" do
     # Simulate logged in session
     post '/accounts/login', params: {
       user: {
@@ -39,10 +39,8 @@ RSpec.describe "Manual Login Test", type: :request do
 
     # Follow the redirect
     follow_redirect!
-    puts "After redirect - Status: #{response.status}"
-    puts "After redirect - Path: #{request.path}"
 
     expect(response).to have_http_status(200)
-    expect(request.path).to eq('/admin/dashboard')
+    expect(request.path).to eq('/admin')
   end
 end

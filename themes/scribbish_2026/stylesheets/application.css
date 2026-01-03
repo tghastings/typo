@@ -12,8 +12,8 @@
   --color-text: #333;
   --color-text-muted: #666;
   --color-text-light: #999;
-  --color-background: #fdfcf8;
-  --color-background-alt: #f8f7f6;
+  --color-background: #f9f6ed;
+  --color-background-alt: #f3f0e5;
   --color-background-code: #1a1a1a;
   --color-border: #e5e5e5;
   --color-border-light: #eee;
@@ -211,7 +211,8 @@ cite {
   text-decoration: none !important;
 }
 
-#header h2 {
+#header h2,
+#header .header-subtitle {
   font-family: var(--font-serif);
   font-size: var(--font-size-sm);
   font-style: italic;
@@ -976,16 +977,39 @@ pre.line-numbers .line-numbers-rows,
  --------------------------------------------------------------*/
 .pagination {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: var(--space-sm);
+  align-items: center;
+  gap: 6px;
   margin: var(--space-xl) 0;
+  font-size: 0; /* Eliminates whitespace between inline elements */
+}
+
+/* Wrapper spans - no styling, just inline */
+.pagination .page,
+.pagination .prev,
+.pagination .next,
+.pagination .first,
+.pagination .last {
+  display: inline;
+  padding: 0;
+  margin: 0;
   font-size: var(--font-size-sm);
 }
 
+/* Actual clickable/visible elements */
 .pagination a,
-.pagination span {
-  padding: var(--space-sm) var(--space-md);
+.pagination .page.current {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
   border-radius: var(--border-radius);
+  font-size: var(--font-size-sm);
+  font-style: normal;
+  box-sizing: border-box;
 }
 
 .pagination a {
@@ -999,13 +1023,15 @@ pre.line-numbers .line-numbers-rows,
   color: #fff;
 }
 
-.pagination .current {
+.pagination .page.current {
   background: var(--color-primary);
   color: #fff;
 }
 
-.pagination .disabled {
+.pagination .disabled,
+.pagination .gap {
   color: var(--color-text-light);
+  background: transparent;
 }
 
 /*--------------------------------------------------------------

@@ -4,7 +4,11 @@ describe "articles/read.html.erb" do
   with_each_theme do |theme, view_path|
     describe theme ? "with theme #{theme}" : "without a theme" do
       before(:each) do
-        @controller.view_paths.unshift(view_path) if theme
+        @controller.prepend_view_path(view_path) if theme
+
+        # Stub login helpers for theme layouts that use them
+        allow(view).to receive(:logged_in?).and_return(false)
+        allow(view).to receive(:current_user).and_return(nil)
 
         # we do not want to test article links and such
         view.stub(:article_links) { "" }

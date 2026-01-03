@@ -20,17 +20,10 @@
   <header id="header">
     <div class="header-left">
       <h1><%= link_to this_blog.blog_name, this_blog.base_url %></h1>
-      <% if this_blog.blog_subtitle.present? %>
-        <h2><%= this_blog.blog_subtitle %></h2>
-      <% end %>
     </div>
-    <nav class="header-nav">
-      <% if logged_in? %>
-        <%= link_to _("Admin"), admin_dashboard_path %> &middot; <%= link_to _("Log Out"), logout_path %>
-      <% else %>
-        <%= link_to _("Log In"), login_path %>
-      <% end %>
-    </nav>
+    <% if this_blog.blog_subtitle.present? %>
+      <h2 class="header-subtitle"><%= this_blog.blog_subtitle %></h2>
+    <% end %>
   </header>
 
   <div id="page">
@@ -45,7 +38,14 @@
   </div>
 
   <footer id="footer">
-    <p><%= link_to this_blog.blog_name, this_blog.base_url %></p>
+    <p>
+      <%= link_to this_blog.blog_name, this_blog.base_url %> &middot;
+      <% if logged_in? %>
+        <%= link_to _("Admin"), admin_dashboard_path %> &middot; <%= link_to _("Log Out"), logout_path %>
+      <% else %>
+        <%= link_to _("Log In"), login_path %>
+      <% end %>
+    </p>
     <ul>
       <li>
         <%= _("Powered by %s", link_to('Typo of Theseus', 'https://github.com/tghastings/typo')) %> &middot;

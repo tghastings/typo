@@ -111,12 +111,16 @@ function saveActiveItems() {
   var active = document.getElementById('active');
   if (!active) return;
 
+  var hasNewItems = false;
   var ids = Array.from(active.children)
     .filter(function(el) { return el.id; })
     .map(function(el) {
       var id = el.id;
       if (id.startsWith('active_')) return id.replace('active_', '');
-      if (id.startsWith('available_')) return id.replace('available_', '');
+      if (id.startsWith('available_')) {
+        hasNewItems = true;
+        return id.replace('available_', '');
+      }
       return id;
     });
 
@@ -141,6 +145,10 @@ function saveActiveItems() {
     console.log('Sidebar saved:', data);
     var spinner = document.getElementById('update_spinner');
     if (spinner) spinner.style.display = 'none';
+    // Reload page if new sidebars were added to show config fields
+    if (hasNewItems) {
+      window.location.reload();
+    }
   }).catch(function(err) {
     console.error('Error:', err);
     var spinner = document.getElementById('update_spinner');

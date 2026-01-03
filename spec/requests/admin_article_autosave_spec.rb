@@ -32,7 +32,7 @@ RSpec.describe "Admin Article Autosave", type: :request do
       article = Article.last
       expect(article.title).to eq('Autosaved Article')
       expect(article.body).to eq('Content being autosaved')
-      expect(article.state).to eq('draft')
+      expect(article.state.to_s.downcase).to eq('draft')
       expect(article.parent_id).to be_nil
     end
 
@@ -90,7 +90,7 @@ RSpec.describe "Admin Article Autosave", type: :request do
 
       draft = Article.last
       expect(draft.parent_id).to eq(published_article.id)
-      expect(draft.state).to eq('draft')
+      expect(draft.state.to_s.downcase).to eq('draft')
       expect(draft.title).to eq('Edited Title')
     end
   end

@@ -75,24 +75,22 @@ class Admin::SidebarController < Admin::BaseController
 
   def publish
     Sidebar.transaction do
-      position = 0
       params[:configure] ||= { }
-      # Crappy workaround to rails update_all bug with PgSQL / SQLite
-      ActiveRecord::Base.connection.execute("update sidebars set active_position=null")
-      flash_sidebars.each do |id|
-        sidebar = Sidebar.find(id)
-        raw_attribs = params[:configure][id.to_s] || {}
+
+      # Get active sidebars from database (not flash, which may be stale after reload)
+      active_sidebars = Sidebar.where.not(active_position: nil).order('active_position ASC')
+
+      active_sidebars.each do |sidebar|
+        raw_attribs = params[:configure][sidebar.id.to_s] || {}
         sb_attribs = raw_attribs.respond_to?(:permit!) ? raw_attribs.permit!.to_h : raw_attribs.to_h
+
         # If it's a checkbox and unchecked, convert the 0 to false
-        # This is ugly.  Anyone have an improvement?
         sidebar.fields.each do |field|
           sb_attribs[field.key] = field.canonicalize(sb_attribs[field.key])
         end
 
-        sidebar.update(config: sb_attribs.to_h, active_position: position)
-        position += 1
+        sidebar.update(config: sb_attribs.to_h)
       end
-      Sidebar.where('active_position is null').delete_all
     end
     ::PageCache.sweep_all
     flash[:success] = _("Sidebar changes published successfully")

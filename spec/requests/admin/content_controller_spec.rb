@@ -501,14 +501,14 @@ RSpec.describe 'Admin::Content', type: :request do
       }.to change { Article.count }
     end
 
-    it 'autosave returns JSON response' do
+    it 'autosave returns JSON response when requested' do
       initial_article = FactoryBot.create(:article, user: @admin)
       post '/admin/content/autosave', params: {
         article: {
           title: 'JSON Response Article',
           body_and_extended: 'Content for JSON'
         }
-      }
+      }, headers: { 'Accept' => 'application/json' }
       expect(response.content_type).to include('application/json')
     end
   end
@@ -516,27 +516,27 @@ RSpec.describe 'Admin::Content', type: :request do
   describe 'Editor switching' do
     before { login_admin }
 
-    it 'switches to simple editor' do
+    it 'returns markdown editor partial' do
       get '/admin/content/insert_editor', params: { editor: 'simple' }
       expect(response).to be_successful
     end
 
-    it 'switches to visual editor' do
+    it 'returns markdown editor for any editor param' do
       get '/admin/content/insert_editor', params: { editor: 'visual' }
       expect(response).to be_successful
     end
 
-    it 'updates user editor preference to simple' do
+    it 'always sets user editor preference to markdown' do
       get '/admin/content/insert_editor', params: { editor: 'simple' }
-      expect(@admin.reload.editor).to eq('simple')
+      expect(@admin.reload.editor).to eq('markdown')
     end
 
-    it 'updates user editor preference to visual' do
+    it 'uses unified markdown editor' do
       get '/admin/content/insert_editor', params: { editor: 'visual' }
-      expect(@admin.reload.editor).to eq('visual')
+      expect(@admin.reload.editor).to eq('markdown')
     end
 
-    it 'defaults to visual editor when unknown editor specified' do
+    it 'responds successfully for any editor value' do
       get '/admin/content/insert_editor', params: { editor: 'unknown' }
       expect(response).to be_successful
     end
@@ -545,13 +545,13 @@ RSpec.describe 'Admin::Content', type: :request do
   describe 'Attachment box' do
     before { login_admin }
 
-    it 'responds to attachment_box_add' do
-      get '/admin/content/attachment_box_add', params: { id: 1 }
+    it 'responds to attachment_box_add with turbo stream' do
+      get '/admin/content/attachment_box_add', params: { id: 1 }, headers: { 'Accept' => 'text/vnd.turbo-stream.html' }
       expect(response).to be_successful
     end
 
-    it 'returns JSON response for attachment box' do
-      get '/admin/content/attachment_box_add', params: { id: 1 }
+    it 'returns JSON response for attachment box when requested' do
+      get '/admin/content/attachment_box_add', params: { id: 1 }, headers: { 'Accept' => 'application/json' }
       expect(response.content_type).to include('application/json')
     end
   end

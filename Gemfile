@@ -61,6 +61,7 @@ group :development, :test do
   gem 'cucumber-rails', require: false
   gem 'cucumber', '~> 9.0'
   gem 'debug'
+  gem 'rspec_junit_formatter'  # For CI test result uploads
 end
 
 group :development do

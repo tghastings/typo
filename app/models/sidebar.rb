@@ -57,7 +57,8 @@ class Sidebar < ActiveRecord::Base
 
     def line_html(sidebar)
       html = label_html(sidebar)
-      html << content_tag(:div,  input_html(sidebar), :class => 'input')
+      html << content_tag(:div, input_html(sidebar), :class => 'input')
+      html.html_safe
     end
 
     def input_name(sidebar)
@@ -90,7 +91,7 @@ class Sidebar < ActiveRecord::Base
           radio_button_tag(input_name(sidebar), value,
                            value == sidebar.config[key], options) +
             content_tag('label', label_for(choice))
-        end.join("<br />")
+        end.join("<br />").html_safe
       end
 
       def label_for(choice)
@@ -109,7 +110,7 @@ class Sidebar < ActiveRecord::Base
       end
 
       def line_html(sidebar)
-        input_html(sidebar) + ' ' + label_html(sidebar) + '<br >'
+        input_html(sidebar) + ' '.html_safe + label_html(sidebar) + tag(:br)
       end
 
       def canonicalize(value)
