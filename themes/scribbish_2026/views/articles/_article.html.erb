@@ -8,12 +8,12 @@
 <% end -%>
     </h2>
     <p class="author">
-      <%= _("Posted by") %> <cite><%= author_link(article) %></cite>
+      <%= _("Posted by") %> <cite><%= author_link(article) %></cite> on 
       <abbr class="published" title="<%= article.published_at.xmlschema %>">
         <time datetime="<%= article.published_at.iso8601 %>"><%= display_date_and_time article.published_at %></time>
       </abbr>
 <% unless article.categories.empty? -%>
-      &middot; in <%= category_links(article, "").html_safe %>
+      in <%= category_links(article, "").html_safe %>
 <% end -%>
 <% unless article.tags.empty? -%>
       &middot; <%= tag_links(article, "").html_safe %>

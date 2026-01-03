@@ -354,7 +354,7 @@ pre:has(> code[class*="language-"]) {
   font-size: 14px !important;
   line-height: 1.6 !important;
   margin: 1em 0 !important;
-  padding: 0.75em 1em !important;
+  padding: 5px !important;
   border: none !important;
   border-radius: 10px !important;
   overflow-x: visible !important;
@@ -374,8 +374,10 @@ pre.line-numbers > code,
 pre[class*="language-"] > code,
 pre > code[class*="language-"] {
   display: block !important;
-  padding-left: 50px !important;
-  padding-top: 0.5em !important;
+  padding-left: 38px !important;
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
+  padding-right: 5px !important;
   background: none !important;
   font-size: inherit !important;
   line-height: inherit !important;
@@ -388,15 +390,15 @@ pre.line-numbers .line-numbers-rows,
 .line-numbers .line-numbers-rows {
   position: absolute !important;
   pointer-events: none !important;
-  top: 0.75em !important;
-  left: 0 !important;
-  width: 3em !important;
+  top: 6px !important;
+  left: 5px !important;
+  width: 1.75em !important;
   font-size: 100% !important;
   line-height: 1.6 !important;
   letter-spacing: -1px !important;
   border-right: 1px solid #1e3a5f !important;
   user-select: none !important;
-  padding-right: 0.8em !important;
+  padding-right: 0.1em !important;
   text-align: right !important;
   color: #4a6785 !important;
   background: #0a0e1a !important;
@@ -1105,4 +1107,78 @@ pre:hover .code-copy-btn {
     font-size: var(--font-size-sm);
     color: var(--color-text-muted);
   }
+}
+
+/*--------------------------------------------------------------
+ Bibliography - Academic-style link references
+ --------------------------------------------------------------*/
+.bibliography-ref {
+  font-size: 0.7em;
+  vertical-align: super;
+  color: var(--color-text-light);
+  margin-left: 1px;
+  font-variant: small-caps;
+  font-family: var(--font-serif);
+}
+
+.bibliography-ref a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.bibliography {
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-md);
+  font-size: var(--font-size-sm);
+  position: relative;
+  text-align: left;
+}
+
+.bibliography h3 {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  font-variant: small-caps;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+  margin: 0 0 var(--space-sm) 0;
+  color: var(--color-text);
+  text-align: right;
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-sm);
+  width: 85px;
+  margin-left: auto;
+}
+
+.bibliography ol,
+.bibliography-list,
+ol.bibliography-list {
+  margin: 0 !important;
+  padding: 0 0 0 5px !important;
+  list-style-type: none;
+  text-align: left;
+  border-left: 1px solid var(--color-border);
+}
+
+.bibliography-list li {
+  margin: 0 !important;
+  padding: 0 !important;
+  margin-bottom: 2px !important;
+}
+
+.bibliography-list li::before {
+  content: "[" attr(value) "] ";
+  color: var(--color-text-light);
+  font-variant: small-caps;
+  font-family: var(--font-serif);
+}
+
+.bibliography-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.bibliography-link:hover {
+  text-decoration: underline;
 }
