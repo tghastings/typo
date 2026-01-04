@@ -50,8 +50,8 @@ COPY . .
 # Precompile bootsnap code for faster boot times
 RUN bundle exec bootsnap precompile app/ lib/ 2>/dev/null || true
 
-# Precompile assets
-RUN SECRET_KEY_BASE=placeholder bundle exec rails assets:precompile
+# Precompile assets (provide placeholder secrets for build-time compilation)
+RUN SECRET_KEY_BASE=placeholder SECRET_TOKEN=placeholder bundle exec rails assets:precompile
 
 # Stage 3: Production image
 FROM base AS production

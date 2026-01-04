@@ -95,7 +95,7 @@ jobs:
 
       - name: Setup database
         run: |
-          bundle exec rails db:create db:schema:load
+          bundle exec rails db:prepare
 
       - name: Run tests (excluding slow system tests)
         run: |

@@ -11,6 +11,7 @@ services:
     environment:
       - RAILS_ENV=production
       - SECRET_KEY_BASE=${SECRET_KEY_BASE:-changeme_in_production}
+      - SECRET_TOKEN=${SECRET_TOKEN:-changeme_in_production}
       - RAILS_LOG_TO_STDOUT=true
       - RAILS_SERVE_STATIC_FILES=true
     volumes:
@@ -35,6 +36,7 @@ services:
   #   environment:
   #     - RAILS_ENV=production
   #     - SECRET_KEY_BASE=${SECRET_KEY_BASE:-changeme_in_production}
+  #     - SECRET_TOKEN=${SECRET_TOKEN:-changeme_in_production}
   #     - DATABASE_URL=postgres://typo:typo@postgres:5432/typo_production
   #     - RAILS_LOG_TO_STDOUT=true
   #     - RAILS_SERVE_STATIC_FILES=true
