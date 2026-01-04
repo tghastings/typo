@@ -648,8 +648,8 @@ pre {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   background: var(--color-background-alt);
-  margin: var(--space-md) 0 0 0;
-  padding: 0.5rem 1.5rem;
+  margin: 0 !important;
+  padding: 0 !important;
   border-radius: var(--border-radius);
 }
 
