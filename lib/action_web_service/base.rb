@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ActionWebService # :nodoc:
   class ActionWebServiceError < StandardError # :nodoc:
   end

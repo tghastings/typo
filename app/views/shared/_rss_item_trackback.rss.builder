@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 feed.item do
   feed.title item.feed_title
   feed.description item.excerpt
   feed.pubDate pub_date(item.created_at)
-  feed.guid "urn:uuid:#{item.guid}", "isPermaLink" => "false"
+  feed.guid "urn:uuid:#{item.guid}", 'isPermaLink' => 'false'
   feed.link item.url
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe CommentsController do
@@ -6,76 +8,80 @@ describe CommentsController do
   end
 
   describe '#create' do
-    describe "Basic comment creation" do
+    describe 'Basic comment creation' do
       before do
         @article = Factory(:article)
-        comment = {:body => 'content', :author => 'bob', :email => 'bob@home', :url => 'http://bobs.home/'}
-        post :create, :comment => comment, :article_id => @article.id
+        comment = { body: 'content', author: 'bob', email: 'bob@home', url: 'http://bobs.home/' }
+        post :create, comment: comment, article_id: @article.id
       end
 
-      it "should assign the new comment to @comment" do
+      it 'should assign the new comment to @comment' do
         expect(assigns[:comment]).to eq(Comment.find_by_author_and_body_and_article_id('bob', 'content', @article.id))
       end
 
-      it "should assign the article to @article" do
+      it 'should assign the article to @article' do
         expect(assigns[:article]).to eq(@article)
       end
 
-      it "should save the comment" do
+      it 'should save the comment' do
         expect(@article.comments.size).to eq(1)
       end
 
-      it "should set the author" do
+      it 'should set the author' do
         expect(@article.comments.last.author).to eq('bob')
       end
 
-      it "should set an author cookie" do
-        expect(cookies["author"]).to eq('bob')
+      it 'should set an author cookie' do
+        expect(cookies['author']).to eq('bob')
       end
 
-      it "should set a gravatar_id cookie" do
-        expect(cookies["gravatar_id"]).to eq(Digest::MD5.hexdigest('bob@home'))
+      it 'should set a gravatar_id cookie' do
+        expect(cookies['gravatar_id']).to eq(Digest::MD5.hexdigest('bob@home'))
       end
 
-      it "should set a url cookie" do
-        expect(cookies["url"]).to eq('http://bobs.home/')
+      it 'should set a url cookie' do
+        expect(cookies['url']).to eq('http://bobs.home/')
       end
     end
 
-
-    it "should redirect to the article" do
-      article = Factory(:article, :created_at => '2005-01-01 02:00:00')
-      post :create, :comment => {:body => 'content', :author => 'bob'},
-        :article_id => article.id
-      expect(response).to redirect_to("#{@blog.base_url}/#{article.created_at.year}/#{sprintf("%.2d", article.created_at.month)}/#{sprintf("%.2d", article.created_at.day)}/#{article.permalink}")
+    it 'should redirect to the article' do
+      article = Factory(:article, created_at: '2005-01-01 02:00:00')
+      post :create, comment: { body: 'content', author: 'bob' },
+                    article_id: article.id
+      expect(response).to redirect_to("#{@blog.base_url}/#{article.created_at.year}/#{format('%.2d',
+                                                                                             article.created_at.month)}/#{format(
+                                                                                               '%.2d', article.created_at.day
+                                                                                             )}/#{article.permalink}")
     end
   end
 
   describe 'AJAX creation' do
-    it "should render the comment partial" do
-      xhr :post, :create, :comment => {:body => 'content', :author => 'bob'},
-        :article_id => Factory(:article).id
-      expect(response).to render_template("articles/_comment")
+    it 'should render the comment partial' do
+      xhr :post, :create, comment: { body: 'content', author: 'bob' },
+                          article_id: Factory(:article).id
+      expect(response).to render_template('articles/_comment')
     end
   end
 
-  describe "#index" do
+  describe '#index' do
     context 'scoped index' do
-      it "GET 2007/10/11/slug/comments should redirect to /2007/10/11/slug#comments" do
-        article = Factory(:article, :created_at => '2005-01-01 02:00:00')
-        get 'index', :article_id => article.id
-        expect(response).to redirect_to("#{@blog.base_url}/#{article.created_at.year}/#{sprintf("%.2d", article.created_at.month)}/#{sprintf("%.2d", article.created_at.day)}/#{article.permalink}#comments")
+      it 'GET 2007/10/11/slug/comments should redirect to /2007/10/11/slug#comments' do
+        article = Factory(:article, created_at: '2005-01-01 02:00:00')
+        get 'index', article_id: article.id
+        expect(response).to redirect_to("#{@blog.base_url}/#{article.created_at.year}/#{format('%.2d',
+                                                                                               article.created_at.month)}/#{format(
+                                                                                                 '%.2d', article.created_at.day
+                                                                                               )}/#{article.permalink}#comments")
       end
-
     end
 
-    context "without format" do
-      it "should be successful" do
+    context 'without format' do
+      it 'should be successful' do
         get 'index'
         expect(response).to be_success
       end
 
-      it "should not bother fetching any comments " do
+      it 'should not bother fetching any comments ' do
         mock_comment = double(Comment)
         expect(mock_comment).not_to receive(:published_comments)
         expect(mock_comment).not_to receive(:rss_limit_params)
@@ -85,59 +91,59 @@ describe CommentsController do
     end
 
     context "with :format => 'atom'" do
-      context "without article" do
+      context 'without article' do
         before do
           Factory(:comment)
-          get 'index', :format => 'atom'
+          get 'index', format: 'atom'
         end
 
-        it "is succesful" do
+        it 'is succesful' do
           expect(response).to be_success
         end
 
-        it "passes the comments to the template" do
+        it 'passes the comments to the template' do
           expect(assigns(:comments)).not_to be_empty
         end
 
-        it "should return an atom feed" do
-          expect(response).to render_template("index_atom_feed")
+        it 'should return an atom feed' do
+          expect(response).to render_template('index_atom_feed')
         end
       end
 
-      context "with an article" do
-        it "should return an atom feed" do
-          get :index, :format => 'atom', :article_id => Factory(:article).id
+      context 'with an article' do
+        it 'should return an atom feed' do
+          get :index, format: 'atom', article_id: Factory(:article).id
           expect(response).to be_success
-          expect(response).to render_template("index_atom_feed")
+          expect(response).to render_template('index_atom_feed')
         end
       end
     end
 
     context "with :format => 'rss'" do
-      context "without article" do
+      context 'without article' do
         before do
           Factory(:comment)
-          get 'index', :format => 'rss'
+          get 'index', format: 'rss'
         end
 
-        it "is succesful" do
+        it 'is succesful' do
           expect(response).to be_success
         end
 
-        it "passes the comments to the template" do
+        it 'passes the comments to the template' do
           expect(assigns(:comments)).not_to be_empty
         end
 
-        it "should return an rss feed" do
-          expect(response).to render_template("index_rss_feed")
+        it 'should return an rss feed' do
+          expect(response).to render_template('index_rss_feed')
         end
       end
 
-      context "with article" do
-        it "should return an rss feed" do
-          get :index, :format => 'rss', :article_id => Factory(:article).id
+      context 'with article' do
+        it 'should return an rss feed' do
+          get :index, format: 'rss', article_id: Factory(:article).id
           expect(response).to be_success
-          expect(response).to render_template("index_rss_feed")
+          expect(response).to render_template('index_rss_feed')
         end
       end
     end

@@ -1,7 +1,9 @@
-module Admin::SeoHelper
-  def robot_writable?
-    File.writable?"#{::Rails.root.to_s}/public/robots.txt"
+# frozen_string_literal: true
+
+module Admin
+  module SeoHelper
+    def robot_writable?
+      File.writable? "#{::Rails.root}/public/robots.txt"
+    end
   end
-
-
 end

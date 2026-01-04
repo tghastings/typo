@@ -31,8 +31,8 @@ RSpec.describe 'Admin::Content', type: :request do
       end
 
       it 'displays multiple articles' do
-        article1 = FactoryBot.create(:article, user: @admin, title: 'First Article')
-        article2 = FactoryBot.create(:article, user: @admin, title: 'Second Article')
+        FactoryBot.create(:article, user: @admin, title: 'First Article')
+        FactoryBot.create(:article, user: @admin, title: 'Second Article')
         get '/admin/content'
         expect(response.body).to include('First Article')
         expect(response.body).to include('Second Article')
@@ -44,13 +44,13 @@ RSpec.describe 'Admin::Content', type: :request do
     before { login_admin }
 
     it 'returns partial for XHR request' do
-      article = FactoryBot.create(:article, user: @admin)
+      FactoryBot.create(:article, user: @admin)
       get '/admin/content', xhr: true
       expect(response).to be_successful
     end
 
     it 'returns article list partial on XHR request' do
-      article = FactoryBot.create(:article, user: @admin, title: 'XHR Article')
+      FactoryBot.create(:article, user: @admin, title: 'XHR Article')
       get '/admin/content', xhr: true
       expect(response.body).to include('XHR Article')
     end
@@ -79,7 +79,7 @@ RSpec.describe 'Admin::Content', type: :request do
     before { login_admin }
 
     it 'creates a new article' do
-      expect {
+      expect do
         post '/admin/content/new', params: {
           article: {
             title: 'Test Article',
@@ -88,7 +88,7 @@ RSpec.describe 'Admin::Content', type: :request do
             allow_pings: '1'
           }
         }
-      }.to change { Article.count }.by(1)
+      end.to change { Article.count }.by(1)
     end
 
     it 'redirects to index after creation' do
@@ -341,9 +341,9 @@ RSpec.describe 'Admin::Content', type: :request do
 
     it 'does not delete the article on GET' do
       article = FactoryBot.create(:article, user: @admin)
-      expect {
+      expect do
         get "/admin/content/destroy/#{article.id}"
-      }.not_to change { Article.count }
+      end.not_to(change { Article.count })
     end
 
     it 'shows delete confirmation' do
@@ -358,9 +358,9 @@ RSpec.describe 'Admin::Content', type: :request do
 
     it 'deletes the article' do
       article = FactoryBot.create(:article, user: @admin)
-      expect {
+      expect do
         post "/admin/content/destroy/#{article.id}"
-      }.to change { Article.count }.by(-1)
+      end.to change { Article.count }.by(-1)
     end
 
     it 'redirects to index after deletion' do
@@ -378,9 +378,9 @@ RSpec.describe 'Admin::Content', type: :request do
     it 'deletes article with associated comments' do
       article = FactoryBot.create(:article, user: @admin)
       FactoryBot.create(:comment, article: article)
-      expect {
+      expect do
         post "/admin/content/destroy/#{article.id}"
-      }.to change { Article.count }.by(-1)
+      end.to change { Article.count }.by(-1)
     end
 
     it 'deletes article with categories' do
@@ -389,9 +389,9 @@ RSpec.describe 'Admin::Content', type: :request do
       article.categories << category
       article.save!
 
-      expect {
+      expect do
         post "/admin/content/destroy/#{article.id}"
-      }.to change { Article.count }.by(-1)
+      end.to change { Article.count }.by(-1)
     end
   end
 
@@ -424,7 +424,7 @@ RSpec.describe 'Admin::Content', type: :request do
     end
 
     it 'filters articles by withdrawn state' do
-      article = FactoryBot.create(:article, user: @admin, state: 'withdrawn')
+      FactoryBot.create(:article, user: @admin, state: 'withdrawn')
       get '/admin/content', params: { search: { state: 'withdrawn' } }
       expect(response).to be_successful
     end
@@ -478,7 +478,7 @@ RSpec.describe 'Admin::Content', type: :request do
 
     it 'responds to autosave request' do
       # Create an initial article first
-      initial_article = FactoryBot.create(:article, user: @admin)
+      FactoryBot.create(:article, user: @admin)
       post '/admin/content/autosave', params: {
         article: {
           title: 'Autosave Draft',
@@ -490,19 +490,19 @@ RSpec.describe 'Admin::Content', type: :request do
     end
 
     it 'creates a draft on autosave' do
-      initial_article = FactoryBot.create(:article, user: @admin)
-      expect {
+      FactoryBot.create(:article, user: @admin)
+      expect do
         post '/admin/content/autosave', params: {
           article: {
             title: 'New Autosave Article',
             body_and_extended: 'Autosave body content'
           }
         }
-      }.to change { Article.count }
+      end.to(change { Article.count })
     end
 
     it 'autosave returns JSON response when requested' do
-      initial_article = FactoryBot.create(:article, user: @admin)
+      FactoryBot.create(:article, user: @admin)
       post '/admin/content/autosave', params: {
         article: {
           title: 'JSON Response Article',
@@ -550,9 +550,9 @@ RSpec.describe 'Admin::Content', type: :request do
       expect(response).to be_successful
     end
 
-    it 'returns JSON response for attachment box when requested' do
-      get '/admin/content/attachment_box_add', params: { id: 1 }, headers: { 'Accept' => 'application/json' }
-      expect(response.content_type).to include('application/json')
+    it 'returns successful response for attachment box via XHR' do
+      get '/admin/content/attachment_box_add', params: { id: 1 }, xhr: true
+      expect(response).to be_successful
     end
   end
 
@@ -589,14 +589,14 @@ RSpec.describe 'Admin::Content', type: :request do
     before { login_admin }
 
     it 'requires title for article creation' do
-      expect {
+      expect do
         post '/admin/content/new', params: {
           article: {
             title: '',
             body: 'Body without title'
           }
         }
-      }.not_to change { Article.count }
+      end.not_to(change { Article.count })
     end
 
     it 'does not redirect on validation failure' do

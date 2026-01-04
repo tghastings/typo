@@ -1,32 +1,33 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe GroupingController do
-
-  describe "should set meta robots to noindex follow when" do
-    it "tag controller and unindex_tags options is true" do
-      Factory(:blog, :unindex_tags => true)
+  describe 'should set meta robots to noindex follow when' do
+    it 'tag controller and unindex_tags options is true' do
+      Factory(:blog, unindex_tags: true)
       expect(controller).to receive(:grouping_class).and_return(Tag)
       expect(controller.send(:set_noindex)).to be_truthy
     end
-    it "category controller and unindex_categories optinos is true" do
-      Factory(:blog, :unindex_categories => true)
+    it 'category controller and unindex_categories optinos is true' do
+      Factory(:blog, unindex_categories: true)
       expect(controller).to receive(:grouping_class).exactly(2).times.and_return(Category)
       expect(controller.send(:set_noindex)).to be_truthy
     end
-    it "page params not blank and unindex_tags and unindex_categories are set to false" do
-      Factory(:blog, :unindex_categories => false, :unindex_tags => false)
+    it 'page params not blank and unindex_tags and unindex_categories are set to false' do
+      Factory(:blog, unindex_categories: false, unindex_tags: false)
       expect(controller).to receive(:grouping_class).exactly(2).times.and_return(Category)
       expect(controller.send(:set_noindex, 1)).to be_truthy
     end
   end
-  describe "should not set meta robots to noindex follow when" do
-    it "tag controller and unindex_tags options is false and page params nil" do
-      Factory(:blog, :unindex_tags => false)
+  describe 'should not set meta robots to noindex follow when' do
+    it 'tag controller and unindex_tags options is false and page params nil' do
+      Factory(:blog, unindex_tags: false)
       expect(controller).to receive(:grouping_class).exactly(2).times.and_return(Tag)
       expect(controller.send(:set_noindex)).to be_falsey
     end
-    it "categoriy controller and unindex_categories options is false and page params nil" do
-      Factory(:blog, :unindex_categories => false)
+    it 'categoriy controller and unindex_categories options is false and page params nil' do
+      Factory(:blog, unindex_categories: false)
       expect(controller).to receive(:grouping_class).exactly(2).times.and_return(Category)
       expect(controller.send(:set_noindex)).to be_falsey
     end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Get the first user (tom) as publisher
 publisher = User.first
 puts "Publisher: #{publisher.login} (id: #{publisher.id})"
@@ -13,7 +15,7 @@ categories = {
 }
 
 created_categories = {}
-categories.each do |name, description|
+categories.each_key do |name|
   cat = Category.find_or_create_by!(name: name)
   created_categories[name] = cat
   puts "Category: #{name}"
@@ -39,83 +41,83 @@ end
 article_mappings = {
   'Welcome to Typo' => {
     categories: ['Web Development'],
-    tags: ['rails', 'ruby', 'web']
+    tags: %w[rails ruby web]
   },
   'Towards Resilient Critical Infrastructures' => {
-    categories: ['Research', 'Security'],
-    tags: ['phd', 'security', 'research', 'academic', 'infrastructure']
+    categories: %w[Research Security],
+    tags: %w[phd security research academic infrastructure]
   },
   'Network Resilience PhD Thesis' => {
-    categories: ['Research', 'Education'],
-    tags: ['phd', 'research', 'network', 'academic']
+    categories: %w[Research Education],
+    tags: %w[phd research network academic]
   },
   'Using Docker Compose' => {
     categories: ['DevOps'],
-    tags: ['docker', 'devops', 'infrastructure']
+    tags: %w[docker devops infrastructure]
   },
   'Docker and Kubernetes Setup' => {
     categories: ['DevOps'],
-    tags: ['docker', 'kubernetes', 'devops', 'infrastructure']
+    tags: %w[docker kubernetes devops infrastructure]
   },
   'Kubernetes Homelab' => {
     categories: ['DevOps'],
-    tags: ['kubernetes', 'homelab', 'devops', 'infrastructure']
+    tags: %w[kubernetes homelab devops infrastructure]
   },
   'GitLab CI/CD Pipeline' => {
     categories: ['DevOps', 'Web Development'],
-    tags: ['gitlab', 'devops', 'automation', 'infrastructure']
+    tags: %w[gitlab devops automation infrastructure]
   },
   'GitHub Actions Workflow' => {
     categories: ['DevOps', 'Web Development'],
-    tags: ['github', 'devops', 'automation']
+    tags: %w[github devops automation]
   },
   'Vim Configuration Guide' => {
     categories: ['Tips & Tricks'],
-    tags: ['vim', 'tools', 'productivity', 'terminal']
+    tags: %w[vim tools productivity terminal]
   },
   'Terminal Productivity Tips' => {
     categories: ['Tips & Tricks'],
-    tags: ['terminal', 'productivity', 'tips', 'tools']
+    tags: %w[terminal productivity tips tools]
   },
   'Ruby on Rails Best Practices' => {
     categories: ['Web Development'],
-    tags: ['ruby', 'rails', 'web']
+    tags: %w[ruby rails web]
   },
   'JavaScript Modern Features' => {
     categories: ['Web Development'],
-    tags: ['javascript', 'web']
+    tags: %w[javascript web]
   },
   'CSS Grid and Flexbox' => {
     categories: ['Web Development'],
-    tags: ['css', 'html', 'web']
+    tags: %w[css html web]
   },
   'Linux Server Administration' => {
     categories: ['DevOps'],
-    tags: ['linux', 'devops', 'infrastructure']
+    tags: %w[linux devops infrastructure]
   },
   'macOS Development Setup' => {
     categories: ['Tips & Tricks'],
-    tags: ['macos', 'tools', 'productivity']
+    tags: %w[macos tools productivity]
   },
   'Security Best Practices' => {
     categories: ['Security'],
-    tags: ['security', 'privacy']
+    tags: %w[security privacy]
   },
   'Privacy and Encryption' => {
     categories: ['Security'],
-    tags: ['security', 'privacy']
+    tags: %w[security privacy]
   },
   'Academic Conference Tips' => {
-    categories: ['Education', 'Research'],
-    tags: ['academic', 'conferences', 'research', 'education']
+    categories: %w[Education Research],
+    tags: %w[academic conferences research education]
   },
   'Research Publication Guide' => {
-    categories: ['Education', 'Research'],
-    tags: ['academic', 'publications', 'research', 'education']
+    categories: %w[Education Research],
+    tags: %w[academic publications research education]
   },
   'PhD Survival Guide' => {
     categories: ['Education'],
-    tags: ['phd', 'education', 'academic']
+    tags: %w[phd education academic]
   }
 }
 
@@ -149,7 +151,9 @@ Article.find_each do |article|
       cat = created_categories['DevOps']
       article.categories << cat unless article.categories.include?(cat)
       article.tags << created_tags['docker'] if content.include?('docker') && !article.tags.include?(created_tags['docker'])
-      article.tags << created_tags['kubernetes'] if (content.include?('kubernetes') || content.include?('k8s')) && !article.tags.include?(created_tags['kubernetes'])
+      if (content.include?('kubernetes') || content.include?('k8s')) && !article.tags.include?(created_tags['kubernetes'])
+        article.tags << created_tags['kubernetes']
+      end
       puts "Auto-categorized '#{article.title}' as DevOps"
     end
 

@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 RSpec.describe 'Stimulus Controllers', type: :system, js: true do
   let!(:blog) { FactoryBot.create(:blog) }
-  let!(:admin_user) { FactoryBot.create(:user, profile: Profile.find_by(label: "admin")) }
+  let!(:admin_user) { FactoryBot.create(:user, profile: Profile.find_by(label: 'admin')) }
 
   before do
     login_as_admin
@@ -34,7 +36,7 @@ RSpec.describe 'Stimulus Controllers', type: :system, js: true do
 
       # Look for flash message with controller
       if page.has_css?('[data-controller="flash"]')
-        flash_element = find('[data-controller="flash"]')
+        find('[data-controller="flash"]')
 
         # Flash should auto-dismiss after timeout
         sleep 6 # Default is 5 seconds
@@ -48,9 +50,7 @@ RSpec.describe 'Stimulus Controllers', type: :system, js: true do
       visit '/admin/content/new'
 
       # Should have CKEditor controller on textarea
-      if page.has_css?('[data-controller="ckeditor"]')
-        expect(page).to have_css('[data-controller="ckeditor"]')
-      end
+      expect(page).to have_css('[data-controller="ckeditor"]') if page.has_css?('[data-controller="ckeditor"]')
     end
   end
 end

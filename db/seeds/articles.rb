@@ -1,21 +1,23 @@
+# frozen_string_literal: true
+
 # Seed file for blog articles from tom.hastings.dev
 # Run with: rails db:seed
 
-puts "Creating blog articles..."
+puts 'Creating blog articles...'
 
 articles_data = [
   {
-    title: "Spring 2025 Student Project Reflections",
+    title: 'Spring 2025 Student Project Reflections',
     published_at: DateTime.new(2025, 5, 10),
-    permalink: "spring-2025-student-project-reflections",
+    permalink: 'spring-2025-student-project-reflections',
     body: <<~BODY
       We just finished the Spring 25 semester at UCCS, and I am proud of my students who built some excellent applications in our Advanced Software Engineering course. Students shipped production-ready, AI-enhanced web apps—from a smart to-do list to a plant-ID game—using Django, external APIs, and CI/CD pipelines to identify code coverage metrics, code smells, and security vulnerabilities. Each team acted as a customer group for one group and a development group for another. They learned about full-stack development, cloud deployment solutions, agile methodologies, and teamwork, turning real-world problems into user-focused solutions.
     BODY
   },
   {
-    title: "DevEdu... Edtech Cloud Development Environment",
+    title: 'DevEdu... Edtech Cloud Development Environment',
     published_at: DateTime.new(2025, 1, 18),
-    permalink: "devedu-edtech-cloud-development-enviroment",
+    permalink: 'devedu-edtech-cloud-development-enviroment',
     body: <<~BODY
       Educators can create an account, create a course, and assign development environments to the course. Students access containerized development environments through their web browsers, featuring VSCode with integrated terminal access.
 
@@ -27,25 +29,25 @@ articles_data = [
     BODY
   },
   {
-    title: "New Year, New Blog, Welcome Rails 8!",
+    title: 'New Year, New Blog, Welcome Rails 8!',
     published_at: DateTime.new(2024, 12, 1),
-    permalink: "new-year-new-blog-welcome-rails-8",
+    permalink: 'new-year-new-blog-welcome-rails-8',
     body: <<~BODY
       I love this time of year. Things at work slowdown and I have time to learn new tools and techniques. This year, I've spent my time moving my blog over from Rails 6 with React and Devise to native Rails 8. Rails 8 provides an authentication mechanism and many new improvements.
     BODY
   },
   {
-    title: "Graduated 2024! Ph.D.",
+    title: 'Graduated 2024! Ph.D.',
     published_at: DateTime.new(2024, 11, 9),
-    permalink: "graduated-2024-ph-d",
+    permalink: 'graduated-2024-ph-d',
     body: <<~BODY
       I finally made it. After six years studying at the University of Colorado Colorado Springs, I graduated in May with my Ph.D. in Engineering. I'm excited to be done and focus on my family and professional career that still includes teaching occasionally.
     BODY
   },
   {
-    title: "New Paper in IEEE: Continuous Verification of Open Source Components in a World of Weak Links",
+    title: 'New Paper in IEEE: Continuous Verification of Open Source Components in a World of Weak Links',
     published_at: DateTime.new(2023, 1, 16),
-    permalink: "new-paper-in-ieee-continuous-verification-of-open-source",
+    permalink: 'new-paper-in-ieee-continuous-verification-of-open-source',
     body: <<~BODY
       I published a research paper titled "Continuous Verification of Open Source Components in a World of Weak Links" available through IEEE.
 
@@ -55,17 +57,17 @@ articles_data = [
     BODY
   },
   {
-    title: "ARM Processors... Dev The Future... w/ a new platform",
+    title: 'ARM Processors... Dev The Future... w/ a new platform',
     published_at: DateTime.new(2022, 1, 9),
-    permalink: "arm-processors-dev-the-future-w-a-new-platform",
+    permalink: 'arm-processors-dev-the-future-w-a-new-platform',
     body: <<~BODY
       I believe ARM processors will be the future for SaaS based applications.
     BODY
   },
   {
-    title: "1st Docker Multi-Platform Build",
+    title: '1st Docker Multi-Platform Build',
     published_at: DateTime.new(2021, 10, 31),
-    permalink: "1st-docker-multi-platform-build",
+    permalink: '1st-docker-multi-platform-build',
     body: <<~BODY
       Built my first multi-platform Docker project for students who are utilizing Apple's M1 processor...
 
@@ -73,9 +75,9 @@ articles_data = [
     BODY
   },
   {
-    title: "Engineering Software as a Service. 2nd Edition Beta.",
+    title: 'Engineering Software as a Service. 2nd Edition Beta.',
     published_at: DateTime.new(2021, 4, 22),
-    permalink: "engineering-software-as-a-service-2nd-edition-beta",
+    permalink: 'engineering-software-as-a-service-2nd-edition-beta',
     body: <<~BODY
       Three years ago, my advisor, Prof. Kristen Walcott, introduced me to an excellent set of software engineering curriculum. The curriculum was developed at UC Berkley by Prof. Armando Fox and Prof. David Patterson in partnership with EdX.
 
@@ -85,9 +87,9 @@ articles_data = [
     BODY
   },
   {
-    title: "Knocking Down Barriers for CS Education",
+    title: 'Knocking Down Barriers for CS Education',
     published_at: DateTime.new(2021, 4, 17),
-    permalink: "knocking-down-barriers-for-cs-education",
+    permalink: 'knocking-down-barriers-for-cs-education',
     body: <<~BODY
       Students deserve the best education regardless of socioeconomic factors and the pandemic has been widening the equity gaps.
 
@@ -101,17 +103,17 @@ articles_data = [
     BODY
   },
   {
-    title: "Back to Ruby on Rails w/ a React Twist",
+    title: 'Back to Ruby on Rails w/ a React Twist',
     published_at: DateTime.new(2020, 12, 11),
-    permalink: "back-to-ruby-on-rails-w-a-react-twist",
+    permalink: 'back-to-ruby-on-rails-w-a-react-twist',
     body: <<~BODY
       Once again, I moved my blog to Ruby on Rails, but this time with a front-end written in React. I love it (minus the mass dependency list)! I still have a big place in my heart for Go, though, and VueJS.
     BODY
   },
   {
-    title: "K8s & Docker",
+    title: 'K8s & Docker',
     published_at: DateTime.new(2020, 12, 11),
-    permalink: "k8s-docker",
+    permalink: 'k8s-docker',
     body: <<~BODY
       Enjoying Microk8s, Docker, and the TICK Stack.
 
@@ -119,9 +121,9 @@ articles_data = [
     BODY
   },
   {
-    title: "Dissertation Proposal Defended",
+    title: 'Dissertation Proposal Defended',
     published_at: DateTime.new(2020, 11, 10),
-    permalink: "dissertation-proposal-defended",
+    permalink: 'dissertation-proposal-defended',
     body: <<~BODY
       I defended my dissertation proposal at the University of Colorado at Colorado Springs. My research focuses on supply chain security threats in open source software.
 
@@ -131,9 +133,9 @@ articles_data = [
     BODY
   },
   {
-    title: "To Catch a Scammer",
+    title: 'To Catch a Scammer',
     published_at: DateTime.new(2019, 12, 31),
-    permalink: "to-catch-a-scammer",
+    permalink: 'to-catch-a-scammer',
     body: <<~BODY
       Dan's written English was rough for being a consultant, with things like misspelled words, words in the wrong order, and wrong words.
 
@@ -147,9 +149,9 @@ articles_data = [
     BODY
   },
   {
-    title: "My Top 5 Research Tools for Computer Science",
+    title: 'My Top 5 Research Tools for Computer Science',
     published_at: DateTime.new(2019, 1, 13),
-    permalink: "my-top-5-research-tools-for-computer-science",
+    permalink: 'my-top-5-research-tools-for-computer-science',
     body: <<~BODY
       1. Zotero - Zotero provides an easy way to manage bibliographies and includes easy export for Bibtex.
 
@@ -163,9 +165,9 @@ articles_data = [
     BODY
   },
   {
-    title: "New Year with JAMstack",
+    title: 'New Year with JAMstack',
     published_at: DateTime.new(2019, 1, 12),
-    permalink: "new-year-with-jamstack",
+    permalink: 'new-year-with-jamstack',
     body: <<~BODY
       The JAMstack is a relativity new concept in web development, and it caught my attention because of the simplicity and speed at which pages load.
 
@@ -181,9 +183,9 @@ articles_data = [
     BODY
   },
   {
-    title: "Software Supply Chain Open Source Issues. Part 1.",
+    title: 'Software Supply Chain Open Source Issues. Part 1.',
     published_at: DateTime.new(2018, 9, 18),
-    permalink: "software-supply-chain-open-source-issues-part-1",
+    permalink: 'software-supply-chain-open-source-issues-part-1',
     body: <<~BODY
       With the rise of languages that provide package management tools, developers and software engineers are spending more time integrating than coding.
 
@@ -197,9 +199,9 @@ articles_data = [
     BODY
   },
   {
-    title: "User Interaction Metrics for Hybrid Mobile Applications",
+    title: 'User Interaction Metrics for Hybrid Mobile Applications',
     published_at: DateTime.new(2018, 7, 24),
-    permalink: "user-interaction-metrics-for-hybrid-mobile-applications",
+    permalink: 'user-interaction-metrics-for-hybrid-mobile-applications',
     body: <<~BODY
       Understanding user behavior and interactions in mobile applications are critical for developers to understand where to spend limited resources when adding, updating, and testing features.
 
@@ -213,7 +215,7 @@ articles_data = [
   {
     title: "What's In Your Container?",
     published_at: DateTime.new(2018, 4, 30),
-    permalink: "what-s-in-your-container",
+    permalink: 'what-s-in-your-container',
     body: <<~BODY
       I'm excited to be speaking at JFrog's swampUP conference in May.
 
@@ -225,25 +227,25 @@ articles_data = [
     BODY
   },
   {
-    title: "Ad-hoc Ansible Commands",
+    title: 'Ad-hoc Ansible Commands',
     published_at: DateTime.new(2017, 12, 20),
-    permalink: "ad-hoc-ansible-commands",
+    permalink: 'ad-hoc-ansible-commands',
     body: <<~BODY
       Sometimes I like to stash commands that I use regularly. Below is a snippet of code that I find helpful from time to time.
     BODY
   },
   {
-    title: "Docker Catch Sigterm",
+    title: 'Docker Catch Sigterm',
     published_at: DateTime.new(2017, 12, 18),
-    permalink: "docker-catch-sigterm",
+    permalink: 'docker-catch-sigterm',
     body: <<~BODY
       Sometimes I like to stash commands that I use regularly. Below is a snippet of code that I find helpful from time to time.
     BODY
   },
   {
-    title: "Cost of Securing IEEE 802.11s Mesh Networks Using CJDNS",
+    title: 'Cost of Securing IEEE 802.11s Mesh Networks Using CJDNS',
     published_at: DateTime.new(2017, 5, 10),
-    permalink: "cost-of-securing-ieee-802-11s-mesh-networks-using-cjdns",
+    permalink: 'cost-of-securing-ieee-802-11s-mesh-networks-using-cjdns',
     body: <<~BODY
       The Internet is weak, it is broken, and we are not doing anything to fix it.
 
@@ -263,9 +265,9 @@ articles_data = [
     BODY
   },
   {
-    title: "SailsJS Error on Install: npm ERR! enoent ENOENT",
+    title: 'SailsJS Error on Install: npm ERR! enoent ENOENT',
     published_at: DateTime.new(2017, 3, 18),
-    permalink: "sailsjs-error-on-install-npm-err-enoent-enoent",
+    permalink: 'sailsjs-error-on-install-npm-err-enoent-enoent',
     body: <<~BODY
       npm ERR! enoent ENOENT: no such file or directory, chmod '/node_modules/sails/node_modules/anchor/node_modules/geojsonhint/node_modules/jsonlint-lines/node_modules/nomnom/node_modules/chalk/node_modules/strip-ansi/cli.js'
 
@@ -277,9 +279,9 @@ articles_data = [
     BODY
   },
   {
-    title: "DisplayLink Video - Ubuntu 16.10 - 1 FPS Issue: Fixed",
+    title: 'DisplayLink Video - Ubuntu 16.10 - 1 FPS Issue: Fixed',
     published_at: DateTime.new(2017, 3, 12),
-    permalink: "displaylink-video-ubuntu-16-10-1-fps-issue-fixed",
+    permalink: 'displaylink-video-ubuntu-16-10-1-fps-issue-fixed',
     body: <<~BODY
       I ran into an issue using my Dell USB 3.0 dock when I upgraded to Ubuntu 16.10 on my Dell XPS-13. I was getting ~1 FPS using the DisplayLink driver. I ended up having to turn off VSync. Hopefully DisplayLink releases an update soon to fix this.
 
@@ -291,9 +293,9 @@ articles_data = [
     BODY
   },
   {
-    title: "What I learned developing real-time web applications",
+    title: 'What I learned developing real-time web applications',
     published_at: DateTime.new(2016, 12, 29),
-    permalink: "what-i-learned-developing-real-time-web-applications",
+    permalink: 'what-i-learned-developing-real-time-web-applications',
     body: <<~BODY
       I developed a system that processes approximately 29 messages per second, averaging 3KB each.
 
@@ -309,9 +311,9 @@ articles_data = [
     BODY
   },
   {
-    title: "Welcome",
+    title: 'Welcome',
     published_at: DateTime.new(2016, 12, 10),
-    permalink: "welcome",
+    permalink: 'welcome',
     body: <<~BODY
       Welcome. I just updated my blog and moved it on to Heroku. Stay tuned for new updates.
     BODY
@@ -325,7 +327,7 @@ articles_data.each do |article_attrs|
     body: article_attrs[:body].strip,
     published_at: article_attrs[:published_at],
     published: true,
-    state: "published",
+    state: 'published',
     allow_comments: true,
     allow_pings: true,
     text_filter_id: 2 # Markdown

@@ -30,7 +30,7 @@ RSpec.describe 'Admin::Feedback', type: :request do
       end
 
       it 'displays comment list' do
-        comment = FactoryBot.create(:comment, article: @article, author: 'Test Commenter')
+        FactoryBot.create(:comment, article: @article, author: 'Test Commenter')
         get '/admin/feedback'
         expect(response.body).to include('Test Commenter')
       end
@@ -156,7 +156,7 @@ RSpec.describe 'Admin::Feedback', type: :request do
     end
 
     it 'displays comments for the article' do
-      comment = FactoryBot.create(:comment, article: @article, body: 'Article comment body')
+      FactoryBot.create(:comment, article: @article, body: 'Article comment body')
       get "/admin/feedback/article/#{@article.id}"
       expect(response.body).to include('Article comment body')
     end
@@ -171,22 +171,22 @@ RSpec.describe 'Admin::Feedback', type: :request do
 
     context 'filtering by state' do
       it 'filters ham comments only' do
-        ham_comment = FactoryBot.create(:comment, article: @article, state: 'ham', body: 'Ham body')
-        spam_comment = FactoryBot.create(:spam_comment, article: @article, body: 'Spam body')
+        FactoryBot.create(:comment, article: @article, state: 'ham', body: 'Ham body')
+        FactoryBot.create(:spam_comment, article: @article, body: 'Spam body')
         get "/admin/feedback/article/#{@article.id}", params: { ham: 'f' }
         expect(response).to be_successful
       end
 
       it 'filters spam comments only' do
-        ham_comment = FactoryBot.create(:comment, article: @article, state: 'ham', body: 'Ham body')
-        spam_comment = FactoryBot.create(:spam_comment, article: @article, body: 'Spam body')
+        FactoryBot.create(:comment, article: @article, state: 'ham', body: 'Ham body')
+        FactoryBot.create(:spam_comment, article: @article, body: 'Spam body')
         get "/admin/feedback/article/#{@article.id}", params: { spam: 'f' }
         expect(response).to be_successful
       end
 
       it 'shows all comments when no filter specified' do
-        ham_comment = FactoryBot.create(:comment, article: @article, state: 'ham')
-        spam_comment = FactoryBot.create(:spam_comment, article: @article)
+        FactoryBot.create(:comment, article: @article, state: 'ham')
+        FactoryBot.create(:spam_comment, article: @article)
         get "/admin/feedback/article/#{@article.id}"
         expect(response).to be_successful
       end
@@ -224,7 +224,7 @@ RSpec.describe 'Admin::Feedback', type: :request do
         publisher_profile = Profile.find_by(label: 'publisher') || Profile.create!(
           label: 'publisher',
           nicename: 'Publisher',
-          modules: [:dashboard, :write, :articles, :pages, :feedback, :media, :profile]
+          modules: %i[dashboard write articles pages feedback media profile]
         )
         publisher = User.create!(
           login: 'publisher_edit',
@@ -256,7 +256,7 @@ RSpec.describe 'Admin::Feedback', type: :request do
         publisher_profile = Profile.find_by(label: 'publisher') || Profile.create!(
           label: 'publisher',
           nicename: 'Publisher',
-          modules: [:dashboard, :write, :articles, :pages, :feedback, :media, :profile]
+          modules: %i[dashboard write articles pages feedback media profile]
         )
         publisher = User.create!(
           login: 'publisher_owner',
@@ -337,7 +337,7 @@ RSpec.describe 'Admin::Feedback', type: :request do
         publisher_profile = Profile.find_by(label: 'publisher') || Profile.create!(
           label: 'publisher',
           nicename: 'Publisher',
-          modules: [:dashboard, :write, :articles, :pages, :feedback, :media, :profile]
+          modules: %i[dashboard write articles pages feedback media profile]
         )
         publisher = User.create!(
           login: 'publisher_update',
@@ -385,9 +385,9 @@ RSpec.describe 'Admin::Feedback', type: :request do
 
     it 'does not delete the comment on GET' do
       comment = FactoryBot.create(:comment, article: @article)
-      expect {
+      expect do
         get "/admin/feedback/destroy/#{comment.id}"
-      }.not_to change { Comment.count }
+      end.not_to(change { Comment.count })
     end
   end
 
@@ -396,9 +396,9 @@ RSpec.describe 'Admin::Feedback', type: :request do
 
     it 'deletes the comment' do
       comment = FactoryBot.create(:comment, article: @article)
-      expect {
+      expect do
         post "/admin/feedback/destroy/#{comment.id}"
-      }.to change { Comment.count }.by(-1)
+      end.to change { Comment.count }.by(-1)
     end
 
     it 'redirects to article feedback after deletion' do
@@ -420,7 +420,7 @@ RSpec.describe 'Admin::Feedback', type: :request do
         publisher_profile = Profile.find_by(label: 'publisher') || Profile.create!(
           label: 'publisher',
           nicename: 'Publisher',
-          modules: [:dashboard, :write, :articles, :pages, :feedback, :media, :profile]
+          modules: %i[dashboard write articles pages feedback media profile]
         )
         publisher = User.create!(
           login: 'publisher_destroy',
@@ -435,9 +435,9 @@ RSpec.describe 'Admin::Feedback', type: :request do
         comment = FactoryBot.create(:comment, article: @article)
 
         login_user(publisher)
-        expect {
+        expect do
           post "/admin/feedback/destroy/#{comment.id}"
-        }.not_to change { Comment.count }
+        end.not_to(change { Comment.count })
         expect(response).to redirect_to(controller: 'admin/feedback', action: :index)
       end
 
@@ -445,7 +445,7 @@ RSpec.describe 'Admin::Feedback', type: :request do
         publisher_profile = Profile.find_by(label: 'publisher') || Profile.create!(
           label: 'publisher',
           nicename: 'Publisher',
-          modules: [:dashboard, :write, :articles, :pages, :feedback, :media, :profile]
+          modules: %i[dashboard write articles pages feedback media profile]
         )
         publisher = User.create!(
           login: 'publisher_owner_del',
@@ -460,9 +460,9 @@ RSpec.describe 'Admin::Feedback', type: :request do
         comment = FactoryBot.create(:comment, article: publisher_article)
 
         login_user(publisher)
-        expect {
+        expect do
           post "/admin/feedback/destroy/#{comment.id}"
-        }.to change { Comment.count }.by(-1)
+        end.to change { Comment.count }.by(-1)
       end
 
       it 'allows admin to delete any comment' do
@@ -470,9 +470,9 @@ RSpec.describe 'Admin::Feedback', type: :request do
         other_article = FactoryBot.create(:article, user: other_user)
         comment = FactoryBot.create(:comment, article: other_article)
 
-        expect {
+        expect do
           post "/admin/feedback/destroy/#{comment.id}"
-        }.to change { Comment.count }.by(-1)
+        end.to change { Comment.count }.by(-1)
       end
     end
   end
@@ -484,7 +484,7 @@ RSpec.describe 'Admin::Feedback', type: :request do
     before { login_admin }
 
     it 'creates a new comment' do
-      expect {
+      expect do
         post '/admin/feedback/create', params: {
           article_id: @article.id,
           comment: {
@@ -493,7 +493,7 @@ RSpec.describe 'Admin::Feedback', type: :request do
             body: 'Admin created comment'
           }
         }
-      }.to change { Comment.count }.by(1)
+      end.to change { Comment.count }.by(1)
     end
 
     it 'assigns comment to current user' do
@@ -626,13 +626,13 @@ RSpec.describe 'Admin::Feedback', type: :request do
 
     describe 'Delete Checked Items' do
       it 'deletes selected comments' do
-        expect {
+        expect do
           post '/admin/feedback/bulkops', params: {
             feedback_check: { comment1.id.to_s => '1', comment2.id.to_s => '1' },
             bulkop_top: 'Delete Checked Items',
             bulkop_bottom: ''
           }
-        }.to change { Comment.count }.by(-2)
+        end.to change { Comment.count }.by(-2)
       end
 
       it 'sets flash notice with deleted count' do
@@ -654,13 +654,13 @@ RSpec.describe 'Admin::Feedback', type: :request do
       end
 
       it 'uses bottom bulk operation when top is empty' do
-        expect {
+        expect do
           post '/admin/feedback/bulkops', params: {
             feedback_check: { comment1.id.to_s => '1' },
             bulkop_top: '',
             bulkop_bottom: 'Delete Checked Items'
           }
-        }.to change { Comment.count }.by(-1)
+        end.to change { Comment.count }.by(-1)
       end
     end
 
@@ -736,8 +736,8 @@ RSpec.describe 'Admin::Feedback', type: :request do
 
     describe 'Delete all spam' do
       it 'deletes all spam comments' do
-        spam1 = FactoryBot.create(:spam_comment, article: @article)
-        spam2 = FactoryBot.create(:spam_comment, article: @article)
+        FactoryBot.create(:spam_comment, article: @article)
+        FactoryBot.create(:spam_comment, article: @article)
         post '/admin/feedback/bulkops', params: {
           bulkop_top: 'Delete all spam',
           bulkop_bottom: ''
@@ -835,13 +835,14 @@ RSpec.describe 'Admin::Feedback', type: :request do
       end
 
       it 'handles comments with very long content' do
-        FactoryBot.create(:comment, article: @article, body: 'a' * 10000)
+        FactoryBot.create(:comment, article: @article, body: 'a' * 10_000)
         get '/admin/feedback'
         expect(response).to be_successful
       end
 
       it 'handles comments with unicode content' do
-        FactoryBot.create(:comment, article: @article, body: 'Unicode: \u00e9\u00e8\u00ea \u4e2d\u6587 \u0440\u0443\u0441\u0441\u043a\u0438\u0439')
+        FactoryBot.create(:comment, article: @article,
+                                    body: 'Unicode: \u00e9\u00e8\u00ea \u4e2d\u6587 \u0440\u0443\u0441\u0441\u043a\u0438\u0439')
         get '/admin/feedback'
         expect(response).to be_successful
       end

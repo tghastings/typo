@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ActionWebService # :nodoc:
   module Protocol # :nodoc:
     module Discovery # :nodoc:
@@ -8,20 +10,21 @@ module ActionWebService # :nodoc:
 
       module ClassMethods # :nodoc:
         def register_protocol(klass)
-          write_inheritable_array("web_service_protocols", [klass])
+          write_inheritable_array('web_service_protocols', [klass])
         end
       end
 
       module InstanceMethods # :nodoc:
         private
-          def discover_web_service_request(action_pack_request)
-            (self.class.read_inheritable_attribute("web_service_protocols") || []).each do |protocol|
-              protocol = protocol.create(self)
-              request = protocol.decode_action_pack_request(action_pack_request)
-              return request unless request.nil?
-            end
-            nil
+
+        def discover_web_service_request(action_pack_request)
+          (self.class.read_inheritable_attribute('web_service_protocols') || []).each do |protocol|
+            protocol = protocol.create(self)
+            request = protocol.decode_action_pack_request(action_pack_request)
+            return request unless request.nil?
           end
+          nil
+        end
       end
     end
   end

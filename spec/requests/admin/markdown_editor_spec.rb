@@ -93,14 +93,14 @@ RSpec.describe 'Markdown Editor', type: :request do
     before { login_admin }
 
     it 'creates article with markdown body' do
-      expect {
+      expect do
         post '/admin/content/new', params: {
           article: {
             title: 'Markdown Article',
             body_and_extended: '# Hello Markdown\n\nThis is **bold** and *italic*.'
           }
         }
-      }.to change { Article.count }.by(1)
+      end.to change { Article.count }.by(1)
     end
 
     it 'stores raw markdown in body field' do

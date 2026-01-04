@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Stateful
   class State
     def initialize(model)
@@ -8,7 +10,7 @@ module Stateful
       self.class.to_s.demodulize
     end
 
-    def exit_hook(target_state)
+    def exit_hook(_target_state)
       ::Rails.logger.debug("#{model} leaving state #{self}")
     end
 
@@ -16,21 +18,18 @@ module Stateful
       ::Rails.logger.debug("#{model} entering state #{self}")
     end
 
-
-    def method_missing(predicate, *args)
+    def method_missing(predicate, *)
       if predicate.to_s.last == '?'
         self.class.to_s.demodulize.underscore == predicate.to_s.chop
+      elsif block_given?
+        super { |*block_args| yield(*block_args) }
       else
-        if block_given?
-          super(predicate, *args) { |*block_args| yield(*block_args) }
-        else
-          super(predicate, *args)
-        end
+        super
       end
     end
 
-    def ==(other_state)
-      self.class == other_state.class
+    def ==(other)
+      self.class == other.class
     end
 
     def hash
@@ -38,6 +37,7 @@ module Stateful
     end
 
     private
+
     attr_reader :model
   end
 
@@ -49,10 +49,11 @@ module Stateful
     def has_state(field, options = {})
       options.assert_valid_keys(:valid_states, :handles, :initial_state)
 
-      unless states = options[:valid_states]
-        raise "You must specify at least one state"
+      unless (states = options[:valid_states])
+        raise 'You must specify at least one state'
       end
-      states        = states.collect &:to_sym
+
+      states        = states.collect(&:to_sym)
 
       delegations   = Set.new(options[:handles]) + states.collect { |value| "#{value}?" }
 
@@ -60,29 +61,30 @@ module Stateful
 
       state_writer_method(field, states, initial_state)
       state_reader_method(field, states, initial_state)
+      state_reload_method(field)
 
       delegations.each do |value|
-        delegate value, :to => field
+        delegate value, to: field
       end
     end
 
     def state_reader_method(name, states, initial_state)
-      module_eval <<-end_meth
+      module_eval <<-END_METH, __FILE__, __LINE__ + 1
         def #{name}(force_reload = false)
           if @#{name}_obj.nil? || force_reload
             memento = read_attribute(#{name.inspect}) || #{initial_state.inspect}
             unless #{states.inspect}.include? memento.to_sym
-              raise \"Invalid state: \#{memento} in the database.\"
+              raise "Invalid state: \#{memento} in the database."
             end
             @#{name}_obj = self.class.class_eval(memento.to_s.classify).new(self)
           end
           @#{name}_obj
         end
-      end_meth
+      END_METH
     end
 
-    def state_writer_method(name, states, initial_state)
-      module_eval <<-end_meth
+    def state_writer_method(name, states, _initial_state)
+      module_eval <<-END_METH, __FILE__, __LINE__ + 1
         def #{name}=(state)
           case state
           when Symbol
@@ -105,7 +107,16 @@ module Stateful
           @#{name}_obj.enter_hook
           @#{name}_obj
         end
-      end_meth
+      END_METH
+    end
+
+    def state_reload_method(name)
+      module_eval <<-END_METH, __FILE__, __LINE__ + 1
+        def reload(*args)
+          @#{name}_obj = nil
+          super
+        end
+      END_METH
     end
   end
 end

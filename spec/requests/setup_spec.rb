@@ -58,9 +58,9 @@ RSpec.describe 'Setup', type: :request do
         end
 
         it 'creates an admin user' do
-          expect {
+          expect do
             post '/setup', params: { setting: { blog_name: 'My New Blog', email: 'admin@example.com' } }
-          }.to change(User, :count).by(1)
+          end.to change(User, :count).by(1)
         end
 
         it 'creates user with login admin' do

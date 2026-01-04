@@ -1,98 +1,100 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
-describe "articles/index.html.erb" do
-with_each_theme do |theme, view_path|
-  describe theme ? "with theme #{theme}" : "without a theme" do
-    before(:each) do
-      @controller.prepend_view_path(view_path) if theme
-      # Stub login helpers for theme layouts that use them
-      allow(view).to receive(:logged_in?).and_return(false)
-      allow(view).to receive(:current_user).and_return(nil)
-    end
-
-    context "normally" do
+describe 'articles/index.html.erb' do
+  with_each_theme do |theme, view_path|
+    describe theme ? "with theme #{theme}" : 'without a theme' do
       before(:each) do
-        Factory(:blog)
-        2.times {Factory(:article, :body => 'body')}
-        @controller.action_name = "index"
-        @controller.request.path_parameters["controller"] = "articles"
-        assign(:articles, Article.page(1).per(4))
-
-        render
+        @controller.prepend_view_path(view_path) if theme
+        # Stub login helpers for theme layouts that use them
+        allow(view).to receive(:logged_in?).and_return(false)
+        allow(view).to receive(:current_user).and_return(nil)
       end
 
-      subject { rendered }
+      context 'normally' do
+        before(:each) do
+          Factory(:blog)
+          2.times { Factory(:article, body: 'body') }
+          @controller.action_name = 'index'
+          @controller.request.path_parameters['controller'] = 'articles'
+          assign(:articles, Article.page(1).per(4))
 
-      it "should not have too many paragraph marks around body" do
-        is_expected.to have_selector("p", text: "body")
-        is_expected.not_to have_selector("p>p", text: "body")
+          render
+        end
+
+        subject { rendered }
+
+        it 'should not have too many paragraph marks around body' do
+          is_expected.to have_selector('p', text: 'body')
+          is_expected.not_to have_selector('p>p', text: 'body')
+        end
+
+        it 'should not have div nested inside p' do
+          is_expected.not_to have_selector('p>div')
+        end
+
+        it 'should not have extra escaped html' do
+          expect(rendered).not_to match(/&lt;/)
+          expect(rendered).not_to match(/&gt;/)
+          expect(rendered).not_to match(/&amp;/)
+        end
+
+        it 'renders the regular article partial twice' do
+          expect(view).to render_template(partial: 'articles/_article_content',
+                                          count: 2)
+        end
+
+        it 'does not render any password forms' do
+          expect(view).not_to render_template(partial: 'articles/_password_form')
+        end
       end
 
-      it "should not have div nested inside p" do
-        is_expected.not_to have_selector("p>div")
+      context 'without search, on page 2' do
+        before(:each) do
+          Factory(:blog)
+          3.times { Factory(:article) }
+          @controller.action_name = 'index'
+          @controller.request.path_parameters['controller'] = 'articles'
+          @controller.request.path_parameters['action'] = 'index'
+          assign(:articles, Article.page(2).per(2))
+
+          render
+        end
+
+        subject { rendered }
+
+        it 'should not have pagination link to page 2' do
+          is_expected.not_to have_selector("a[href='/page/2']")
+        end
+
+        it 'should have pagination link to page 1' do
+          is_expected.to have_selector("a[href='/']")
+        end
       end
 
-      it "should not have extra escaped html" do
-        expect(rendered).not_to match(/&lt;/)
-        expect(rendered).not_to match(/&gt;/)
-        expect(rendered).not_to match(/&amp;/)
-      end
+      context 'when on page 2 of search' do
+        before(:each) do
+          Factory(:blog)
+          3.times { Factory(:article, body: 'body') }
+          @controller.action_name = 'search'
+          @controller.request.path_parameters['controller'] = 'articles'
+          params[:q]           = 'body'
+          params[:page]        = 2
+          params[:action]      = 'search'
+          assign(:articles, Blog.default.articles_matching(params[:q], { page: params[:page], per: 1 }))
 
-      it "renders the regular article partial twice" do
-        expect(view).to render_template(:partial => "articles/_article_content",
-                                    :count => 2)
-      end
+          render
+        end
 
-      it "does not render any password forms" do
-        expect(view).not_to render_template(:partial => "articles/_password_form")
-      end
-    end
+        it 'should not have pagination link to search page 2' do
+          expect(rendered).not_to have_selector("a[href='/search/body/page/2']")
+        end
 
-    context "without search, on page 2" do
-      before(:each) do
-        Factory(:blog)
-        3.times { Factory(:article) }
-        @controller.action_name = "index"
-        @controller.request.path_parameters["controller"] = "articles"
-        @controller.request.path_parameters["action"] = "index"
-        assign(:articles, Article.page(2).per(2))
-
-        render
-      end
-
-      subject { rendered }
-
-      it "should not have pagination link to page 2" do
-        is_expected.not_to have_selector("a[href='/page/2']")
-      end
-
-      it "should have pagination link to page 1" do
-        is_expected.to have_selector("a[href='/']")
-      end
-    end
-
-    context "when on page 2 of search" do
-      before(:each) do
-        Factory(:blog)
-        3.times {Factory(:article, :body => 'body')}
-        @controller.action_name = "search"
-        @controller.request.path_parameters["controller"] = "articles"
-        params[:q]           = "body"
-        params[:page]        = 2
-        params[:action]      = 'search'
-        assign(:articles, Blog.default.articles_matching(params[:q], {:page => params[:page], :per => 1}))
-
-        render
-      end
-
-      it "should not have pagination link to search page 2" do
-        expect(rendered).not_to have_selector("a[href='/search/body/page/2']")
-      end
-
-      it "should have pagination link to search page 1" do
-        expect(rendered).to have_selector("a[href='/search/body']")
+        it 'should have pagination link to search page 1' do
+          expect(rendered).to have_selector("a[href='/search/body']")
+        end
       end
     end
   end
-end
 end

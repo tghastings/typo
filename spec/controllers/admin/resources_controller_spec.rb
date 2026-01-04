@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe Admin::ResourcesController do
@@ -46,9 +48,9 @@ describe Admin::ResourcesController do
       end
 
       it 'creates a new resource' do
-        expect {
+        expect do
           post :upload, upload: { filename: file }
-        }.to change(Resource, :count).by(1)
+        end.to change(Resource, :count).by(1)
       end
 
       it 'attaches the file to the resource' do
@@ -93,9 +95,9 @@ describe Admin::ResourcesController do
       let(:file) { fixture_file_upload('testfile.txt', 'text/plain') }
 
       it 'creates a new resource' do
-        expect {
+        expect do
           post :upload, file: file
-        }.to change(Resource, :count).by(1)
+        end.to change(Resource, :count).by(1)
       end
 
       it 'attaches the file' do
@@ -107,9 +109,9 @@ describe Admin::ResourcesController do
 
     context 'with no file' do
       it 'does not create a resource' do
-        expect {
+        expect do
           post :upload
-        }.not_to change(Resource, :count)
+        end.not_to change(Resource, :count)
       end
 
       it 'sets error flash message' do
@@ -125,9 +127,9 @@ describe Admin::ResourcesController do
 
     context 'with invalid file (string instead of file object)' do
       it 'does not create a resource' do
-        expect {
+        expect do
           post :upload, upload: { filename: 'not_a_file.txt' }
-        }.not_to change(Resource, :count)
+        end.not_to change(Resource, :count)
       end
 
       it 'sets error flash message' do
@@ -197,9 +199,9 @@ describe Admin::ResourcesController do
     let!(:resource) { Factory(:resource) }
 
     it 'destroys the resource' do
-      expect {
+      expect do
         post :destroy, id: resource.id
-      }.to change(Resource, :count).by(-1)
+      end.to change(Resource, :count).by(-1)
     end
 
     it 'redirects to index' do
@@ -222,20 +224,20 @@ describe Admin::ResourcesController do
       end
 
       it 'destroys the resource and attachment' do
-        expect {
+        expect do
           post :destroy, id: resource.id
-        }.to change(Resource, :count).by(-1)
+        end.to change(Resource, :count).by(-1)
       end
     end
 
     context 'with non-existent resource' do
       it 'sets error flash message' do
-        post :destroy, id: 99999
+        post :destroy, id: 99_999
         expect(flash[:error]).to eq('File not found')
       end
 
       it 'redirects to index' do
-        post :destroy, id: 99999
+        post :destroy, id: 99_999
         expect(response).to redirect_to(action: 'index')
       end
     end

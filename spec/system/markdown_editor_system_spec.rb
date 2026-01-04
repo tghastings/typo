@@ -4,7 +4,7 @@ require 'spec_helper'
 
 RSpec.describe 'Markdown Editor', type: :system, js: true do
   let!(:blog) { FactoryBot.create(:blog) }
-  let!(:admin_user) { FactoryBot.create(:user, profile: Profile.find_by(label: "admin"), editor: 'markdown') }
+  let!(:admin_user) { FactoryBot.create(:user, profile: Profile.find_by(label: 'admin'), editor: 'markdown') }
 
   before do
     login_as_admin
@@ -20,10 +20,14 @@ RSpec.describe 'Markdown Editor', type: :system, js: true do
 
     it 'connects the markdown-editor Stimulus controller' do
       visit '/admin/content/new'
-      sleep 3  # Wait for JS to load
+      sleep 3 # Wait for JS to load
 
       # Get browser console logs
-      logs = page.driver.browser.logs.get(:browser) rescue []
+      logs = begin
+        page.driver.browser.logs.get(:browser)
+      rescue StandardError
+        []
+      end
       puts "\n=== BROWSER LOGS ==="
       logs.each { |log| puts "  [#{log.level}] #{log.message}" }
       puts "=== END LOGS ===\n"

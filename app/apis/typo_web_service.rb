@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class TypoWebService < ActionWebService::Base
   attr_accessor :controller
 
@@ -15,6 +17,6 @@ class TypoWebService < ActionWebService::Base
     method = self.class.web_service_api.api_methods[name]
 
     h = method.expects_to_hash(args)
-    raise "Invalid login" unless @user=User.authenticate(h[:username], h[:password])
+    raise 'Invalid login' unless (@user = User.authenticate(h[:username], h[:password]))
   end
 end

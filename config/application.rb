@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'boot'
 
 require 'rails/all'
@@ -29,10 +31,10 @@ module TypoBlog
     config.action_controller.page_cache_directory = Rails.root.join('public/cache').to_s
 
     # Autoload paths
-    config.autoload_paths += %W(
+    config.autoload_paths += %W[
       #{config.root}/app/apis
       #{config.root}/lib
-    )
+    ]
 
     # Ignore action_web_service and related files from Zeitwerk autoloader
     # (legacy library with non-standard naming conventions and deprecated Rails APIs)
@@ -46,13 +48,13 @@ module TypoBlog
     config.assets.paths << Rails.root.join('public', 'stylesheets')
 
     # Precompile legacy assets
-    config.assets.precompile += %w( ckeditor/* )
+    config.assets.precompile += %w[ckeditor/*]
 
     # Filter sensitive parameters from the log file
-    config.filter_parameters += [:password, :password_confirmation]
+    config.filter_parameters += %i[password password_confirmation]
 
     # Encoding
-    config.encoding = "utf-8"
+    config.encoding = 'utf-8'
 
     # Time zone
     config.time_zone = 'UTC'
@@ -79,5 +81,5 @@ end
 
 # Date formats
 Date::DATE_FORMATS.merge!(
-  :long_weekday => '%a %B %e, %Y %H:%M'
+  long_weekday: '%a %B %e, %Y %H:%M'
 )

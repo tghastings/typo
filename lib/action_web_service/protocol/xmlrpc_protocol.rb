@@ -1,13 +1,15 @@
+# frozen_string_literal: true
+
 require 'xmlrpc/marshal'
 
 module XMLRPC # :nodoc:
   class FaultException # :nodoc:
-    alias :message :faultString
+    alias message faultString
   end
 
   class Create
     def wrong_type(value)
-      if BigDecimal === value
+      if value.is_a?(BigDecimal)
         [true, value.to_f]
       else
         false
@@ -24,7 +26,7 @@ module ActionWebService # :nodoc:
       end
 
       class XmlRpcProtocol < AbstractProtocol # :nodoc:
-        def self.create(controller)
+        def self.create(_controller)
           XmlRpcProtocol.new
         end
 
@@ -36,14 +38,14 @@ module ActionWebService # :nodoc:
         def decode_request(raw_request, service_name)
           method_name, params = XMLRPC::Marshal.load_call(raw_request)
           Request.new(self, method_name, params, service_name)
-        rescue
-          return nil
+        rescue StandardError
+          nil
         end
 
         def encode_request(method_name, params, param_types)
           if param_types
             params = params.dup
-            param_types.each_with_index{ |type, i| params[i] = value_to_xmlrpc_wire_format(params[i], type) }
+            param_types.each_with_index { |type, i| params[i] = value_to_xmlrpc_wire_format(params[i], type) }
           end
           XMLRPC::Marshal.dump_call(method_name, *params)
         end
@@ -52,16 +54,14 @@ module ActionWebService # :nodoc:
           [nil, XMLRPC::Marshal.load_response(raw_response)]
         end
 
-        def encode_response(method_name, return_value, return_type, protocol_options={})
-          if return_value && return_type
-            return_value = value_to_xmlrpc_wire_format(return_value, return_type)
-          end
+        def encode_response(_method_name, return_value, return_type, _protocol_options = {})
+          return_value = value_to_xmlrpc_wire_format(return_value, return_type) if return_value && return_type
           return_value = false if return_value.nil?
           raw_response = XMLRPC::Marshal.dump_response(return_value)
           Response.new(raw_response, 'text/xml', return_value)
         end
 
-        def encode_multicall_response(responses, protocol_options={})
+        def encode_multicall_response(responses, _protocol_options = {})
           result = responses.map do |return_value, return_type|
             if return_value && return_type
               return_value = value_to_xmlrpc_wire_format(return_value, return_type)
@@ -76,30 +76,30 @@ module ActionWebService # :nodoc:
 
         def value_to_xmlrpc_wire_format(value, value_type)
           if value_type.array?
-            value.map{ |val| value_to_xmlrpc_wire_format(val, value_type.element_type) }
-          else
-            if value.is_a?(ActionWebService::Struct)
-              struct = {}
-              value.class.members.each do |name, type|
-                member_value = value[name]
-                next if member_value.nil?
-                struct[name.to_s] = value_to_xmlrpc_wire_format(member_value, type)
-              end
-              struct
-            elsif value.is_a?(ActiveRecord::Base)
-              struct = {}
-              value.attributes.each do |key, member_value|
-                next if member_value.nil?
-                struct[key.to_s] = member_value
-              end
-              struct
-            elsif value.is_a?(ActionWebService::Base64)
-              XMLRPC::Base64.new(value)
-            elsif value.is_a?(Exception) && !value.is_a?(XMLRPC::FaultException)
-              XMLRPC::FaultException.new(2, value.message)
-            else
-              value
+            value.map { |val| value_to_xmlrpc_wire_format(val, value_type.element_type) }
+          elsif value.is_a?(ActionWebService::Struct)
+            struct = {}
+            value.class.members.each do |name, type|
+              member_value = value[name]
+              next if member_value.nil?
+
+              struct[name.to_s] = value_to_xmlrpc_wire_format(member_value, type)
             end
+            struct
+          elsif value.is_a?(ActiveRecord::Base)
+            struct = {}
+            value.attributes.each do |key, member_value|
+              next if member_value.nil?
+
+              struct[key.to_s] = member_value
+            end
+            struct
+          elsif value.is_a?(ActionWebService::Base64)
+            XMLRPC::Base64.new(value)
+          elsif value.is_a?(Exception) && !value.is_a?(XMLRPC::FaultException)
+            XMLRPC::FaultException.new(2, value.message)
+          else
+            value
           end
         end
       end

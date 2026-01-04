@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 module ActionWebService
-  module VERSION #:nodoc:
+  module VERSION # :nodoc:
     MAJOR = 2
     MINOR = 3
     TINY  = 5

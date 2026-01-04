@@ -9,14 +9,15 @@ module AdminRequestHelpers
     @admin_profile = Profile.find_by(label: 'admin') || Profile.create!(
       label: 'admin',
       nicename: 'Administrator',
-      modules: [:dashboard, :write, :articles, :pages, :feedback, :themes, :sidebar, :users, :seo, :media, :settings, :profile]
+      modules: %i[dashboard write articles pages feedback themes sidebar users seo media settings
+                  profile]
     )
 
     # Create contributor profile
     @contributor_profile = Profile.find_by(label: 'contributor') || Profile.create!(
       label: 'contributor',
       nicename: 'Contributor',
-      modules: [:dashboard, :profile]
+      modules: %i[dashboard profile]
     )
 
     # Create admin user

@@ -49,7 +49,7 @@ RSpec.describe 'Admin::Pages', type: :request do
     before { login_admin }
 
     it 'creates a new page' do
-      expect {
+      expect do
         post '/admin/pages/new', params: {
           page: {
             title: 'Test Page',
@@ -57,7 +57,7 @@ RSpec.describe 'Admin::Pages', type: :request do
             name: 'test-page'
           }
         }
-      }.to change { Page.count }.by(1)
+      end.to change { Page.count }.by(1)
     end
 
     it 'redirects to index after creation' do
@@ -136,9 +136,9 @@ RSpec.describe 'Admin::Pages', type: :request do
 
     it 'does not delete the page on GET' do
       page = FactoryBot.create(:page, user: @admin)
-      expect {
+      expect do
         get "/admin/pages/destroy/#{page.id}"
-      }.not_to change { Page.count }
+      end.not_to(change { Page.count })
     end
   end
 
@@ -147,9 +147,9 @@ RSpec.describe 'Admin::Pages', type: :request do
 
     it 'deletes the page' do
       page = FactoryBot.create(:page, user: @admin)
-      expect {
+      expect do
         post "/admin/pages/destroy/#{page.id}"
-      }.to change { Page.count }.by(-1)
+      end.to change { Page.count }.by(-1)
     end
 
     it 'redirects to index after deletion' do

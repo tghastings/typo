@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Monkey patch to handle ActionController::Parameters in attributes=
 # This is needed for backward compatibility with Rails 3 code that uses
 # model.attributes = params[:model]

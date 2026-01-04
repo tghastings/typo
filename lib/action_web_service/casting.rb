@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'time'
 require 'date'
 require 'xmlrpc/datetime'
@@ -30,11 +32,13 @@ module ActionWebService # :nodoc:
 
         def cast_expects(api_method, params) # :nodoc:
           return [] if api_method.expects.nil?
-          api_method.expects.zip(params).map{ |type, param| cast(param, type) }
+
+          api_method.expects.zip(params).map { |type, param| cast(param, type) }
         end
 
         def cast_returns(api_method, return_value) # :nodoc:
           return nil if api_method.returns.nil?
+
           cast(return_value, api_method.returns[0])
         end
 
@@ -42,16 +46,15 @@ module ActionWebService # :nodoc:
           return value if signature_type.nil? # signature.length != params.length
           return nil if value.nil?
           # XMLRPC protocol doesn't support nil values. It uses false instead.
-          if signature_type.structured? && value.equal?(false)
-            return nil
-          end
-          unless signature_type.array? || signature_type.structured?
-            return value if canonical_type(value.class) == signature_type.type
-          end
+          return nil if signature_type.structured? && value.equal?(false)
+
+          return value if !(signature_type.array? || signature_type.structured?) && (canonical_type(value.class) == signature_type.type)
+
           if signature_type.array?
             unless value.respond_to?(:entries) && !value.is_a?(String)
               raise CastingError, "Don't know how to cast #{value.class} into #{signature_type.type.inspect}"
             end
+
             value.entries.map do |entry|
               cast(entry, signature_type.element_type)
             end
@@ -83,7 +86,8 @@ module ActionWebService # :nodoc:
             end
           when :bool
             return false if value.nil?
-            return value if value == true || value == false
+            return value if [true, false].include?(value)
+
             case value.to_s.downcase
             when '1', 'true', 'y', 'yes'
               true
@@ -97,32 +101,33 @@ module ActionWebService # :nodoc:
           when :decimal
             BigDecimal(value.to_s)
           when :time
-            value = "%s/%s/%s %s:%s:%s" % value.values_at(*%w[2 3 1 4 5 6]) if value.kind_of?(Hash)
-            if value.kind_of?(Time)
+            value = '%s/%s/%s %s:%s:%s' % value.values_at(*%w[2 3 1 4 5 6]) if value.is_a?(Hash)
+            if value.is_a?(Time)
               value
-            elsif value.kind_of?(DateTime)
+            elsif value.is_a?(DateTime)
               value.to_time
             else
               Time.parse(value.to_s)
             end
           when :date
-            value = "%s/%s/%s" % value.values_at(*%w[2 3 1]) if value.kind_of?(Hash)
-            value.kind_of?(Date) ? value : Date.parse(value.to_s)
+            value = '%s/%s/%s' % value.values_at(*%w[2 3 1]) if value.is_a?(Hash)
+            value.is_a?(Date) ? value : Date.parse(value.to_s)
           when :datetime
-            value = "%s/%s/%s %s:%s:%s" % value.values_at(*%w[2 3 1 4 5 6]) if value.kind_of?(Hash)
-            value.kind_of?(DateTime) ? value : DateTime.parse(value.to_s)
+            value = '%s/%s/%s %s:%s:%s' % value.values_at(*%w[2 3 1 4 5 6]) if value.is_a?(Hash)
+            value.is_a?(DateTime) ? value : DateTime.parse(value.to_s)
           end
         end
 
         def cast_to_structured_type(value, signature_type) # :nodoc:
-          obj = nil
           # if the canonical classes are the same or if the given value is of
           # a type that is derived from the signature_type do not attempt to
           # "cast" the value into the signature_type as it's already good to go
-          obj = (
-            canonical_type(value.class) == canonical_type(signature_type.type) or
-            derived_from?(signature_type.type, value.class)
-          ) ? value : signature_type.type_class.new
+          obj = if (canonical_type(value.class) == canonical_type(signature_type.type)) ||
+                   derived_from?(signature_type.type, value.class)
+                  value
+                else
+                  signature_type.type_class.new
+                end
           if value.respond_to?(:each_pair)
             klass = signature_type.type_class
             value.each_pair do |name, val|

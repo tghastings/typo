@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Settings specified here will take precedence over those in config/environment.rb
 
 TypoBlog::Application.configure do
@@ -51,8 +53,6 @@ TypoBlog::Application.configure do
 
   # Configure Migrator if defined
   config.after_initialize do
-    if defined?(Migrator)
-      Migrator.offer_migration_when_available = false
-    end
+    Migrator.offer_migration_when_available = false if defined?(Migrator)
   end
 end

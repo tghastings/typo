@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class NotificationMailer < ActionMailer::Base
   helper :mail
   layout nil
@@ -30,17 +32,17 @@ class NotificationMailer < ActionMailer::Base
     @blog = Blog.default
     @recipients = user.email
     @from = Blog.default.email_from
-    @headers = {'X-Mailer' => "Typo #{TYPO_VERSION}"}
+    @headers = { 'X-Mailer' => "Typo #{TYPO_VERSION}" }
     mail(to: @recipients, from: @from, subject: "Notification from #{@blog.blog_name}", headers: @headers)
   end
 
   private
+
   def setup(user, content)
     @user = user
     @blog = content.blog
     @recipients = user.email
     @from = content.blog.email_from
-    @headers = {'X-Mailer' => "Typo #{TYPO_VERSION}"}
+    @headers = { 'X-Mailer' => "Typo #{TYPO_VERSION}" }
   end
-
 end

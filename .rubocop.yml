@@ -1,0 +1,121 @@
+# RuboCop configuration for Typo blog
+# This configuration is tuned for the existing codebase
+
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.4
+  Exclude:
+    - 'db/schema.rb'
+    - 'db/migrate/**/*'
+    - 'vendor/**/*'
+    - 'vendor/plugins/**/*'
+    - 'node_modules/**/*'
+    - 'bin/**/*'
+    - 'lib/generators/**/*'
+    - 'themes/**/*'
+
+# Disable ClassAndModuleChildren - it incorrectly converts class reopening
+# (e.g., class TextFilterPlugin::Macro) to module nesting, which breaks
+# when the parent is a class, not a module
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+# Metrics - These require significant refactoring, disabled for now
+Metrics/BlockLength:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/ModuleLength:
+  Enabled: false
+
+Metrics/ParameterLists:
+  Enabled: false
+
+# Documentation - Legacy code doesn't have docs
+Style/Documentation:
+  Enabled: false
+
+# Global variables are used intentionally in some places
+Style/GlobalVars:
+  Enabled: false
+
+# Class variables are used in the codebase
+Style/ClassVars:
+  Enabled: false
+
+# Allow exception rescue for legacy compatibility
+Lint/RescueException:
+  Enabled: false
+
+# Line length - be more permissive
+Layout/LineLength:
+  Max: 150
+
+# Naming conventions - existing code has different conventions
+Naming/MethodName:
+  Enabled: false
+
+Naming/AccessorMethodName:
+  Enabled: false
+
+Naming/PredicatePrefix:
+  Enabled: false
+
+Naming/VariableNumber:
+  Enabled: false
+
+Naming/MethodParameterName:
+  Enabled: false
+
+Naming/FileName:
+  Enabled: false
+
+Naming/HeredocDelimiterNaming:
+  Enabled: false
+
+Naming/VariableName:
+  Enabled: false
+
+# Optional boolean parameters are used in the codebase
+Style/OptionalBooleanParameter:
+  Enabled: false
+
+# respond_to_missing is not always needed in legacy code
+Style/MissingRespondToMissing:
+  Enabled: false
+
+# Identical conditional branches - sometimes intentional
+Style/IdenticalConditionalBranches:
+  Enabled: false
+
+# Duplicate branch bodies - sometimes intentional for readability
+Lint/DuplicateBranch:
+  Enabled: false
+
+# Predicate method naming - legacy code uses different conventions
+Naming/PredicateMethod:
+  Enabled: false
+
+# Security cops that flag metaprogramming - review carefully but allow
+Security/Eval:
+  Exclude:
+    - 'lib/text_filter_plugin.rb'
+    - 'lib/stateful.rb'
+    - 'lib/action_web_service/**/*'
+
+Security/Open:
+  Enabled: false

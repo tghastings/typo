@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
-RSpec.describe "Admin Feedback with Turbo", type: :request do
+RSpec.describe 'Admin Feedback with Turbo', type: :request do
   let!(:blog) { FactoryBot.create(:blog) }
   let!(:admin_profile) { Profile.find_by(label: 'admin') || FactoryBot.create(:profile_admin) }
   let!(:admin_user) { FactoryBot.create(:user, profile: admin_profile, login: 'admin_user', password: 'test123') }
@@ -14,8 +16,8 @@ RSpec.describe "Admin Feedback with Turbo", type: :request do
     follow_redirect!
   end
 
-  describe "GET /admin/feedback with Turbo Frame" do
-    it "returns feedback list in turbo frame format" do
+  describe 'GET /admin/feedback with Turbo Frame' do
+    it 'returns feedback list in turbo frame format' do
       get '/admin/feedback', headers: { 'Turbo-Frame' => 'feedback_list' }
 
       expect(response).to have_http_status(:success)
@@ -23,27 +25,27 @@ RSpec.describe "Admin Feedback with Turbo", type: :request do
       expect(response.body).to include('Spam Author')
     end
 
-    it "filters by ham status" do
-      get '/admin/feedback', params: { published: 'f' }
+    it 'filters by ham status' do
+      get '/admin/feedback', params: { ham: 'f' }
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include('Ham Author')
     end
 
-    it "filters by spam status" do
-      get '/admin/feedback', params: { published: 'spam' }
+    it 'filters by spam status' do
+      get '/admin/feedback', params: { spam: 'f' }
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include('Spam Author')
     end
   end
 
-  describe "POST /admin/feedback/mark_as_ham with Turbo Stream" do
-    it "marks spam comment as ham and returns Turbo Stream" do
+  describe 'POST /admin/feedback/mark_as_ham with Turbo Stream' do
+    it 'marks spam comment as ham and returns Turbo Stream' do
       expect(spam_comment.reload.ham?).to be false
 
       post "/admin/feedback/mark_as_ham/#{spam_comment.id}",
-        headers: { 'Accept' => 'text/vnd.turbo-stream.html' }
+           headers: { 'Accept' => 'text/vnd.turbo-stream.html' }
 
       expect(response).to have_http_status(:success)
       expect(response.content_type).to include('turbo-stream')
@@ -54,12 +56,12 @@ RSpec.describe "Admin Feedback with Turbo", type: :request do
     end
   end
 
-  describe "POST /admin/feedback/mark_as_spam with Turbo Stream" do
-    it "marks ham comment as spam and returns Turbo Stream" do
+  describe 'POST /admin/feedback/mark_as_spam with Turbo Stream' do
+    it 'marks ham comment as spam and returns Turbo Stream' do
       expect(ham_comment.reload.spam?).to be false
 
       post "/admin/feedback/mark_as_spam/#{ham_comment.id}",
-        headers: { 'Accept' => 'text/vnd.turbo-stream.html' }
+           headers: { 'Accept' => 'text/vnd.turbo-stream.html' }
 
       expect(response).to have_http_status(:success)
       expect(response.content_type).to include('turbo-stream')
@@ -70,10 +72,10 @@ RSpec.describe "Admin Feedback with Turbo", type: :request do
     end
   end
 
-  describe "Turbo Stream response format" do
-    it "contains replace action for the feedback row" do
+  describe 'Turbo Stream response format' do
+    it 'contains replace action for the feedback row' do
       post "/admin/feedback/mark_as_ham/#{spam_comment.id}",
-        headers: { 'Accept' => 'text/vnd.turbo-stream.html' }
+           headers: { 'Accept' => 'text/vnd.turbo-stream.html' }
 
       expect(response.body).to include('<turbo-stream')
       expect(response.body).to include('action="replace"')

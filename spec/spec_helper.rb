@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # This file is copied to spec/ when you run 'rails generate rspec:install'
 require 'simplecov'
 SimpleCov.start 'rails' do
@@ -6,8 +8,8 @@ SimpleCov.start 'rails' do
   add_filter '/vendor/'
 end
 
-ENV["RAILS_ENV"] ||= 'test'
-require File.expand_path("../../config/environment", __FILE__)
+ENV['RAILS_ENV'] ||= 'test'
+require File.expand_path('../config/environment', __dir__)
 require 'rspec/rails'
 require 'rspec/collection_matchers'
 require 'factory_bot'
@@ -22,8 +24,8 @@ FactoryBot.reload
 Factory = FactoryBot
 
 # Backward compatibility: Factory() function shorthand for Factory.create()
-def Factory(name, *args)
-  FactoryBot.create(name, *args)
+def Factory(name, *)
+  FactoryBot.create(name, *)
 end
 
 # Backward compatibility: Old ActiveRecord find syntax
@@ -32,21 +34,21 @@ end
 # Model.find(:first, :conditions => {...}) -> Model.where({...}).first
 module ActiveRecordFindBackwardCompat
   def find(*args)
-    return super if args.first.is_a?(Integer) || args.first.is_a?(String) && args.first !~ /^(first|all|last)$/
+    return super if args.first.is_a?(Integer) || (args.first.is_a?(String) && args.first !~ /^(first|all|last)$/)
 
     type = args.shift
     options = args.first || {}
 
-    scope = self.all  # Start with a relation, not the class
+    scope = all # Start with a relation, not the class
     if options[:conditions]
       conditions = options[:conditions]
-      if conditions.is_a?(Array)
-        scope = scope.where(conditions[0], *conditions[1..-1])
-      elsif conditions.is_a?(Hash)
-        scope = scope.where(conditions)
-      else
-        scope = scope.where(conditions)
-      end
+      scope = if conditions.is_a?(Array)
+                scope.where(conditions[0], *conditions[1..])
+              elsif conditions.is_a?(Hash)
+                scope.where(conditions)
+              else
+                scope.where(conditions)
+              end
     end
     scope = scope.order(options[:order]) if options[:order]
     scope = scope.limit(options[:limit]) if options[:limit]
@@ -55,7 +57,7 @@ module ActiveRecordFindBackwardCompat
     case type.to_s
     when 'first' then scope.first
     when 'last' then scope.last
-    when 'all' then scope  # Return the relation, not an array
+    when 'all' then scope # Return the relation, not an array
     else super(type, *args)
     end
   end
@@ -65,19 +67,20 @@ ActiveRecord::Base.extend(ActiveRecordFindBackwardCompat)
 
 # Backward compatibility: Dynamic finders like find_or_create_by_name, find_by_name, find_all_by_*
 module DynamicFindersBackwardCompat
-  def method_missing(method_name, *args, &block)
-    if method_name.to_s =~ /^find_or_create_by_(.+)$/
-      attributes = $1.split('_and_')
+  def method_missing(method_name, *args, &)
+    case method_name.to_s
+    when /^find_or_create_by_(.+)$/
+      attributes = ::Regexp.last_match(1).split('_and_')
       options = args.extract_options!
       conditions = attributes.zip(args).to_h
       record = where(conditions).first
       record || create!(options.merge(conditions))
-    elsif method_name.to_s =~ /^find_by_(.+)$/
-      attributes = $1.split('_and_')
+    when /^find_by_(.+)$/
+      attributes = ::Regexp.last_match(1).split('_and_')
       conditions = attributes.zip(args).to_h
       where(conditions).first
-    elsif method_name.to_s =~ /^find_all_by_(.+)$/
-      attributes = $1.split('_and_')
+    when /^find_all_by_(.+)$/
+      attributes = ::Regexp.last_match(1).split('_and_')
       conditions = attributes.zip(args).to_h
       where(conditions).to_a
     else
@@ -91,8 +94,6 @@ module DynamicFindersBackwardCompat
 end
 
 ActiveRecord::Base.extend(DynamicFindersBackwardCompat)
-
-User
 class User
   def send_create_notification; end
 end
@@ -100,7 +101,7 @@ end
 # Requires supporting ruby files with custom matchers and macros, etc,
 # in spec/support/ and its subdirectories.
 # Exclude mocks directory for now as it will be loaded conditionally
-Dir[Rails.root.join("spec/support/**/*.rb")].reject { |f| f.include?('/mocks/') }.each {|f| require f}
+Dir[Rails.root.join('spec/support/**/*.rb')].reject { |f| f.include?('/mocks/') }.each { |f| require f }
 
 RSpec.configure do |config|
   config.mock_with :rspec
@@ -108,13 +109,11 @@ RSpec.configure do |config|
   config.include FactoryBot::Syntax::Methods
   config.render_views
 
-  # Load HTTP mocks only for non-system tests (Selenium needs real HTTP)
+  # Load HTTP mocks for unit/integration tests
   config.before(:suite) do
     unless ENV['SKIP_HTTP_MOCKS']
-      # Only load mocks for non-system test suites
-      if RSpec.configuration.files_to_run.none? { |f| f.include?('spec/system') }
-        Dir[Rails.root.join("spec/support/mocks/*.rb")].each {|f| require f}
-      end
+      # Always load mocks - system tests check for Chrome availability anyway
+      Dir[Rails.root.join('spec/support/mocks/*.rb')].each { |f| require f }
     end
   end
 
@@ -125,40 +124,26 @@ RSpec.configure do |config|
 
     # Ensure essential database records exist to prevent test pollution
     # Create default text filters if they don't exist
-    unless TextFilter.find_by(name: 'textile')
-      FactoryBot.create(:textile)
-    end
-    unless TextFilter.find_by(name: 'markdown')
-      FactoryBot.create(:markdown)
-    end
-    unless TextFilter.find_by(name: 'none')
-      FactoryBot.create(:none_filter)
-    end
+    FactoryBot.create(:textile) unless TextFilter.find_by(name: 'textile')
+    FactoryBot.create(:markdown) unless TextFilter.find_by(name: 'markdown')
+    FactoryBot.create(:none_filter) unless TextFilter.find_by(name: 'none')
 
     # Ensure default profiles exist
-    unless Profile.find_by(label: 'admin')
-      FactoryBot.create(:profile_admin)
-    end
-    unless Profile.find_by(label: 'publisher')
-      FactoryBot.create(:profile_publisher)
-    end
-    unless Profile.find_by(label: 'contributor')
-      FactoryBot.create(:profile_contributor)
-    end
+    FactoryBot.create(:profile_admin) unless Profile.find_by(label: 'admin')
+    FactoryBot.create(:profile_publisher) unless Profile.find_by(label: 'publisher')
+    FactoryBot.create(:profile_contributor) unless Profile.find_by(label: 'contributor')
 
     # Ensure a Blog record exists
-    unless Blog.first
-      FactoryBot.create(:blog)
-    end
+    FactoryBot.create(:blog) unless Blog.first
   end
 
   # Disable deprecated should syntax warnings
   config.expect_with :rspec do |expectations|
-    expectations.syntax = [:should, :expect]
+    expectations.syntax = %i[should expect]
   end
 
   config.mock_with :rspec do |mocks|
-    mocks.syntax = [:should, :expect]
+    mocks.syntax = %i[should expect]
   end
 
   # Infer spec type from file location
@@ -185,16 +170,16 @@ RSpec.configure do |config|
         match do |target|
           # Handle both controller response and view rendered
           html = if target.respond_to?(:body)
-            target.body
-          elsif target.is_a?(String)
-            target
-          elsif defined?(rendered)
-            rendered
-          elsif defined?(response)
-            response.body
-          else
-            target.to_s
-          end
+                   target.body
+                 elsif target.is_a?(String)
+                   target
+                 elsif defined?(rendered)
+                   rendered
+                 elsif defined?(response)
+                   response.body
+                 else
+                   target.to_s
+                 end
 
           doc = Nokogiri::HTML(html)
           elements = doc.css(css_selector)
@@ -211,7 +196,7 @@ RSpec.configure do |config|
           end
         end
 
-        failure_message do |target|
+        failure_message do |_target|
           if opts[:content]
             "expected to find css #{css_selector.inspect} with content #{opts[:content].inspect} but there were no matches"
           elsif opts[:href]
@@ -226,9 +211,7 @@ RSpec.configure do |config|
 
     # Backward compatibility: be_success -> be_successful
     RSpec::Matchers.define :be_success do
-      match do |response|
-        response.successful?
-      end
+      match(&:successful?)
     end
   end, type: :controller)
 
@@ -257,7 +240,7 @@ RSpec.configure do |config|
           end
         end
 
-        failure_message do |target|
+        failure_message do |_target|
           if opts[:content]
             "expected to find css #{css_selector.inspect} with content #{opts[:content].inspect} but there were no matches"
           elsif opts[:href]
@@ -273,23 +256,23 @@ RSpec.configure do |config|
 
   # Backward compatibility: mock -> double
   config.include(Module.new do
-    def mock(*args, &block)
-      double(*args, &block)
+    def mock(*, &)
+      double(*, &)
     end
 
     # Backward compatibility: mock_model (removed in rspec-rails 4+)
     def mock_model(model_class, stubs = {})
       model = double("#{model_class.name}_#{object_id}", stubs.reverse_merge(
-        :to_param => "1",
-        :to_key => nil,
-        :to_model => nil,
-        :model_name => model_class.model_name,
-        :persisted? => false,
-        :destroyed? => false,
-        :marked_for_destruction? => false,
-        :new_record? => true,
-        :id => nil
-      ))
+                                                           to_param: '1',
+                                                           to_key: nil,
+                                                           to_model: nil,
+                                                           model_name: model_class.model_name,
+                                                           persisted?: false,
+                                                           destroyed?: false,
+                                                           marked_for_destruction?: false,
+                                                           new_record?: true,
+                                                           id: nil
+                                                         ))
       # Allow is_a? to accept any class/symbol and return appropriate values
       allow(model).to receive(:is_a?) do |klass|
         klass == model_class || klass == model_class.superclass
@@ -346,13 +329,13 @@ RSpec.configure do |config|
       expect(string).not_to match(pattern), message
     end
 
-    def assert_raise(exception_class, message = nil, &block)
-      expect(&block).to raise_error(exception_class), message
+    def assert_raise(exception_class, message = nil, &)
+      expect(&).to raise_error(exception_class), message
     end
     alias_method :assert_raises, :assert_raise
 
-    def assert_nothing_raised(message = nil, &block)
-      expect(&block).not_to raise_error, message
+    def assert_nothing_raised(message = nil, &)
+      expect(&).not_to raise_error, message
     end
 
     def assert_respond_to(object, method, message = nil)
@@ -387,7 +370,7 @@ end
 module ActionController
   class TestCase
     module Behavior
-      %w(get post patch put head delete).each do |method|
+      %w[get post patch put head delete].each do |method|
         define_method("#{method}_with_backward_compat") do |action, *args|
           # Handle case with no params at all
           if args.empty?
@@ -413,9 +396,9 @@ end
 
 def define_spec_public_cache_directory
   ActionController::Base.page_cache_directory = File.join(Rails.root, 'spec', 'public')
-  unless File.exist? ActionController::Base.page_cache_directory
-    FileUtils.mkdir_p ActionController::Base.page_cache_directory
-  end
+  return if File.exist? ActionController::Base.page_cache_directory
+
+  FileUtils.mkdir_p ActionController::Base.page_cache_directory
 end
 
 def path_for_file_in_spec_public_cache_directory(file)
@@ -435,38 +418,38 @@ def assert_xml(xml)
   end
 end
 
-def assert_atom10 feed, count
+def assert_atom10(feed, count)
   doc = Nokogiri::XML.parse(feed)
   root = doc.css(':root').first
-  root.name.should == "feed"
-  root.namespace.href.should == "http://www.w3.org/2005/Atom"
+  root.name.should
+  root.namespace.href.should
   root.css('entry').count.should == count
 end
 
-def assert_rss20 feed, count
+def assert_rss20(feed, count)
   doc = Nokogiri::XML.parse(feed)
   root = doc.css(':root').first
-  root.name.should == "rss"
-  root['version'].should == "2.0"
+  root.name.should
+  root['version'].should
   root.css('channel item').count.should == count
 end
 
 def stub_default_blog
-  blog = Blog.new(base_url: "http://myblog.net", blog_name: "Test Blog", text_filter: "textile")
+  blog = Blog.new(base_url: 'http://myblog.net', blog_name: 'Test Blog', text_filter: 'textile')
   allow(view).to receive(:this_blog).and_return(blog)
   allow(Blog).to receive(:default).and_return(blog)
   blog
 end
 
-def stub_full_article(time=Time.now)
-  author = build(:user, name: "User Name")
-  textile_filter = TextFilter.find_by(name: "textile") || TextFilter.find_by(name: "none")
+def stub_full_article(time = Time.now)
+  author = build(:user, name: 'User Name')
+  textile_filter = TextFilter.find_by(name: 'textile') || TextFilter.find_by(name: 'none')
 
   a = build(:article, published_at: time, user: author,
-            created_at: time, updated_at: time,
-            title: "Foo Bar", permalink: 'foo-bar',
-            guid: time.hash.to_s,
-            text_filter_id: textile_filter&.id)
+                      created_at: time, updated_at: time,
+                      title: 'Foo Bar', permalink: 'foo-bar',
+                      guid: time.hash.to_s,
+                      text_filter_id: textile_filter&.id)
   allow(a).to receive(:categories).and_return([build(:category)])
   allow(a).to receive(:published_comments).and_return([])
   allow(a).to receive(:resources).and_return([build(:resource)])
@@ -476,13 +459,12 @@ end
 
 # test standard view and all themes
 def with_each_theme
-  yield nil, ""
-  Dir.new(File.join(::Rails.root.to_s, "themes")).each do |theme|
+  yield nil, ''
+  Dir.new(File.join(Rails.root.to_s, 'themes')).each do |theme|
     next if theme =~ /\.\.?/
-    view_path = "#{::Rails.root.to_s}/themes/#{theme}/views"
-    if File.exist?("#{::Rails.root.to_s}/themes/#{theme}/helpers/theme_helper.rb")
-      require "#{::Rails.root.to_s}/themes/#{theme}/helpers/theme_helper.rb"
-    end
+
+    view_path = "#{Rails.root}/themes/#{theme}/views"
+    require "#{Rails.root}/themes/#{theme}/helpers/theme_helper.rb" if File.exist?("#{Rails.root}/themes/#{theme}/helpers/theme_helper.rb")
     yield theme, view_path
   end
 end
@@ -497,21 +479,21 @@ end
 # Finally, copy src/demo.py into your path as 'feedvalidator', make it executable,
 # and change the first line to something like '#!/usr/bin/python'.
 
-if($validator_installed == nil)
+if $validator_installed.nil?
   $validator_installed = false
   begin
-    IO.popen("feedvalidator 2> /dev/null","r") do |pipe|
-      if (pipe.read =~ %r{Validating http://www.intertwingly.net/blog/index.})
-        puts "Using locally installed Python feed validator"
+    IO.popen('feedvalidator 2> /dev/null', 'r') do |pipe|
+      if pipe.read =~ %r{Validating http://www.intertwingly.net/blog/index.}
+        puts 'Using locally installed Python feed validator'
         $validator_installed = true
       end
     end
-  rescue
+  rescue StandardError
     nil
   end
 end
 
-def assert_feedvalidator(rss, todo=nil)
+def assert_feedvalidator(rss, todo = nil)
   unless $validator_installed
     puts 'Not validating feed because no validator (feedvalidator in python) is installed'
     return
@@ -531,37 +513,37 @@ def assert_feedvalidator(rss, todo=nil)
 
     okay, messages = parse_validator_messages(messages)
 
-    if todo && ! ENV['RUN_TODO_TESTS']
-      assert !okay, messages + "\nTest unexpectedly passed!\nFeed text:\n"+rss
+    if todo && !ENV['RUN_TODO_TESTS']
+      assert !okay, "#{messages}\nTest unexpectedly passed!\nFeed text:\n#{rss}"
     else
-      assert okay, messages + "\nFeed text:\n"+rss
+      assert okay, "#{messages}\nFeed text:\n#{rss}"
     end
   end
 end
 
 def parse_validator_messages(message)
-  messages=message.split(/\n/).reject do |m|
-    m =~ /Feeds should not be served with the "text\/plain" media type/ ||
+  messages = message.split("\n").reject do |m|
+    m =~ %r{Feeds should not be served with the "text/plain" media type} ||
       m =~ /Self reference doesn't match document location/
   end
 
-  if(messages.size > 1)
+  if messages.size > 1
     [false, messages.join("\n")]
   else
-    [true, ""]
+    [true, '']
   end
 end
 
 # Temporarily define #flunk until rspec-rails 2 beta 21 comes out.
 # TODO: Remove this once no longer needed!
-def flunk(*args, &block)
-  assertion_delegate.flunk(*args, &block)
+def flunk(*, &)
+  assertion_delegate.flunk(*, &)
 end
 
 # Backward compatibility: stub_model replacement for modern RSpec
 def stub_model(klass, attributes = {})
   instance = klass.new(attributes)
-  allow(instance).to receive(:id).and_return(rand(1000) + 1)
+  allow(instance).to receive(:id).and_return(rand(1..1000))
   allow(instance).to receive(:new_record?).and_return(false)
   allow(instance).to receive(:persisted?).and_return(true)
   instance
@@ -575,25 +557,25 @@ class StubChain
     @method_name = method_name
   end
 
-  def and_return(value = nil, &block)
+  def and_return(value = nil, &)
     if block_given?
-      RSpec::Mocks.allow_message(@object, @method_name, &block)
+      RSpec::Mocks.allow_message(@object, @method_name, &)
     else
       RSpec::Mocks.allow_message(@object, @method_name) { value }
     end
     self
   end
 
-  def with(*args)
+  def with(*_args)
     # Ignore with() for backward compatibility
     self
   end
 end
 
 module StubBackwardCompatibility
-  def stub(method_name, &block)
+  def stub(method_name, &)
     if block_given?
-      RSpec::Mocks.allow_message(self, method_name, &block)
+      RSpec::Mocks.allow_message(self, method_name, &)
       self
     else
       StubChain.new(self, method_name)
@@ -601,7 +583,7 @@ module StubBackwardCompatibility
   end
 
   # stub! is just an alias for stub in old RSpec
-  alias_method :stub!, :stub
+  alias stub! stub
 end
 
 Object.include(StubBackwardCompatibility)
@@ -610,10 +592,9 @@ Object.include(StubBackwardCompatibility)
 # See Webrat ticket #345.
 # Solution adapted from the following patch:
 # http://github.com/indirect/webrat/commit/46b8d91c962e802fbcb14ee0bcf03aab1afa180a
-module Webrat #:nodoc:
-  module XML #:nodoc:
-
-    def self.document(stringlike) #:nodoc:
+module Webrat # :nodoc:
+  module XML # :nodoc:
+    def self.document(stringlike) # :nodoc:
       return stringlike.dom if stringlike.respond_to?(:dom)
 
       case stringlike
@@ -622,7 +603,7 @@ module Webrat #:nodoc:
       else
         stringlike = stringlike.body if stringlike.respond_to?(:body)
 
-        if stringlike.to_s =~ /\<\?xml/
+        if stringlike.to_s =~ /<\?xml/
           Nokogiri::XML(stringlike.to_s)
         else
           Nokogiri::HTML(stringlike.to_s)

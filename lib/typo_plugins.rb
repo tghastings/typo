@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module TypoPlugins
   # Deprecated?
   def plugin_public_action(action)
@@ -11,29 +13,34 @@ module TypoPlugins
   end
 
   # Deprecated?
-  def plugin_description(description)
-    eval "def self.description; '#{description}'; end"
+  def plugin_description(desc)
+    define_singleton_method(:description) { desc }
   end
 
   # Deprecated?
   def plugin_display_name(name)
-    eval "def self.display_name; '#{name}'; end"
+    define_singleton_method(:display_name) { name }
   end
 
   unless defined?(Keeper) # Something in rails double require this module. Prevent that to keep @@registered integrity
     class Keeper
-      KINDS = [:avatar, :textfilter]
+      KINDS = %i[avatar textfilter].freeze
       @@registered = {}
 
       class << self
         def available_plugins(kind = nil)
           return @@registered.inspect unless kind
-          raise ArgumentError.new "#{kind} is not part of available plugins targets (#{KINDS.map(&:to_s).join(',')})" unless KINDS.include?(kind)
+          raise ArgumentError, "#{kind} is not part of available plugins targets (#{KINDS.map(&:to_s).join(',')})" unless KINDS.include?(kind)
+
           @@registered ? @@registered[kind] : nil
         end
 
         def register(klass)
-          raise ArgumentError.new "#{klass.kind.to_s} is not part of available plugins targets (#{KINDS.map(&:to_s).join(',')})" unless KINDS.include?(klass.kind)
+          unless KINDS.include?(klass.kind)
+            raise ArgumentError,
+                  "#{klass.kind} is not part of available plugins targets (#{KINDS.map(&:to_s).join(',')})"
+          end
+
           @@registered[klass.kind] ||= []
           @@registered[klass.kind] << klass
           Rails.logger.debug("TypoPlugins: just registered plugin #{@@registered[klass.kind]} for #{klass.kind.inspect} target.")
@@ -42,32 +49,33 @@ module TypoPlugins
       end
 
       private
+
       def initialize
         raise 'No instance allowed.'
       end
     end
-  end # Defined
+  end
 
   class Base
-
     class << self
-      attr_accessor :name
-      attr_accessor :description
+      attr_accessor :name, :description
       attr_reader   :registered
 
       def kind
         :void
       end
-
-    end # << self
+    end
 
     def initialize(h = {})
       h = h.dup
       kind = h.delete(:kind)
-      raise ArgumentError.new "#{kind} is not part of available plugins targets (#{KINDS.map(&:to_s).join(',')})" unless KINDS.include?(kind)
-      @kind = kind
-      raise ArgumentError.new "Too many keys in TypoPlugins::Base hash: I don't know what to do with your remainder: #{h.inspect}" unless h.empty?
-    end
+      raise ArgumentError, "#{kind} is not part of available plugins targets (#{KINDS.map(&:to_s).join(',')})" unless KINDS.include?(kind)
 
+      @kind = kind
+      return if h.empty?
+
+      raise ArgumentError,
+            "Too many keys in TypoPlugins::Base hash: I don't know what to do with your remainder: #{h.inspect}"
+    end
   end
 end

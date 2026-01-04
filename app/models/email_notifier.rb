@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class EmailNotifier < ActiveRecord::Observer
   observe Article, Comment
 

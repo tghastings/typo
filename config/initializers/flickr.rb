@@ -1,2 +1,3 @@
-FLICKR_KEY='84f652422f05b96b29b9a960e0081c50'
+# frozen_string_literal: true
 
+FLICKR_KEY = '84f652422f05b96b29b9a960e0081c50'

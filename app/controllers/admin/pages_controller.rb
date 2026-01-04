@@ -1,58 +1,60 @@
-# coding: utf-8
+# frozen_string_literal: true
+
 require 'base64'
 
-class Admin::PagesController < Admin::BaseController
-  layout "administration", :except => 'show'
-  cache_sweeper :blog_sweeper
+module Admin
+  class PagesController < Admin::BaseController
+    layout 'administration', except: 'show'
+    cache_sweeper :blog_sweeper
 
-  def index
-    @search = params[:search] ? params[:search] : {}
-    @pages = Page.search_paginate(@search, :page => params[:page], :per_page => this_blog.admin_display_elements)
-  end
+    def index
+      @search = params[:search] || {}
+      @pages = Page.search_paginate(@search, page: params[:page], per_page: this_blog.admin_display_elements)
+    end
 
-  def new
-    @macros = TextFilter.macro_filters
-    page_params = params[:page]
-    # Convert ActionController::Parameters to hash for Model.new()
-    page_params = page_params.to_unsafe_h if page_params.respond_to?(:to_unsafe_h)
-    @page = Page.new(page_params)
-    @page.user_id = current_user.id
-    @page.text_filter ||= current_user.text_filter
-    @images = Resource.where("mime LIKE '%image%'").order('created_at DESC').page(1).per(10)
-    if request.post?
+    def new
+      @macros = TextFilter.macro_filters
+      page_params = params[:page]
+      # Convert ActionController::Parameters to hash for Model.new()
+      page_params = page_params.to_unsafe_h if page_params.respond_to?(:to_unsafe_h)
+      @page = Page.new(page_params)
+      @page.user_id = current_user.id
+      @page.text_filter ||= current_user.text_filter
+      @images = Resource.where("mime LIKE '%image%'").order('created_at DESC').page(1).per(10)
+      return unless request.post?
+
       @page.published_at = Time.now
-      if @page.save
-        flash[:notice] = _('Page was successfully created.')
-        redirect_to :action => 'index'
-      end
-    end
-  end
+      return unless @page.save
 
-  def edit
-    @macros = TextFilter.macro_filters
-    @images = Resource.where("mime LIKE '%image%'").page(1).order('created_at DESC').per(10)
-    @page = Page.find(params[:id])
-    @page.attributes = params[:page] if params[:page].present?
-    if request.post? and @page.save
+      flash[:notice] = _('Page was successfully created.')
+      redirect_to action: 'index'
+    end
+
+    def edit
+      @macros = TextFilter.macro_filters
+      @images = Resource.where("mime LIKE '%image%'").page(1).order('created_at DESC').per(10)
+      @page = Page.find(params[:id])
+      @page.attributes = params[:page] if params[:page].present?
+      return unless request.post? && @page.save
+
       flash[:notice] = _('Page was successfully updated.')
-      redirect_to :action => 'index'
+      redirect_to action: 'index'
+    end
+
+    def destroy
+      @record = Page.find(params[:id])
+      return render 'admin/shared/destroy' unless request.post?
+
+      @record.destroy
+      redirect_to action: 'index'
+    end
+
+    def insert_editor
+      # All editors now use the unified markdown editor
+      current_user.editor = 'markdown'
+      current_user.save!
+
+      render partial: 'admin/shared/markdown_editor'
     end
   end
-
-  def destroy
-    @record = Page.find(params[:id])
-    return(render 'admin/shared/destroy') unless request.post?
-
-    @record.destroy
-    redirect_to :action => 'index'    
-  end
-
-  def insert_editor
-    # All editors now use the unified markdown editor
-    current_user.editor = 'markdown'
-    current_user.save!
-
-    render :partial => "admin/shared/markdown_editor"
-  end
-
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Category < ActiveRecord::Base
   acts_as_list
 
@@ -6,7 +8,7 @@ class Category < ActiveRecord::Base
   has_many :children, class_name: 'Category', foreign_key: 'parent_id'
 
   has_many :categorizations
-  has_many :articles, -> { order("published_at DESC, created_at DESC") }, through: :categorizations
+  has_many :articles, -> { order('published_at DESC, created_at DESC') }, through: :categorizations
 
   default_scope { order(name: :asc) }
 
@@ -22,7 +24,7 @@ class Category < ActiveRecord::Base
   def self.reorder(serialized_list)
     transaction do
       serialized_list.each_with_index do |cid, index|
-        find(cid).update_attribute "position", index
+        find(cid).update_attribute 'position', index
       end
     end
   end
@@ -35,7 +37,7 @@ class Category < ActiveRecord::Base
     find_by(permalink: permalink) or raise ActiveRecord::RecordNotFound
   end
 
-  def self.find_all_with_article_counters(maxcount=nil)
+  def self.find_all_with_article_counters(_maxcount = nil)
     find_by_sql([%{
       SELECT categories.id, categories.name, categories.permalink, categories.position, COUNT(articles.id) AS article_counter
       FROM #{Category.table_name} categories
@@ -56,7 +58,7 @@ class Category < ActiveRecord::Base
     name
   end
 
-  def permalink_url(anchor=nil, only_path=false)
+  def permalink_url(_anchor = nil, only_path = false)
     blog = Blog.default
     blog.url_for(
       controller: '/categories',
@@ -73,6 +75,6 @@ class Category < ActiveRecord::Base
   protected
 
   def set_permalink
-    self.permalink = self.name.to_permalink if self.permalink.blank?
+    self.permalink = name.to_permalink if permalink.blank?
   end
 end

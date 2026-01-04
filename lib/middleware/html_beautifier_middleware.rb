@@ -28,7 +28,7 @@ class HtmlBeautifierMiddleware
           beautified = beautify_html(body)
           headers['Content-Length'] = beautified.bytesize.to_s
           response = [beautified]
-        rescue => e
+        rescue StandardError => e
           Rails.logger.warn "HTML Beautifier failed: #{e.message}"
         end
       end
@@ -61,7 +61,7 @@ class HtmlBeautifierMiddleware
     # Step 1: Preserve pre/code/textarea content exactly
     preserved = {}
     counter = 0
-    working = html.gsub(/<(pre|code|textarea)(\s[^>]*)?>.*?<\/\1>/mi) do |match|
+    working = html.gsub(%r{<(pre|code|textarea)(\s[^>]*)?>.*?</\1>}mi) do |match|
       key = "___PRESERVE_#{counter}___"
       preserved[key] = match
       counter += 1
@@ -73,8 +73,8 @@ class HtmlBeautifierMiddleware
 
     # Step 3: Add newlines around block elements
     block_pattern = BLOCK_TAGS.join('|')
-    working = working.gsub(/<(#{block_pattern})(\s|>|\/)/i, "\n<\\1\\2")
-    working = working.gsub(/<\/(#{block_pattern})>/i, "</\\1>\n")
+    working = working.gsub(%r{<(#{block_pattern})(\s|>|/)}i, "\n<\\1\\2")
+    working = working.gsub(%r{</(#{block_pattern})>}i, "</\\1>\n")
     working = working.gsub(/<!DOCTYPE[^>]*>/i) { |m| "#{m}\n" }
 
     # Step 4: Split and indent
@@ -84,20 +84,20 @@ class HtmlBeautifierMiddleware
 
     lines.each do |line|
       # Check for closing tag
-      if line =~ /^<\/(html|head|body|header|footer|main|aside|nav|section|article|div|ul|ol|dl|table|thead|tbody|tfoot|form|fieldset|figure)>/i
+      if line =~ %r{^</(html|head|body|header|footer|main|aside|nav|section|article|div|ul|ol|dl|table|thead|tbody|tfoot|form|fieldset|figure)>}i
         indent_level -= 1
-        indent_level = 0 if indent_level < 0
+        indent_level = 0 if indent_level.negative?
       end
 
       # Add line with current indent
-      result << ('  ' * indent_level) + line
+      result << (('  ' * indent_level) + line)
 
       # Check for opening tag that needs indent increase
-      if line =~ /^<(html|head|body|header|footer|main|aside|nav|section|article|div|ul|ol|dl|table|thead|tbody|tfoot|form|fieldset|figure)(\s|>)/i
-        unless line =~ /<\/\w+>$/ || line =~ /\/>$/
-          indent_level += 1
-        end
+      unless line =~ /^<(html|head|body|header|footer|main|aside|nav|section|article|div|ul|ol|dl|table|thead|tbody|tfoot|form|fieldset|figure)(\s|>)/i
+        next
       end
+
+      indent_level += 1 unless line =~ %r{</\w+>$} || line =~ %r{/>$}
     end
 
     output = result.join("\n")
@@ -107,6 +107,6 @@ class HtmlBeautifierMiddleware
       output = output.sub(key, content)
     end
 
-    output + "\n"
+    "#{output}\n"
   end
 end

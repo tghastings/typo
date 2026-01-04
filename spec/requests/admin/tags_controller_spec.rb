@@ -24,7 +24,7 @@ RSpec.describe 'Admin::Tags', type: :request do
       end
 
       it 'displays tag list' do
-        tag = FactoryBot.create(:tag, name: 'test-tag', display_name: 'Test Tag')
+        FactoryBot.create(:tag, name: 'test-tag', display_name: 'Test Tag')
         get '/admin/tags'
         expect(response.body).to include('Test Tag')
       end
@@ -48,8 +48,8 @@ RSpec.describe 'Admin::Tags', type: :request do
       end
 
       it 'displays multiple tags' do
-        tag1 = FactoryBot.create(:tag, name: 'first-tag', display_name: 'First Tag')
-        tag2 = FactoryBot.create(:tag, name: 'second-tag', display_name: 'Second Tag')
+        FactoryBot.create(:tag, name: 'first-tag', display_name: 'First Tag')
+        FactoryBot.create(:tag, name: 'second-tag', display_name: 'Second Tag')
         get '/admin/tags'
         expect(response.body).to include('First Tag')
         expect(response.body).to include('Second Tag')
@@ -144,14 +144,14 @@ RSpec.describe 'Admin::Tags', type: :request do
 
       it 'creates a redirect for the old tag name' do
         tag = FactoryBot.create(:tag, name: 'old-name', display_name: 'Old Name')
-        expect {
+        expect do
           post "/admin/tags/edit/#{tag.id}", params: {
             tag: {
               name: 'new-name',
               display_name: 'New Name'
             }
           }
-        }.to change { Redirect.count }.by(1)
+        end.to change { Redirect.count }.by(1)
       end
 
       it 'creates redirect with correct from_path' do
@@ -197,9 +197,9 @@ RSpec.describe 'Admin::Tags', type: :request do
 
       it 'does not delete the tag on GET' do
         tag = FactoryBot.create(:tag)
-        expect {
+        expect do
           get "/admin/tags/destroy/#{tag.id}"
-        }.not_to change { Tag.count }
+        end.not_to(change { Tag.count })
       end
 
       it 'shows delete confirmation message' do
@@ -230,9 +230,9 @@ RSpec.describe 'Admin::Tags', type: :request do
 
       it 'deletes the tag' do
         tag = FactoryBot.create(:tag)
-        expect {
+        expect do
           post "/admin/tags/destroy/#{tag.id}"
-        }.to change { Tag.count }.by(-1)
+        end.to change { Tag.count }.by(-1)
       end
 
       it 'redirects to index after deletion' do
@@ -253,9 +253,9 @@ RSpec.describe 'Admin::Tags', type: :request do
         tag = FactoryBot.create(:tag)
         article = FactoryBot.create(:article, user: @admin)
         article.tags << tag
-        expect {
+        expect do
           post "/admin/tags/destroy/#{tag.id}"
-        }.to change { Tag.count }.by(-1)
+        end.to change { Tag.count }.by(-1)
       end
     end
   end
@@ -321,7 +321,7 @@ RSpec.describe 'Admin::Tags', type: :request do
     before { login_admin }
 
     it 'handles tags with unicode characters' do
-      tag = FactoryBot.create(:tag, display_name: 'Ruby on Rails')
+      FactoryBot.create(:tag, display_name: 'Ruby on Rails')
       get '/admin/tags'
       expect(response).to be_successful
       expect(response.body).to include('Ruby on Rails')
@@ -329,7 +329,7 @@ RSpec.describe 'Admin::Tags', type: :request do
 
     it 'handles tags with very long names' do
       long_name = 'A' * 100
-      tag = FactoryBot.create(:tag, display_name: long_name)
+      FactoryBot.create(:tag, display_name: long_name)
       get '/admin/tags'
       expect(response).to be_successful
     end

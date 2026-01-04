@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Rails.application.configure do
   # Configure 'rails notes' to inspect Cucumber files
   config.annotations.register_directories('features')
@@ -7,7 +9,7 @@ Rails.application.configure do
 
   # Allow GitHub Codespaces hosts
   config.hosts << /.*\.app\.github\.dev/
-  config.hosts << "localhost"
+  config.hosts << 'localhost'
 
   # Allow forwarded hosts (for proxied environments like Codespaces)
   config.action_controller.forgery_protection_origin_check = false

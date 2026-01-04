@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 RSpec.describe 'Admin Feedback Management with Turbo', type: :system, js: true do
   let!(:blog) { FactoryBot.create(:blog) }
-  let!(:admin_user) { FactoryBot.create(:user, profile: Profile.find_by(label: "admin")) }
+  let!(:admin_user) { FactoryBot.create(:user, profile: Profile.find_by(label: 'admin')) }
   let!(:article) { FactoryBot.create(:article, user: admin_user, blog: blog) }
   let!(:ham_comment) { FactoryBot.create(:comment, article: article, state: 'ham') }
   let!(:spam_comment) { FactoryBot.create(:comment, article: article, state: 'spam') }

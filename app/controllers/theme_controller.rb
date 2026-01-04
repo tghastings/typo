@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 class ThemeController < ContentController
-  skip_forgery_protection only: [:stylesheets, :javascript, :images]
+  skip_forgery_protection only: %i[stylesheets javascript images]
 
   def stylesheets
     render_theme_item(:stylesheets, params[:filename], 'text/css; charset=utf-8')
@@ -17,19 +19,16 @@ class ThemeController < ContentController
     head :not_found
   end
 
-  def static_view_test
-  end
+  def static_view_test; end
 
   private
 
   def render_theme_item(type, file, mime = nil)
     mime ||= mime_for(file)
-    if file.split(%r{[\\/]}).include?("..")
-      return (render "errors/404", :status => 404, :formats => [:html])
-    end
+    return render 'errors/404', status: 404, formats: [:html] if file.split(%r{[\\/]}).include?('..')
 
     src = this_blog.current_theme.path + "/#{type}/#{file}"
-    return (render plain: "Not Found", status: 404) unless File.exist? src
+    return render plain: 'Not Found', status: 404 unless File.exist? src
 
     # Set proper content-type header explicitly
     response.headers['Content-Type'] = mime
@@ -60,4 +59,3 @@ class ThemeController < ContentController
     end
   end
 end
-

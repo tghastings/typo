@@ -1,19 +1,21 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe Admin::DashboardController do
   render_views
-  
+
   before do
     Factory(:blog)
-    #TODO Delete after removing fixtures
+    # TODO: Delete after removing fixtures
     Profile.delete_all
-    henri = Factory(:user, :login => 'henri', :profile => Factory(:profile_admin, :label => Profile::ADMIN))
-    request.session = { :user_id => henri.id }
+    henri = Factory(:user, login: 'henri', profile: Factory(:profile_admin, label: Profile::ADMIN))
+    request.session = { user_id: henri.id }
     get :index
   end
-  
+
   describe 'test index' do
-    it "should render the index template" do
+    it 'should render the index template' do
       expect(response).to render_template('index')
     end
   end

@@ -1,9 +1,9 @@
+# frozen_string_literal: true
+
 require 'typo_plugins'
 
 module TypoPlugins
-
   class AvatarPlugin < Base
-
     class << self
       def kind
         :avatar
@@ -16,8 +16,6 @@ module TypoPlugins
       def name
         raise NotImplementedError
       end
-    end # << self
-
+    end
   end
-
 end

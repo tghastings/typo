@@ -1,17 +1,20 @@
+# frozen_string_literal: true
+
 module Sidebars
   class Field
-    attr_accessor :key
-    attr_accessor :options
+    attr_accessor :key, :options
+
     include ApplicationHelper
     include ActionView::Helpers::TagHelper
     include ActionView::Helpers::FormTagHelper
     include ActionView::Helpers::FormOptionsHelper
 
-    def initialize(key = nil, options = { })
-      @key, @options = key.to_s, options
+    def initialize(key = nil, options = {})
+      @key = key.to_s
+      @options = options
     end
 
-    def label_html(sidebar)
+    def label_html(_sidebar)
       content_tag('label', options[:label] || key.humanize.gsub(/url/i, 'URL'))
     end
 
@@ -20,7 +23,7 @@ module Sidebars
     end
 
     def line_html(sidebar)
-      label_html(sidebar) +  "<br />" + input_html(sidebar) + "<br />"
+      "#{label_html(sidebar)}<br />#{input_html(sidebar)}<br />"
     end
 
     def input_name(sidebar)
@@ -37,7 +40,7 @@ module Sidebars
 
     class TextAreaField < self
       def input_html(sidebar)
-        html_options = { "rows" => "10", "cols" => "30", "style" => "width:255px"}.update(options.stringify_keys)
+        html_options = { 'rows' => '10', 'cols' => '30', 'style' => 'width:255px' }.update(options.stringify_keys)
         text_area_tag(input_name(sidebar), h(sidebar.config[key]), html_options)
       end
     end
@@ -49,7 +52,7 @@ module Sidebars
           radio_button_tag(input_name(sidebar), value,
                            value == sidebar.config[key], options) +
             content_tag('label', label_for(choice))
-        end.join("<br />")
+        end.join('<br />')
       end
 
       def label_for(choice)
@@ -63,17 +66,17 @@ module Sidebars
 
     class CheckBoxField < self
       def input_html(sidebar)
-        check_box_tag(input_name(sidebar), 1, sidebar.config[key], options)+
-        hidden_field_tag(input_name(sidebar),0)
+        check_box_tag(input_name(sidebar), 1, sidebar.config[key], options) +
+          hidden_field_tag(input_name(sidebar), 0)
       end
 
       def line_html(sidebar)
-        input_html(sidebar) + ' ' + label_html(sidebar) + '<br >'
+        "#{input_html(sidebar)} #{label_html(sidebar)}<br >"
       end
     end
 
     def self.build(key, options)
-      field = class_for(options).new(key, options)
+      class_for(options).new(key, options)
     end
 
     def self.class_for(options)
@@ -98,140 +101,137 @@ module Sidebars
     end
   end
 
+  module Sidebars
+    class Plugin < ApplicationController
+      include ApplicationHelper
 
-  class Sidebars::Plugin < ApplicationController
-    include ApplicationHelper
-    helper :theme
+      helper :theme
 
-    @@subclasses = { }
+      @@subclasses = {}
 
-    class << self
-      def inherited(child)
-        @@subclasses[self] ||= []
-        @@subclasses[self] |= [child]
-        super
-      end
-
-      def subclasses
-        @@subclasses[self] ||= []
-        @@subclasses[self] + extra =
-          @@subclasses[self].map {|subclass| subclass.subclasses }.uniq
-      end
-
-      def available_sidebars
-        Sidebars::Plugin.subclasses.select do |sidebar|
-          sidebar.concrete?
+      class << self
+        def inherited(child)
+          @@subclasses[self] ||= []
+          @@subclasses[self] |= [child]
+          super
         end
-      end
 
-
-      def concrete?
-        self.to_s !~ /^Sidebars::(Co(mponent|nsolidated))?Plugin/
-      end
-
-      # The name that's stored in the DB.  This is the final chunk of the
-      # controller name, like 'xml' or 'flickr'.
-      def short_name
-        self.to_s.underscore.split(%r{/}).last
-      end
-
-      @@display_name_of = { }
-      @@description_of  = { }
-
-      # The name that shows up in the UI
-      def display_name(new_dn = nil)
-        # This is the default, but it's best to override it
-        self.display_name = new_dn if new_dn
-        @@display_name_of[self] || short_name.humanize
-      end
-
-      def display_name=(name)
-        @@display_name_of[self] = name
-      end
-
-      def description(new_desc = nil)
-        self.description = new_desc if new_desc
-        @@description_of[self] || short_name.humanize
-      end
-
-      def description=(desc)
-        @@description_of[self] = desc
-      end
-
-      @@fields = { }
-      @@default_config = { }
-      def setting(key, default=nil, options={ })
-        fields << Field.build(key, options)
-        default_config[key.to_s] = default
-        self.send(:define_method, key) do
-          @sb_config[key.to_s]
+        def subclasses
+          @@subclasses[self] ||= []
+          @@subclasses[self] + @@subclasses[self].map(&:subclasses).uniq
         end
-        self.helper_method(key)
+
+        def available_sidebars
+          Sidebars::Plugin.subclasses.select(&:concrete?)
+        end
+
+        def concrete?
+          to_s !~ /^Sidebars::(Co(mponent|nsolidated))?Plugin/
+        end
+
+        # The name that's stored in the DB.  This is the final chunk of the
+        # controller name, like 'xml' or 'flickr'.
+        def short_name
+          to_s.underscore.split(%r{/}).last
+        end
+
+        @@display_name_of = {}
+        @@description_of  = {}
+
+        # The name that shows up in the UI
+        def display_name(new_dn = nil)
+          # This is the default, but it's best to override it
+          self.display_name = new_dn if new_dn
+          @@display_name_of[self] || short_name.humanize
+        end
+
+        def display_name=(name)
+          @@display_name_of[self] = name
+        end
+
+        def description(new_desc = nil)
+          self.description = new_desc if new_desc
+          @@description_of[self] || short_name.humanize
+        end
+
+        def description=(desc)
+          @@description_of[self] = desc
+        end
+
+        @@fields = {}
+        @@default_config = {}
+        def setting(key, default = nil, options = {})
+          fields << Field.build(key, options)
+          default_config[key.to_s] = default
+          send(:define_method, key) do
+            @sb_config[key.to_s]
+          end
+          helper_method(key)
+        end
+
+        def default_config
+          @@default_config[self] ||= HashWithIndifferentAccess.new
+        end
+
+        def default_config=(newval)
+          @@default_config[self] = newval
+        end
+
+        def fields
+          @@fields[self] ||= []
+        end
+
+        def fields=(newval)
+          @@fields[self] = newval
+        end
+
+        def default_helper_module!; end
       end
 
-      def default_config
-        @@default_config[self] ||= HashWithIndifferentAccess.new
+      def index
+        @sidebar = params['sidebar']
+        set_config
+        @sb_config = @sidebar.config
+        content
+        render action: 'content' unless performed?
       end
 
-      def default_config=(newval)
-        @@default_config[self] = newval
+      def configure_wrapper
+        @sidebar = params['sidebar']
+        set_config
+        configure
+        render action: 'configure' unless performed?
       end
 
-      def fields
-        @@fields[self] ||= []
+      # This controller is used on to actually display sidebar items.
+      def content; end
+
+      # This controller is used to configure the sidebar from /admin/sidebar
+      def configure
+        render partial: 'sidebar/row', collection: self.class.fields
       end
 
-      def fields=(newval)
-        @@fields[self] = newval
+      private
+
+      def set_config
+        @sidebar.config ||= {}
+        @sidebar.config.reverse_merge!(self.class.default_config)
       end
 
-      def default_helper_module!
+      def sb_config(key)
+        config = @sidebar.class.default_config
+        config.merge!(@sidebar.config || {})
+        config[key.to_s]
       end
-    end
 
-    def index
-      @sidebar=params['sidebar']
-      set_config
-      @sb_config = @sidebar.config
-      content
-      render :action=>'content' unless performed?
-    end
+      # Horrid hack to make check_cache happy
+      def controller
+        self
+      end
 
-    def configure_wrapper
-      @sidebar=params['sidebar']
-      set_config
-      configure
-      render :action=>'configure' unless performed?
-    end
-
-    # This controller is used on to actually display sidebar items.
-    def content
-    end
-
-    # This controller is used to configure the sidebar from /admin/sidebar
-    def configure
-      render :partial => 'sidebar/row', :collection => self.class.fields
-    end
-
-    private
-    def set_config
-      @sidebar.config ||= {}
-      @sidebar.config.reverse_merge!(self.class.default_config)
-    end
-
-    def sb_config(key)
-      config = @sidebar.class.default_config
-      config.merge!(@sidebar.config || {})
-      config[key.to_s]
-    end
-
-    # Horrid hack to make check_cache happy
-    def controller
-      self
-    end
-
-    def log_processing
-      logger.info "\n\nProcessing #{controller_class_name}\##{action_name} (for #{request_origin})"
+      def log_processing
+        logger.info "\n\nProcessing #{controller_class_name}##{action_name} (for #{request_origin})"
+      end
     end
   end
 end

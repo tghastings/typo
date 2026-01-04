@@ -1,4 +1,5 @@
-# coding: utf-8
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe ApplicationHelper do
@@ -8,7 +9,7 @@ describe ApplicationHelper do
 
   # Stub this_blog to return our test blog
   def this_blog
-    @blog ||= Blog.default
+    @this_blog ||= Blog.default
   end
 
   describe '#render_flash' do
@@ -23,55 +24,56 @@ describe ApplicationHelper do
 
     it 'should render the notice and error flash' do
       flash[:notice] = 'good update'
-      flash[:error] = "its not good"
-      expect(render_flash.split("<br />\n").sort).to eq(['<span class="error">its not good</span>','<span class="notice">good update</span>'])
+      flash[:error] = 'its not good'
+      expect(render_flash.split("<br>\n").sort).to eq(['<span class="error">its not good</span>',
+                                                       '<span class="notice">good update</span>'])
     end
   end
 
-  describe "#link_to_permalink" do
+  describe '#link_to_permalink' do
     before(:each) do
       @test_article = Factory.build(:article, published_at: Date.new(2004, 6, 1), permalink: 'a-big-article')
       allow(@test_article).to receive(:id).and_return(1)
     end
 
-    describe "for a simple ascii-only permalink" do
-      it "should be html safe" do
-        result = link_to_permalink(@test_article, "title")
+    describe 'for a simple ascii-only permalink' do
+      it 'should be html safe' do
+        result = link_to_permalink(@test_article, 'title')
         expect(result).to be_html_safe
       end
 
-      it "should create proper link" do
-        result = link_to_permalink(@test_article, "title")
+      it 'should create proper link' do
+        result = link_to_permalink(@test_article, 'title')
         expect(result).to include('2004/06/01/a-big-article')
         expect(result).to include('>title</a>')
       end
     end
 
-    describe "for a multibyte permalink" do
-      it "escapes the multibyte characters" do
+    describe 'for a multibyte permalink' do
+      it 'escapes the multibyte characters' do
         multibyte_article = Factory.build(:article, permalink: 'ルビー', published_at: Date.new(2004, 6, 1))
         allow(multibyte_article).to receive(:id).and_return(1)
-        link_to_permalink(multibyte_article, "title").should =~ /%E3%83%AB%E3%83%93%E3%83%BC/
+        link_to_permalink(multibyte_article, 'title').should =~ /%E3%83%AB%E3%83%93%E3%83%BC/
       end
     end
 
-    describe "with anchor" do
-      it "includes the anchor in the URL" do
-        result = link_to_permalink(@test_article, "title", "comments")
+    describe 'with anchor' do
+      it 'includes the anchor in the URL' do
+        result = link_to_permalink(@test_article, 'title', 'comments')
         expect(result).to include('#comments')
       end
     end
 
-    describe "with style" do
-      it "includes the class attribute" do
-        result = link_to_permalink(@test_article, "title", nil, "my-class")
+    describe 'with style' do
+      it 'includes the class attribute' do
+        result = link_to_permalink(@test_article, 'title', nil, 'my-class')
         expect(result).to include('class="my-class"')
       end
     end
 
-    describe "with nofollow" do
-      it "includes rel=nofollow attribute" do
-        result = link_to_permalink(@test_article, "title", nil, nil, true)
+    describe 'with nofollow' do
+      it 'includes rel=nofollow attribute' do
+        result = link_to_permalink(@test_article, 'title', nil, nil, true)
         expect(result).to include('rel="nofollow"')
       end
     end
@@ -476,7 +478,7 @@ describe ApplicationHelper do
     end
 
     it 'preserves existing onclick handler' do
-      result = link_to_function('Click me', "alert('hello')", onclick: "doFirst()")
+      result = link_to_function('Click me', "alert('hello')", onclick: 'doFirst()')
       expect(result).to include('doFirst()')
       expect(result).to include('alert(')
     end
@@ -511,12 +513,12 @@ describe ApplicationHelper do
 
   describe '#error_messages_for' do
     it 'returns empty string when object has no errors' do
-      @user_obj = User.new  # New user without errors
+      @user_obj = User.new # New user without errors
       result = error_messages_for(object: @user_obj)
       expect(result).to eq('')
     end
 
-    # Note: error_messages_for with objects that have errors calls pluralize
+    # NOTE: error_messages_for with objects that have errors calls pluralize
     # with 3 arguments but the custom pluralize requires 4. This is a known
     # compatibility issue in the helper itself.
     it 'method exists and is callable' do

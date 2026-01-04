@@ -1,9 +1,9 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe PageCache do
-
   describe 'PageCache#self.sweep_all' do
-
     before(:each) do
       all_files = ['/index.html', '/articles.rss', '/sitemap.xml']
       @all_paths = []
@@ -19,5 +19,4 @@ describe PageCache do
       end
     end
   end
-
 end

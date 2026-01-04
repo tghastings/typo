@@ -32,7 +32,7 @@ RSpec.describe 'Admin::Users', type: :request do
       end
 
       it 'lists all users' do
-        another_user = User.create!(
+        User.create!(
           login: 'another_user',
           email: 'another@test.com',
           password: 'password',
@@ -150,7 +150,7 @@ RSpec.describe 'Admin::Users', type: :request do
 
       context 'with valid parameters' do
         it 'creates a new user' do
-          expect {
+          expect do
             post '/admin/users/new', params: {
               user: {
                 login: 'newuser',
@@ -161,7 +161,7 @@ RSpec.describe 'Admin::Users', type: :request do
                 state: 'active'
               }
             }
-          }.to change { User.count }.by(1)
+          end.to change { User.count }.by(1)
         end
 
         it 'redirects to index after successful creation' do
@@ -225,7 +225,7 @@ RSpec.describe 'Admin::Users', type: :request do
 
       context 'with invalid parameters' do
         it 'does not create a user without login' do
-          expect {
+          expect do
             post '/admin/users/new', params: {
               user: {
                 login: '',
@@ -234,11 +234,11 @@ RSpec.describe 'Admin::Users', type: :request do
                 password_confirmation: 'password123'
               }
             }
-          }.not_to change { User.count }
+          end.not_to(change { User.count })
         end
 
         it 'does not create a user without email' do
-          expect {
+          expect do
             post '/admin/users/new', params: {
               user: {
                 login: 'noemail',
@@ -247,11 +247,11 @@ RSpec.describe 'Admin::Users', type: :request do
                 password_confirmation: 'password123'
               }
             }
-          }.not_to change { User.count }
+          end.not_to(change { User.count })
         end
 
         it 'does not create a user with mismatched password confirmation' do
-          expect {
+          expect do
             post '/admin/users/new', params: {
               user: {
                 login: 'mismatchuser',
@@ -260,11 +260,11 @@ RSpec.describe 'Admin::Users', type: :request do
                 password_confirmation: 'differentpassword'
               }
             }
-          }.not_to change { User.count }
+          end.not_to(change { User.count })
         end
 
         it 'does not create a user with too short password' do
-          expect {
+          expect do
             post '/admin/users/new', params: {
               user: {
                 login: 'shortpassuser',
@@ -273,11 +273,11 @@ RSpec.describe 'Admin::Users', type: :request do
                 password_confirmation: 'abc'
               }
             }
-          }.not_to change { User.count }
+          end.not_to(change { User.count })
         end
 
         it 'does not create a user with too short login' do
-          expect {
+          expect do
             post '/admin/users/new', params: {
               user: {
                 login: 'ab',
@@ -286,11 +286,11 @@ RSpec.describe 'Admin::Users', type: :request do
                 password_confirmation: 'password123'
               }
             }
-          }.not_to change { User.count }
+          end.not_to(change { User.count })
         end
 
         it 'does not create a user with duplicate login' do
-          expect {
+          expect do
             post '/admin/users/new', params: {
               user: {
                 login: @admin.login,
@@ -299,11 +299,11 @@ RSpec.describe 'Admin::Users', type: :request do
                 password_confirmation: 'password123'
               }
             }
-          }.not_to change { User.count }
+          end.not_to(change { User.count })
         end
 
         it 'does not create a user with duplicate email' do
-          expect {
+          expect do
             post '/admin/users/new', params: {
               user: {
                 login: 'dupeemail',
@@ -312,7 +312,7 @@ RSpec.describe 'Admin::Users', type: :request do
                 password_confirmation: 'password123'
               }
             }
-          }.not_to change { User.count }
+          end.not_to(change { User.count })
         end
 
         it 'returns a response on validation failure' do
@@ -602,9 +602,9 @@ RSpec.describe 'Admin::Users', type: :request do
           profile: @contributor_profile,
           state: 'active'
         )
-        expect {
+        expect do
           get "/admin/users/destroy/#{another_user.id}"
-        }.not_to change { User.count }
+        end.not_to(change { User.count })
       end
 
       it 'shows delete confirmation content' do
@@ -651,9 +651,9 @@ RSpec.describe 'Admin::Users', type: :request do
           profile: @contributor_profile,
           state: 'active'
         )
-        expect {
+        expect do
           post "/admin/users/destroy/#{another_user.id}"
-        }.to change { User.count }.by(-1)
+        end.to change { User.count }.by(-1)
       end
 
       it 'redirects to index after deletion' do
@@ -672,9 +672,9 @@ RSpec.describe 'Admin::Users', type: :request do
       it 'does not delete the last user' do
         # Delete all other users first
         User.where.not(id: @admin.id).destroy_all
-        expect {
+        expect do
           post "/admin/users/destroy/#{@admin.id}"
-        }.not_to change { User.count }
+        end.not_to(change { User.count })
       end
 
       it 'still redirects to index even when last user deletion is prevented' do

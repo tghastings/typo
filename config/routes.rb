@@ -1,9 +1,9 @@
+# frozen_string_literal: true
+
 Rails.application.routes.draw do
   # Load plugin routes first
-  Dir.glob(File.join("vendor", "plugins", "typo_*")).each do |dir|
-    if File.exist?(File.join(dir, "config", "routes.rb"))
-      require File.join(dir, "config", "routes.rb")
-    end
+  Dir.glob(File.join('vendor', 'plugins', 'typo_*')).each do |dir|
+    require File.join(dir, 'config', 'routes.rb') if File.exist?(File.join(dir, 'config', 'routes.rb'))
   end
 
   # for CK Editor - disabled for now as these controllers may not exist
@@ -12,13 +12,16 @@ Rails.application.routes.draw do
   # match 'ckeditor/upload', to: 'ckeditor#upload', format: false, via: [:get, :post]
 
   # Serve uploaded files directly (bypasses Active Storage for compatibility)
-  get 'files/:filename', to: 'files#show', as: 'serve_file', constraints: { filename: /[^\/]+/ }
+  get 'files/:filename', to: 'files#show', as: 'serve_file', constraints: { filename: %r{[^/]+} }
 
   # Archive routes
-  match ':year/:month', to: 'articles#index', constraints: { year: /\d{4}/, month: /\d{1,2}/ }, as: 'articles_by_month', format: false, via: :get
-  match ':year/:month/page/:page', to: 'articles#index', constraints: { year: /\d{4}/, month: /\d{1,2}/ }, as: 'articles_by_month_page', format: false, via: :get
+  match ':year/:month', to: 'articles#index', constraints: { year: /\d{4}/, month: /\d{1,2}/ },
+                        as: 'articles_by_month', format: false, via: :get
+  match ':year/:month/page/:page', to: 'articles#index', constraints: { year: /\d{4}/, month: /\d{1,2}/ },
+                                   as: 'articles_by_month_page', format: false, via: :get
   match ':year', to: 'articles#index', constraints: { year: /\d{4}/ }, as: 'articles_by_year', format: false, via: :get
-  match ':year/page/:page', to: 'articles#index', constraints: { year: /\d{4}/ }, as: 'articles_by_year_page', format: false, via: :get
+  match ':year/page/:page', to: 'articles#index', constraints: { year: /\d{4}/ }, as: 'articles_by_year_page',
+                            format: false, via: :get
 
   get 'admin', to: 'admin/dashboard#index', format: false, as: :admin_dashboard
 
@@ -51,19 +54,19 @@ Rails.application.routes.draw do
   get 'xml/feed', to: 'xml#feed'
 
   # Backend controller for XML-RPC (MetaWeblog, MovableType, Blogger APIs)
-  match 'backend/xmlrpc', to: 'backend#xmlrpc', via: [:get, :post], as: :backend_xmlrpc
-  match 'backend/:action', to: 'backend#%{action}', via: [:get, :post]
+  match 'backend/xmlrpc', to: 'backend#xmlrpc', via: %i[get post], as: :backend_xmlrpc
+  match 'backend/:action', to: 'backend#%<action>s', via: %i[get post]
 
   # CommentsController
   resources :comments, as: 'admin_comments' do
     collection do
-      match :preview, via: [:get, :post]
+      match :preview, via: %i[get post]
     end
   end
 
   # TrackbacksController
   resources :trackbacks
-  post "trackbacks/:id/:day/:month/:year", to: 'trackbacks#create', format: false
+  post 'trackbacks/:id/:day/:month/:year', to: 'trackbacks#create', format: false
 
   # ArticlesController
   get '/live_search/', to: 'articles#live_search', as: :live_search_articles, format: false
@@ -73,24 +76,24 @@ Rails.application.routes.draw do
   get '/archives/', to: 'articles#archives', format: false
   get '/page/:page', to: 'articles#index', constraints: { page: /\d+/ }, format: false
   get '/pages/*name', to: 'articles#view_page', format: false
-  match 'previews(/:id)', to: 'articles#preview', format: false, via: [:get, :post]
+  match 'previews(/:id)', to: 'articles#preview', format: false, via: %i[get post]
   post 'check_password', to: 'articles#check_password', format: false
   get 'articles/markup_help/:id', to: 'articles#markup_help', format: false
   get 'articles/tag', to: 'articles#tag', format: false
   get 'articles/category', to: 'articles#category', format: false
 
   # SetupController
-  match '/setup', to: 'setup#index', format: false, via: [:get, :post]
-  match '/setup/confirm', to: 'setup#confirm', format: false, via: [:get, :post]
+  match '/setup', to: 'setup#index', format: false, via: %i[get post]
+  match '/setup/confirm', to: 'setup#confirm', format: false, via: %i[get post]
 
   # CategoriesController
-  resources :categories, except: [:show, :update, :destroy, :edit]
-  resources :categories, path: 'category', only: [:show, :edit, :update, :destroy]
+  resources :categories, except: %i[show update destroy edit]
+  resources :categories, path: 'category', only: %i[show edit update destroy]
   get '/category/:id/page/:page', to: 'categories#show', format: false
 
   # TagsController
-  resources :tags, except: [:show, :update, :destroy, :edit]
-  resources :tags, path: 'tag', only: [:show, :edit, :update, :destroy]
+  resources :tags, except: %i[show update destroy edit]
+  resources :tags, path: 'tag', only: %i[show edit update destroy]
   get '/tag/:id/page/:page', to: 'tags#show', format: false
   get '/tags/page/:page', to: 'tags#index', format: false
 
@@ -147,10 +150,10 @@ Rails.application.routes.draw do
     # Cache sweep route (POST to index)
     post 'cache', to: 'cache#index'
 
-    %w{advanced cache categories comments content profiles feedback general pages
-       resources sidebar textfilters trackbacks users settings tags redirects seo post_types}.each do |ctrl|
+    %w[advanced cache categories comments content profiles feedback general pages
+       resources sidebar textfilters trackbacks users settings tags redirects seo post_types].each do |ctrl|
       get "/#{ctrl}", to: "#{ctrl}#index", as: nil
-      match "/#{ctrl}/:action", controller: ctrl, via: [:get, :post], as: nil
+      match "/#{ctrl}/:action", controller: ctrl, via: %i[get post], as: nil
       match "/#{ctrl}/:action/:id", controller: ctrl, via: :all, as: nil
     end
   end

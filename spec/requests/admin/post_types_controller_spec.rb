@@ -47,11 +47,11 @@ RSpec.describe 'Admin::PostTypes', type: :request do
 
     context 'with valid parameters' do
       it 'creates a new post type' do
-        expect {
+        expect do
           post '/admin/post_types/new', params: {
             post_type: { name: 'review', description: 'Product reviews' }
           }
-        }.to change(PostType, :count).by(1)
+        end.to change(PostType, :count).by(1)
       end
 
       it 'redirects to index after save' do
@@ -105,9 +105,9 @@ RSpec.describe 'Admin::PostTypes', type: :request do
 
     it 'does not delete on GET request' do
       post_type = FactoryBot.create(:post_type)
-      expect {
+      expect do
         get "/admin/post_types/destroy/#{post_type.id}"
-      }.not_to change(PostType, :count)
+      end.not_to change(PostType, :count)
     end
   end
 
@@ -116,9 +116,9 @@ RSpec.describe 'Admin::PostTypes', type: :request do
 
     it 'deletes the post type' do
       post_type = FactoryBot.create(:post_type)
-      expect {
+      expect do
         post "/admin/post_types/destroy/#{post_type.id}"
-      }.to change(PostType, :count).by(-1)
+      end.to change(PostType, :count).by(-1)
     end
 
     it 'redirects to index' do

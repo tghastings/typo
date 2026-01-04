@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Public file serving controller
 # Serves uploaded files from Active Storage
 class FilesController < ApplicationController

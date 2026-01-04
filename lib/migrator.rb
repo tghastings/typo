@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 module Migrator
   mattr_accessor :offer_migration_when_available
   @@offer_migration_when_available = true
 
   def self.migrations_path
-    "#{::Rails.root.to_s}/db/migrate"
+    "#{::Rails.root}/db/migrate"
   end
 
   def self.available_migrations
@@ -12,7 +14,10 @@ module Migrator
 
   def self.current_schema_version
     # Rails 8 compatible: use ActiveRecord::MigrationContext API
-    ActiveRecord::MigrationContext.new(migrations_path).current_version rescue 0
+
+    ActiveRecord::MigrationContext.new(migrations_path).current_version
+  rescue StandardError
+    0
   end
 
   def self.max_schema_version

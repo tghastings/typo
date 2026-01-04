@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 # Serendipity (S9Y) 0.8.x converter for typo by Jochen Schalanda <jochen@schalanda.de>
 # heavily based on the Wordpress 1.5x converter by Patrick Lenz <patrick@lenz.sh>
@@ -14,7 +15,7 @@
 # used by Typo.
 #
 
-require File.dirname(__FILE__) + '/../../config/environment'
+require "#{File.dirname(__FILE__)}/../../config/environment"
 require 'optparse'
 
 class S9YMigrate
@@ -22,18 +23,18 @@ class S9YMigrate
 
   def initialize
     self.options = {}
-    self.parse_options
-    self.convert_users
-    self.convert_categories
-    self.convert_entries
-    self.convert_prefs
+    parse_options
+    convert_users
+    convert_categories
+    convert_entries
+    convert_prefs
   end
 
   def convert_categories
-    s9y_categories = ActiveRecord::Base.connection.select_all(%{
+    s9y_categories = ActiveRecord::Base.connection.select_all(%(
       SELECT category_name AS name
-      FROM `#{self.options[:s9y_db]}`.`#{self.options[:s9y_prefix]}category`
-    })
+      FROM `#{options[:s9y_db]}`.`#{options[:s9y_prefix]}category`
+    ))
 
     puts "Converting #{s9y_categories.size} categories.."
 
@@ -55,24 +56,24 @@ class S9YMigrate
         author,
         authorid AS user_id,
         (CASE isdraft WHEN 'true' THEN '0' ELSE '1' END) AS published
-      FROM `#{self.options[:s9y_db]}`.`#{self.options[:s9y_prefix]}entries`
+      FROM `#{options[:s9y_db]}`.`#{options[:s9y_prefix]}entries`
     })
 
     puts "Converting #{s9y_entries.size} entries.."
 
     s9y_entries.each do |entry|
       a = Article.new
-      a.attributes = entry.reject { |k,v| k =~ /^(id)/ }
+      a.attributes = entry.reject { |k, _v| k =~ /^(id)/ }
       a.save
 
       # Fetch category assignments
-      ActiveRecord::Base.connection.select_all(%{
+      ActiveRecord::Base.connection.select_all(%(
         SELECT category_name
-        FROM `#{self.options[:s9y_db]}`.`#{self.options[:s9y_prefix]}category`, `#{self.options[:s9y_db]}`.`#{self.options[:s9y_prefix]}entrycat`
+        FROM `#{options[:s9y_db]}`.`#{options[:s9y_prefix]}category`, `#{options[:s9y_db]}`.`#{options[:s9y_prefix]}entrycat`
         WHERE entryid = #{entry['id']}
-        AND `#{self.options[:s9y_prefix]}entrycat`.categoryid = `#{self.options[:s9y_prefix]}category`.categoryid
-      }).each do |c|
-        a.categories.push_with_attributes(Category.find_by_name(c['category_name']), :is_primary => 0)
+        AND `#{options[:s9y_prefix]}entrycat`.categoryid = `#{options[:s9y_prefix]}category`.categoryid
+      )).each do |c|
+        a.categories.push_with_attributes(Category.find_by_name(c['category_name']), is_primary: 0)
       end
 
       # Fetch comments
@@ -84,7 +85,7 @@ class S9YMigrate
           body,
           FROM_UNIXTIME(timestamp) AS created_at,
           ip
-        FROM `#{self.options[:s9y_db]}`.`#{self.options[:s9y_prefix]}comments`
+        FROM `#{options[:s9y_db]}`.`#{options[:s9y_prefix]}comments`
         WHERE id = #{entry['id']}
         AND type != 'TRACKBACK'
         AND status = 'approved'
@@ -101,19 +102,18 @@ class S9YMigrate
           body AS excerpt,
           FROM_UNIXTIME(timestamp) AS created_at,
           ip
-        FROM `#{self.options[:s9y_db]}`.`#{self.options[:s9y_prefix]}comments`
+        FROM `#{options[:s9y_db]}`.`#{options[:s9y_prefix]}comments`
         WHERE entry_id = #{entry['id']}
         AND type = 'TRACKBACK'
         AND status = 'approved'
       }).each do |c|
         a.trackbacks.create(c)
       end
-
     end
   end
 
   def convert_prefs
-    puts "Converting prefs"
+    puts 'Converting prefs'
 
     ActiveRecord::Base.connection.select_all(%{
       SELECT
@@ -122,42 +122,42 @@ class S9YMigrate
           WHEN 'blogDescription' THEN 'blog_subtitle'
          END) AS name,
         value
-      FROM `#{self.options[:s9y_db]}`.`#{self.options[:s9y_prefix]}config`
+      FROM `#{options[:s9y_db]}`.`#{options[:s9y_prefix]}config`
       WHERE name IN ('blogTitle', 'blogDescription')
     }).each do |pref|
-      begin
-        Setting.find_by_name(pref['name']).update_attribute("value", pref['value'])
-      rescue
-        Setting.create(pref)
-      end
+      Setting.find_by_name(pref['name']).update_attribute('value', pref['value'])
+    rescue StandardError
+      Setting.create(pref)
     end
   end
 
-def convert_users
-    puts "Converting users"
-	puts "** all users will have the default password \"password\" **"
-	puts "** you should change it as soon as possible!           **"
+  def convert_users
+    puts 'Converting users'
+    puts '** all users will have the default password "password" **'
+    puts '** you should change it as soon as possible!           **'
 
-    ActiveRecord::Base.connection.select_all(%{
+    ActiveRecord::Base.connection.select_all(%(
       SELECT
         realname AS name,
         username AS login,
         email
-      FROM `#{self.options[:s9y_db]}`.`#{self.options[:s9y_prefix]}authors`
-    }).each do |user|
+      FROM `#{options[:s9y_db]}`.`#{options[:s9y_prefix]}authors`
+    )).each do |user|
       u = User.new
       u.attributes = user
-	  u.password = "password"
+      u.password = 'password'
       u.save
     end
   end
 
   def parse_options
     OptionParser.new do |opt|
-      opt.banner = "Usage: s9y.rb [options]"
+      opt.banner = 'Usage: s9y.rb [options]'
 
-      opt.on('--db DBNAME', String, 'S9Y database name.') { |d| self.options[:s9y_db] = d }
-      opt.on('--prefix PREFIX', String, 'S9Y table prefix (defaults to empty string).') { |d| self.options[:s9y_prefix] = d }
+      opt.on('--db DBNAME', String, 'S9Y database name.') { |d| options[:s9y_db] = d }
+      opt.on('--prefix PREFIX', String, 'S9Y table prefix (defaults to empty string).') do |d|
+        options[:s9y_prefix] = d
+      end
 
       opt.on_tail('-h', '--help', 'Show this message.') do
         puts opt
@@ -167,15 +167,14 @@ def convert_users
       opt.parse!(ARGV)
     end
 
-    unless self.options.include?(:s9y_db)
-      puts "See s9y.rb --help for help."
+    unless options.include?(:s9y_db)
+      puts 'See s9y.rb --help for help.'
       exit
     end
 
-	unless self.options.include?(:s9y_prefix)
-      self.options[:s9y_prefix] = ""
-    end
+    return if options.include?(:s9y_prefix)
 
+    options[:s9y_prefix] = ''
   end
 end
 

@@ -7,13 +7,13 @@ RSpec.describe 'Admin::Seo', type: :request do
     setup_blog_and_admin
     # Clean up any existing robots.txt to ensure clean test state
     robots_path = "#{Rails.root}/public/robots.txt"
-    File.delete(robots_path) if File.exist?(robots_path)
+    FileUtils.rm_f(robots_path)
   end
 
   after(:each) do
     # Clean up robots.txt after each test
     robots_path = "#{Rails.root}/public/robots.txt"
-    File.delete(robots_path) if File.exist?(robots_path)
+    FileUtils.rm_f(robots_path)
   end
 
   describe 'GET /admin/seo' do
@@ -464,9 +464,9 @@ RSpec.describe 'Admin::Seo', type: :request do
     context 'with robots.txt' do
       before do
         robots_path = "#{Rails.root}/public/robots.txt"
-        File.write(robots_path, "Initial content")
+        File.write(robots_path, 'Initial content')
         # Make sure it's writable
-        File.chmod(0644, robots_path)
+        File.chmod(0o644, robots_path)
       end
 
       it 'saves robots.txt content when provided' do

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ActionWebService # :nodoc:
   module Container # :nodoc:
     module Direct # :nodoc:
@@ -38,31 +40,31 @@ module ActionWebService # :nodoc:
         #   class MyAPI < ActionWebService::API::Base
         #     ...
         #   end
-        def web_service_api(definition=nil)
+        def web_service_api(definition = nil)
           if definition.nil?
-            read_inheritable_attribute("web_service_api")
+            read_inheritable_attribute('web_service_api')
           else
-            if definition.is_a?(Symbol)
-              raise(ContainerError, "symbols can only be used for #web_service_api inside of a controller")
-            end
+            raise(ContainerError, 'symbols can only be used for #web_service_api inside of a controller') if definition.is_a?(Symbol)
             unless definition.respond_to?(:ancestors) && definition.ancestors.include?(ActionWebService::API::Base)
-              raise(ContainerError, "#{definition.to_s} is not a valid API definition")
+              raise(ContainerError, "#{definition} is not a valid API definition")
             end
-            write_inheritable_attribute("web_service_api", definition)
+
+            write_inheritable_attribute('web_service_api', definition)
             call_web_service_api_callbacks(self, definition)
           end
         end
 
         def add_web_service_api_callback(&block) # :nodoc:
-          write_inheritable_array("web_service_api_callbacks", [block])
+          write_inheritable_array('web_service_api_callbacks', [block])
         end
 
         private
-          def call_web_service_api_callbacks(container_class, definition)
-            (read_inheritable_attribute("web_service_api_callbacks") || []).each do |block|
-              block.call(container_class, definition)
-            end
+
+        def call_web_service_api_callbacks(container_class, definition)
+          (read_inheritable_attribute('web_service_api_callbacks') || []).each do |block|
+            block.call(container_class, definition)
           end
+        end
       end
     end
   end

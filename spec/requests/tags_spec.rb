@@ -18,7 +18,7 @@ RSpec.describe 'Tags', type: :request do
 
     @profile = Profile.find_or_create_by!(label: 'admin') do |p|
       p.nicename = 'Admin'
-      p.modules = [:dashboard, :write, :articles]
+      p.modules = %i[dashboard write articles]
     end
     User.where(login: 'tag_author').destroy_all
     @user = User.create!(

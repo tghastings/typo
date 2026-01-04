@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 class ArticlesController < ContentController
-  before_action :login_required, :only => [:preview]
-  before_action :auto_discovery_feed, :only => [:show, :index]
+  before_action :login_required, only: [:preview]
+  before_action :auto_discovery_feed, only: %i[show index]
   before_action :verify_config
 
-  layout :theme_layout, :except => [:comment_preview, :trackback]
+  layout :theme_layout, except: %i[comment_preview trackback]
 
   cache_sweeper :blog_sweeper
   # Disable page caching - it causes issues with dynamic sidebars like Amazon
@@ -17,34 +19,34 @@ class ArticlesController < ContentController
     # Determine format from URL extension only, ignoring HTTP Accept header
     requested_format = params[:format]
 
-    @limit = if requested_format == 'rss' || requested_format == 'atom'
-      this_blog.limit_rss_display
-    else
-      this_blog.limit_article_display
-    end
+    @limit = if %w[rss atom].include?(requested_format)
+               this_blog.limit_rss_display
+             else
+               this_blog.limit_article_display
+             end
 
-    unless params[:year].blank?
-      @noindex = 1
-      @articles = Article.published_at(params.values_at(:year, :month, :day)).page(params[:page]).per(@limit)
-    else
+    if params[:year].blank?
       @noindex = 1 unless params[:page].blank?
       @articles = Article.published.page(params[:page]).per(@limit)
+    else
+      @noindex = 1
+      @articles = Article.published_at(params.values_at(:year, :month, :day)).page(params[:page]).per(@limit)
     end
 
     @page_title = index_title
     @description = index_description
-    @keywords = (this_blog.meta_keywords.empty?) ? "" : this_blog.meta_keywords
+    @keywords = this_blog.meta_keywords.empty? ? '' : this_blog.meta_keywords
 
-    suffix = (params[:page].nil? and params[:year].nil?) ? "" : "/"
+    suffix = params[:page].nil? && params[:year].nil? ? '' : '/'
 
-    @canonical_url = this_blog.base_url + "/" + [params[:year], params[:month], params[:day]].compact.join("/") + suffix
+    @canonical_url = "#{this_blog.base_url}/#{[params[:year], params[:month], params[:day]].compact.join('/')}#{suffix}"
 
     # Use params[:format] to determine format, ignoring HTTP Accept header
     case requested_format
     when 'atom'
       render_articles_feed('atom')
     when 'rss'
-      auto_discovery_feed(:only_path => false)
+      auto_discovery_feed(only_path: false)
       render_articles_feed('rss')
     else
       render_paginated_index_as_html
@@ -53,36 +55,38 @@ class ArticlesController < ContentController
 
   def search
     @canonical_url = "#{this_blog.base_url}/search/#{params[:q]}"
-    @articles = this_blog.articles_matching(params[:q], :page => params[:page], :per_page => @limit)
-    return error(_("No posts found..."), :status => 200) if @articles.empty?
+    @articles = this_blog.articles_matching(params[:q], page: params[:page], per_page: @limit)
+    return error(_('No posts found...'), status: 200) if @articles.empty?
+
     @page_title = this_blog.search_title_template.to_title(@articles, this_blog, params)
     @description = this_blog.search_desc_template.to_title(@articles, this_blog, params)
     respond_to do |format|
       format.html { render 'search' }
-      format.rss { render "index_rss_feed", :layout => false }
-      format.atom { render "index_atom_feed", :layout => false }
+      format.rss { render 'index_rss_feed', layout: false }
+      format.atom { render 'index_atom_feed', layout: false }
     end
   end
 
   def live_search
     @search = params[:q]
     @articles = Article.search(@search)
-    render :live_search, :layout => false
+    render :live_search, layout: false
   end
 
   def preview
     @article = Article.last_draft(params[:id])
-    @canonical_url = ""
+    @canonical_url = ''
     render 'read'
   end
 
   def check_password
     return unless request.xhr?
+
     @article = Article.find(params[:article][:id])
     if @article.password == params[:article][:password]
-      render :partial => 'articles/full_article_content', :locals => { :article => @article }
+      render partial: 'articles/full_article_content', locals: { article: @article }
     else
-      render :partial => 'articles/password_form', :locals => { :article => @article }
+      render partial: 'articles/password_form', locals: { article: @article }
     end
   end
 
@@ -94,30 +98,33 @@ class ArticlesController < ContentController
 
     # Redirect old version with /:year/:month/:day/:title to new format,
     # because it's changed
-    ["%year%/%month%/%day%/%title%", "articles/%year%/%month%/%day%/%title%"].each do |part|
+    ['%year%/%month%/%day%/%title%', 'articles/%year%/%month%/%day%/%title%'].each do |part|
       match_permalink_format from, part
-      return redirect_to @article.permalink_url, :status => 301, :allow_other_host => true if @article
+      return redirect_to @article.permalink_url, status: 301, allow_other_host: true if @article
     end
 
-    r = Redirect.find_by_from_path(from.join("/"))
-    return redirect_to r.full_to_path, :status => 301, :allow_other_host => true if r
+    r = Redirect.find_by_from_path(from.join('/'))
+    return redirect_to r.full_to_path, status: 301, allow_other_host: true if r
 
-    render "errors/404", :status => 404
+    render 'errors/404', status: 404
   end
-
 
   ### Deprecated Actions ###
 
   def archives
     @articles = Article.find_published
     @page_title = this_blog.archives_title_template.to_title(@articles, this_blog, params)
-    @keywords = (this_blog.meta_keywords.empty?) ? "" : this_blog.meta_keywords
+    @keywords = this_blog.meta_keywords.empty? ? '' : this_blog.meta_keywords
     @description = this_blog.archives_desc_template.to_title(@articles, this_blog, params)
-    @canonical_url = url_for(:only_path => false, :controller => 'articles', :action => 'archives')
+    @canonical_url = url_for(only_path: false, controller: 'articles', action: 'archives')
   end
 
   def comment_preview
-    if (params[:comment][:body].blank? rescue true)
+    if begin
+      params[:comment][:body].blank?
+    rescue StandardError
+      true
+    end
       head :ok
       return
     end
@@ -128,25 +135,25 @@ class ArticlesController < ContentController
   end
 
   def category
-    redirect_to categories_path, :status => 301
+    redirect_to categories_path, status: 301
   end
 
   def tag
-    redirect_to tags_path, :status => 301
+    redirect_to tags_path, status: 301
   end
 
   def view_page
-    if(@page = Page.find_by_name(Array(params[:name]).map { |c| c }.join("/"))) && @page.published?
+    if (@page = Page.find_by_name(Array(params[:name]).map { |c| c }.join('/'))) && @page.published?
       if @page.external_redirect?
         redirect_to @page.redirect_url, status: :moved_permanently, allow_other_host: true
         return
       end
       @page_title = @page.title
-      @description = (this_blog.meta_description.empty?) ? "" : this_blog.meta_description
-      @keywords = (this_blog.meta_keywords.empty?) ? "" : this_blog.meta_keywords
+      @description = this_blog.meta_description.empty? ? '' : this_blog.meta_description
+      @keywords = this_blog.meta_keywords.empty? ? '' : this_blog.meta_keywords
       @canonical_url = @page.permalink_url
     else
-      render "errors/404", :status => 404
+      render 'errors/404', status: 404
     end
   end
 
@@ -158,12 +165,12 @@ class ArticlesController < ContentController
   private
 
   def verify_config
-    if this_blog.nil? || ! this_blog.configured?
-      redirect_to :controller => "setup", :action => "index"
-    elsif User.count == 0
-      redirect_to :controller => "accounts", :action => "signup"
+    if this_blog.nil? || !this_blog.configured?
+      redirect_to controller: 'setup', action: 'index'
+    elsif User.none?
+      redirect_to controller: 'accounts', action: 'signup'
     else
-      return true
+      true
     end
   end
 
@@ -182,37 +189,37 @@ class ArticlesController < ContentController
       format.xml  { render_feedback_feed('atom') }
     end
   rescue ActiveRecord::RecordNotFound
-    error("Post not found...")
+    error('Post not found...')
   end
-
 
   def article_meta
     groupings = @article.categories + @article.tags
-    @keywords = groupings.map { |g| g.name }.join(", ")
+    @keywords = groupings.map(&:name).join(', ')
     @canonical_url = @article.permalink_url
   end
 
-  def render_articles_feed format
-    if this_blog.feedburner_url.empty? or request.env["HTTP_USER_AGENT"] =~ /FeedBurner/i
-      render "index_#{format}_feed", :layout => false
+  def render_articles_feed(format)
+    if this_blog.feedburner_url.empty? || request.env['HTTP_USER_AGENT'] =~ /FeedBurner/i
+      render "index_#{format}_feed", layout: false
     else
       redirect_to "http://feeds2.feedburner.com/#{this_blog.feedburner_url}"
     end
   end
 
-  def render_feedback_feed format
+  def render_feedback_feed(format)
     @feedback = @article.published_feedback
-    render "feedback_#{format}_feed", :layout => false
+    render "feedback_#{format}_feed", layout: false
   end
 
   def set_headers
-    headers["Content-Type"] = "text/html; charset=utf-8"
+    headers['Content-Type'] = 'text/html; charset=utf-8'
   end
 
-  def render_paginated_index(on_empty = _("No posts found..."))
-    return error(on_empty, :status => 200) if @articles.empty?
+  def render_paginated_index(on_empty = _('No posts found...'))
+    return error(on_empty, status: 200) if @articles.empty?
+
     if this_blog.feedburner_url.empty?
-      auto_discovery_feed(:only_path => false)
+      auto_discovery_feed(only_path: false)
     else
       @auto_discovery_url_rss = "http://feeds2.feedburner.com/#{this_blog.feedburner_url}"
       @auto_discovery_url_atom = "http://feeds2.feedburner.com/#{this_blog.feedburner_url}"
@@ -221,10 +228,11 @@ class ArticlesController < ContentController
   end
 
   # Render paginated index explicitly as HTML, ignoring Accept header
-  def render_paginated_index_as_html(on_empty = _("No posts found..."))
-    return error(on_empty, :status => 200) if @articles.empty?
+  def render_paginated_index_as_html(on_empty = _('No posts found...'))
+    return error(on_empty, status: 200) if @articles.empty?
+
     if this_blog.feedburner_url.empty?
-      auto_discovery_feed(:only_path => false)
+      auto_discovery_feed(only_path: false)
     else
       @auto_discovery_url_rss = "http://feeds2.feedburner.com/#{this_blog.feedburner_url}"
       @auto_discovery_url_atom = "http://feeds2.feedburner.com/#{this_blog.feedburner_url}"
@@ -234,9 +242,9 @@ class ArticlesController < ContentController
 
   def index_title
     if params[:year]
-      return this_blog.archives_title_template.to_title(@articles, this_blog, params)
+      this_blog.archives_title_template.to_title(@articles, this_blog, params)
     elsif params[:page]
-      return this_blog.paginated_title_template.to_title(@articles, this_blog, params)
+      this_blog.paginated_title_template.to_title(@articles, this_blog, params)
     else
       this_blog.home_title_template.to_title(@articles, this_blog, params)
     end
@@ -244,9 +252,9 @@ class ArticlesController < ContentController
 
   def index_description
     if params[:year]
-      return this_blog.archives_desc_template.to_title(@articles, this_blog, params)
+      this_blog.archives_desc_template.to_title(@articles, this_blog, params)
     elsif params[:page]
-      return this_blog.paginated_desc_template.to_title(@articles, this_blog, params)
+      this_blog.paginated_desc_template.to_title(@articles, this_blog, params)
     else
       this_blog.home_desc_template.to_title(@articles, this_blog, params)
     end
@@ -258,11 +266,11 @@ class ArticlesController < ContentController
     to = from.next_year
     to = from.next_month unless month.blank?
     to = from + 1.day unless day.blank?
-    to = to - 1 # pull off 1 second so we don't overlap onto the next day
-    return from..to
+    to -= 1 # pull off 1 second so we don't overlap onto the next day
+    from..to
   end
 
-  def split_from_path path
+  def split_from_path(path)
     parts = path.split '/'
     parts.delete('')
     if parts.last =~ /\.atom$/
@@ -275,7 +283,7 @@ class ArticlesController < ContentController
     parts
   end
 
-  def match_permalink_format parts, format
+  def match_permalink_format(parts, format)
     specs = format.split('/')
     specs.delete('')
 
@@ -285,9 +293,9 @@ class ArticlesController < ContentController
 
     specs.zip(parts).each do |spec, item|
       if spec =~ /(.*)%(.*)%(.*)/
-        before_format = $1
-        format_string = $2
-        after_format = $3
+        before_format = ::Regexp.last_match(1)
+        format_string = ::Regexp.last_match(2)
+        after_format = ::Regexp.last_match(3)
         result = item.gsub(/^#{before_format}(.*)#{after_format}$/, '\1')
         article_params[format_string.to_sym] = result
       else
@@ -296,8 +304,8 @@ class ArticlesController < ContentController
     end
     begin
       @article = this_blog.requested_article(article_params)
-    rescue
-      #Not really good.
+    rescue StandardError
+      # Not really good.
       # TODO :Check in request_article type of DATA made in next step
     end
   end

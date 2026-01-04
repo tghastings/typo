@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe SetupController do
@@ -7,7 +9,7 @@ describe SetupController do
       User.delete_all
       Article.delete_all
       Blog.new.save
-      Article.create(:title => "First post").save!
+      Article.create(title: 'First post').save!
     end
 
     describe 'GET setup' do
@@ -20,40 +22,40 @@ describe SetupController do
 
     describe 'POST setup' do
       before do
-        post 'index', {:setting => {:blog_name => 'Foo', :email => 'foo@bar.net'}}
+        post 'index', { setting: { blog_name: 'Foo', email: 'foo@bar.net' } }
       end
 
-      specify { expect(response).to redirect_to(:action => 'confirm') }
+      specify { expect(response).to redirect_to(action: 'confirm') }
 
-      it "should correctly initialize blog and users" do
+      it 'should correctly initialize blog and users' do
         expect(Blog.default.blog_name).to eq('Foo')
-        admin = User.find_by_login("admin")
+        admin = User.find_by_login('admin')
         expect(admin).not_to be_nil
         expect(admin.email).to eq('foo@bar.net')
         expect(Article.first.user).to eq(admin)
       end
 
-      it "should log in admin user" do
-        expect(session[:user_id]).to eq(User.find_by_login("admin").id)
+      it 'should log in admin user' do
+        expect(session[:user_id]).to eq(User.find_by_login('admin').id)
       end
     end
   end
-  
+
   describe 'POST setup with incorrect parameters' do
     before do
       Blog.delete_all
       User.delete_all
       Blog.new.save
     end
-    
-    it "empty blog name should raise an error" do
-      post 'index', {:setting => {:blog_name => '', :email => 'foo@bar.net'}}
-      expect(response).to redirect_to(:action => 'index')
+
+    it 'empty blog name should raise an error' do
+      post 'index', { setting: { blog_name: '', email: 'foo@bar.net' } }
+      expect(response).to redirect_to(action: 'index')
     end
-    
-    it "empty email should raise an error" do
-      post 'index', {:setting => {:blog_name => 'Foo', :email => ''}}
-      expect(response).to redirect_to(:action => 'index')
+
+    it 'empty email should raise an error' do
+      post 'index', { setting: { blog_name: 'Foo', email: '' } }
+      expect(response).to redirect_to(action: 'index')
     end
   end
 
@@ -64,20 +66,20 @@ describe SetupController do
         get 'index'
       end
 
-      specify { expect(response).to redirect_to(:controller => 'articles', :action => 'index') }
+      specify { expect(response).to redirect_to(controller: 'articles', action: 'index') }
     end
 
     describe 'POST setup' do
       before do
         Factory(:blog)
-        post 'index', {:setting => {:blog_name => 'Foo', :email => 'foo@bar.net'}}
+        post 'index', { setting: { blog_name: 'Foo', email: 'foo@bar.net' } }
       end
 
-      specify { expect(response).to redirect_to(:controller => 'articles', :action => 'index') }
+      specify { expect(response).to redirect_to(controller: 'articles', action: 'index') }
 
-      it "should not initialize blog and users" do
+      it 'should not initialize blog and users' do
         expect(Blog.default.blog_name).not_to eq('Foo')
-        admin = User.find_by_login("admin")
+        admin = User.find_by_login('admin')
         expect(admin).to be_nil
       end
     end

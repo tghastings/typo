@@ -181,9 +181,9 @@ RSpec.describe 'Accounts', type: :request do
       end
 
       it 'creates a new user with valid data' do
-        expect {
+        expect do
           post '/accounts/signup', params: { user: { login: 'newuser', email: 'newuser@example.com' } }
-        }.to change(User, :count).by(1)
+        end.to change(User, :count).by(1)
       end
 
       it 'redirects to confirm on success' do
@@ -209,9 +209,9 @@ RSpec.describe 'Accounts', type: :request do
       end
 
       it 'creates a new user with valid data' do
-        expect {
+        expect do
           post '/accounts/signup', params: { user: { login: 'newuser2', email: 'newuser2@example.com' } }
-        }.to change(User, :count).by(1)
+        end.to change(User, :count).by(1)
       end
     end
 
@@ -221,15 +221,15 @@ RSpec.describe 'Accounts', type: :request do
       end
 
       it 'does not create user with short login' do
-        expect {
+        expect do
           post '/accounts/signup', params: { user: { login: 'ab', email: 'newuser@example.com' } }
-        }.not_to change(User, :count)
+        end.not_to change(User, :count)
       end
 
       it 'does not create user with missing email' do
-        expect {
+        expect do
           post '/accounts/signup', params: { user: { login: 'newuser', email: '' } }
-        }.not_to change(User, :count)
+        end.not_to change(User, :count)
       end
     end
   end

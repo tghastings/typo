@@ -18,7 +18,7 @@ RSpec.describe 'Comments', type: :request do
 
     @profile = Profile.find_or_create_by!(label: 'admin') do |p|
       p.nicename = 'Admin'
-      p.modules = [:dashboard, :write, :articles]
+      p.modules = %i[dashboard write articles]
     end
     User.where(login: 'comment_author').destroy_all
     @user = User.create!(
@@ -54,7 +54,7 @@ RSpec.describe 'Comments', type: :request do
       end
 
       it 'returns 404 for non-existent article' do
-        get '/comments', params: { article_id: 999999 }
+        get '/comments', params: { article_id: 999_999 }
         expect(response).to have_http_status(:not_found)
       end
     end
@@ -127,9 +127,9 @@ RSpec.describe 'Comments', type: :request do
       end
 
       it 'creates a new comment and redirects' do
-        expect {
+        expect do
           post '/comments', params: valid_comment_params
-        }.to change(Comment, :count).by(1)
+        end.to change(Comment, :count).by(1)
         expect(response).to redirect_to(@article.permalink_url)
       end
 
@@ -169,7 +169,7 @@ RSpec.describe 'Comments', type: :request do
       it 'handles non-existent article gracefully' do
         post '/comments', params: {
           comment: { author: 'Test', body: 'Test body' },
-          article_id: 999999
+          article_id: 999_999
         }
         # Controller may return 404, redirect, or error depending on implementation
         expect([200, 302, 404, 500]).to include(response.status)
@@ -178,12 +178,12 @@ RSpec.describe 'Comments', type: :request do
 
     context 'with blank body' do
       it 'does not create comment with empty body' do
-        expect {
+        expect do
           post '/comments', params: {
             comment: { author: 'Test', body: '' },
             article_id: @article.id
           }
-        }.not_to change(Comment, :count)
+        end.not_to change(Comment, :count)
       end
     end
 

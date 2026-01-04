@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 xm.item do
   xm.title item.title
   content_html =
@@ -10,29 +12,25 @@ xm.item do
     end
   xm.description content_html + item.get_rss_description
   xm.pubDate pub_date(item.published_at)
-  xm.guid "urn:uuid:#{item.guid}", "isPermaLink" => "false"
-  if item.link_to_author?
-    xm.author "#{item.user.email} (#{item.user.name})"
-  end
-  xm.comments(item.permalink_url("comments"))
-  for category in item.categories
+  xm.guid "urn:uuid:#{item.guid}", 'isPermaLink' => 'false'
+  xm.author "#{item.user.email} (#{item.user.name})" if item.link_to_author?
+  xm.comments(item.permalink_url('comments'))
+  item.categories.each do |category|
     xm.category category.name
   end
-  for tag in item.tags
+  item.tags.each do |tag|
     xm.category tag.display_name
   end
 
   # RSS 2.0 only allows a single enclosure per item, so only include the first one here.
-  if not item.resources.empty?
+  unless item.resources.empty?
     resource = item.resources.first
     xm.enclosure(
-      :url => item.blog.file_url(resource.filename),
-      :length => resource.size,
-      :type => resource.mime)
+      url: item.blog.file_url(resource.filename),
+      length: resource.size,
+      type: resource.mime
+    )
   end
-  if item.allow_pings?
-    xm.trackback :ping, item.trackback_url
-  end
+  xm.trackback :ping, item.trackback_url if item.allow_pings?
   xm.link item.permalink_url
 end
-

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Given('the blog is configured') do
   Blog.delete_all
   @blog = FactoryBot.create(:blog)
@@ -10,10 +12,10 @@ end
 
 Given('I am logged in as an admin') do
   # Set up blog and user
-  steps %{
+  steps %(
     Given the blog is configured
     Given there is an admin user with login "admin" and password "password"
-  }
+  )
 
   # Bypass login form - directly set session like in request specs
   page.driver.browser.clear_cookies
@@ -30,7 +32,8 @@ Given('I am logged in as an admin') do
 end
 
 Given('there is a published article titled {string}') do |title|
-  FactoryBot.create(:article, title: title, published: true, published_at: Time.now, user: @user || FactoryBot.create(:user))
+  FactoryBot.create(:article, title: title, published: true, published_at: Time.now,
+                              user: @user || FactoryBot.create(:user))
 end
 
 When('I visit the homepage') do

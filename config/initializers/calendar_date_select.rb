@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Rails 7 compatibility: Restore InstanceTag for calendar_date_select
 module ActionView
   module Helpers
@@ -30,8 +32,9 @@ module ActionView
       end
 
       def value_before_type_cast
-        return @object.send(@method_name) if @object && @object.respond_to?(@method_name)
-        return @object.send("#{@method_name}_before_type_cast") if @object && @object.respond_to?("#{@method_name}_before_type_cast")
+        return @object.send(@method_name) if @object.respond_to?(@method_name)
+        return @object.send("#{@method_name}_before_type_cast") if @object.respond_to?("#{@method_name}_before_type_cast")
+
         nil
       end
     end
@@ -103,20 +106,20 @@ module ActionView
       end
 
       # update_page is for RJS-style page updates
-      def update_page(&block)
-        page = JavaScriptGenerator.new(self, &block)
+      def update_page(&)
+        page = JavaScriptGenerator.new(self, &)
         javascript_tag(page.to_s)
       end
 
-      def update_page_tag(&block)
-        update_page(&block)
+      def update_page_tag(&)
+        update_page(&)
       end
 
       class JavaScriptGenerator
-        def initialize(context, &block)
+        def initialize(context, &)
           @context = context
           @lines = []
-          instance_eval(&block) if block_given?
+          instance_eval(&) if block_given?
         end
 
         def to_s
@@ -139,13 +142,13 @@ module ActionView
         private
 
         def args_for_javascript(args)
-          args.map { |arg|
+          args.map do |arg|
             case arg
             when String then "'#{arg.gsub("'", "\\\\'")}'"
             when Hash then @context.options_for_javascript(arg)
             else arg.to_s
             end
-          }.join(', ')
+          end.join(', ')
         end
       end
 
@@ -178,13 +181,13 @@ module ActionView
         private
 
         def args_for_javascript(args)
-          args.map { |arg|
+          args.map do |arg|
             case arg
             when String then arg.to_json
             when Hash then @generator.instance_variable_get(:@context).options_for_javascript(arg)
             else arg.to_s
             end
-          }.join(', ')
+          end.join(', ')
         end
       end
     end

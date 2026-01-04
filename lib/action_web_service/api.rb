@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ActionWebService # :nodoc:
   module API # :nodoc:
     # A web service API class specifies the methods that will be available for
@@ -18,7 +20,7 @@ module ActionWebService # :nodoc:
       class_inheritable_option :inflect_names, true
 
       # By default only HTTP POST requests are processed
-      class_inheritable_option :allowed_http_methods, [ :post ]
+      class_inheritable_option :allowed_http_methods, [:post]
 
       # Whether to allow ActiveRecord::Base models in <tt>:expects</tt>.
       # The default is +false+; you should be aware of the security implications
@@ -64,11 +66,10 @@ module ActionWebService # :nodoc:
         # [<tt>:expects</tt>]             Signature for the method input parameters
         # [<tt>:returns</tt>]             Signature for the method return value
         # [<tt>:expects_and_returns</tt>] Signature for both input parameters and return value
-        def api_method(name, options={})
-          unless options.is_a?(Hash)
-            raise(ActionWebServiceError, "Expected a Hash for options")
-          end
-          validate_options([:expects, :returns, :expects_and_returns], options.keys)
+        def api_method(name, options = {})
+          raise(ActionWebServiceError, 'Expected a Hash for options') unless options.is_a?(Hash)
+
+          validate_options(%i[expects returns expects_and_returns], options.keys)
           if options[:expects_and_returns]
             expects = options[:expects_and_returns]
             returns = options[:expects_and_returns]
@@ -78,19 +79,17 @@ module ActionWebService # :nodoc:
           end
           expects = canonical_signature(expects)
           returns = canonical_signature(returns)
-          if expects
-            expects.each do |type|
-              type = type.element_type if type.is_a?(ArrayType)
-              if type.type_class.ancestors.include?(ActiveRecord::Base) && !allow_active_record_expects
-                raise(ActionWebServiceError, "ActiveRecord model classes not allowed in :expects")
-              end
+          expects&.each do |type|
+            type = type.element_type if type.is_a?(ArrayType)
+            if type.type_class.ancestors.include?(ActiveRecord::Base) && !allow_active_record_expects
+              raise(ActionWebServiceError, 'ActiveRecord model classes not allowed in :expects')
             end
           end
           name = name.to_sym
           public_name = public_api_method_name(name)
           method = Method.new(name, public_name, expects, returns)
-          write_inheritable_hash("api_methods", name => method)
-          write_inheritable_hash("api_public_method_names", public_name => name)
+          write_inheritable_hash('api_methods', name => method)
+          write_inheritable_hash('api_public_method_names', public_name => name)
         end
 
         # Whether the given method name is a service method on this API
@@ -102,7 +101,7 @@ module ActionWebService # :nodoc:
         #   ProjectsApi.has_api_method?('GetCount')   #=> false
         #   ProjectsApi.has_api_method?(:getCount)    #=> true
         def has_api_method?(name)
-          api_methods.has_key?(name)
+          api_methods.key?(name)
         end
 
         # Whether the given public method name has a corresponding service method
@@ -115,7 +114,7 @@ module ActionWebService # :nodoc:
         #   ProjectsApi.has_api_method?(:getCount)    #=> false
         #   ProjectsApi.has_api_method?('GetCount')   #=> true
         def has_public_api_method?(public_name)
-          api_public_method_names.has_key?(public_name)
+          api_public_method_names.key?(public_name)
         end
 
         # The corresponding public method name for the given service method name
@@ -154,7 +153,7 @@ module ActionWebService # :nodoc:
         #      :getCompletedCount=>#<ActionWebService::API::Method:0x2437794 ...>}
         #   ProjectsApi.api_methods[:getCount].public_name #=> "GetCount"
         def api_methods
-          read_inheritable_attribute("api_methods") || {}
+          read_inheritable_attribute('api_methods') || {}
         end
 
         # The Method instance for the given public API method name, if any
@@ -185,37 +184,35 @@ module ActionWebService # :nodoc:
 
         # The Method instance for the default API method, if any
         def default_api_method_instance
-          return nil unless name = default_api_method
-          instance = read_inheritable_attribute("default_api_method_instance")
-          if instance && instance.name == name
-            return instance
-          end
+          return nil unless (name = default_api_method)
+
+          instance = read_inheritable_attribute('default_api_method_instance')
+          return instance if instance && instance.name == name
+
           instance = Method.new(name, public_api_method_name(name), nil, nil)
-          write_inheritable_attribute("default_api_method_instance", instance)
+          write_inheritable_attribute('default_api_method_instance', instance)
           instance
         end
 
         private
-          def api_public_method_names
-            read_inheritable_attribute("api_public_method_names") || {}
-          end
 
-          def validate_options(valid_option_keys, supplied_option_keys)
-            unknown_option_keys = supplied_option_keys - valid_option_keys
-            unless unknown_option_keys.empty?
-              raise(ActionWebServiceError, "Unknown options: #{unknown_option_keys}")
-            end
-          end
+        def api_public_method_names
+          read_inheritable_attribute('api_public_method_names') || {}
+        end
+
+        def validate_options(valid_option_keys, supplied_option_keys)
+          unknown_option_keys = supplied_option_keys - valid_option_keys
+          return if unknown_option_keys.empty?
+
+          raise(ActionWebServiceError, "Unknown options: #{unknown_option_keys}")
+        end
       end
     end
 
     # Represents an API method and its associated metadata, and provides functionality
     # to assist in commonly performed API method tasks.
     class Method
-      attr :name
-      attr :public_name
-      attr :expects
-      attr :returns
+      attr_reader :name, :public_name, :expects, :returns
 
       def initialize(name, public_name, expects, returns)
         @name = name
@@ -228,7 +225,8 @@ module ActionWebService # :nodoc:
       # The list of parameter names for this method
       def param_names
         return [] unless @expects
-        @expects.map{ |type| type.name }
+
+        @expects.map(&:name)
       end
 
       # Casts a set of Ruby values into the expected Ruby values
@@ -245,7 +243,8 @@ module ActionWebService # :nodoc:
       # with the given name
       def expects_index_of(param_name)
         return -1 if @expects.nil?
-        (0..(@expects.length-1)).each do |i|
+
+        (0..(@expects.length - 1)).each do |i|
           return i if @expects[i].name.to_s == param_name.to_s
         end
         -1
@@ -255,8 +254,9 @@ module ActionWebService # :nodoc:
       # parameter list
       def expects_to_hash(params)
         return {} if @expects.nil?
+
         h = {}
-        @expects.zip(params){ |type, param| h[type.name] = param }
+        @expects.zip(params) { |type, param| h[type.name] = param }
         h
       end
 
@@ -264,34 +264,33 @@ module ActionWebService # :nodoc:
       def [](sig_type)
         case sig_type
         when :expects
-          @expects.map{|x| compat_signature_entry(x)}
+          @expects.map { |x| compat_signature_entry(x) }
         when :returns
-          @returns.map{|x| compat_signature_entry(x)}
+          @returns.map { |x| compat_signature_entry(x) }
         end
       end
 
       # String representation of this method
       def to_s
-        fqn = ""
-        fqn << (@returns ? (@returns[0].human_name(false) + " ") : "void ")
+        fqn = ''
+        fqn << (@returns ? "#{@returns[0].human_name(false)} " : 'void ')
         fqn << "#{@public_name}("
-        fqn << @expects.map{ |p| p.human_name }.join(", ") if @expects
-        fqn << ")"
+        fqn << @expects.map(&:human_name).join(', ') if @expects
+        fqn << ')'
         fqn
       end
 
       private
-        def compat_signature_entry(entry)
-          if entry.array?
-            [compat_signature_entry(entry.element_type)]
-          else
-            if entry.spec.is_a?(Hash)
-              {entry.spec.keys.first => entry.type_class}
-            else
-              entry.type_class
-            end
-          end
+
+      def compat_signature_entry(entry)
+        if entry.array?
+          [compat_signature_entry(entry.element_type)]
+        elsif entry.spec.is_a?(Hash)
+          { entry.spec.keys.first => entry.type_class }
+        else
+          entry.type_class
         end
+      end
     end
   end
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe FlickrSidebar do
@@ -5,22 +7,22 @@ describe FlickrSidebar do
     @sidebar = FlickrSidebar.new
   end
 
-  describe "class definition" do
-    it "should inherit from Sidebar" do
+  describe 'class definition' do
+    it 'should inherit from Sidebar' do
       expect(FlickrSidebar.superclass).to eq(Sidebar)
     end
 
-    it "should have correct display_name" do
+    it 'should have correct display_name' do
       expect(FlickrSidebar.display_name).to eq('Flickr Photos')
     end
 
-    it "should have correct description" do
+    it 'should have correct description' do
       expect(FlickrSidebar.description).to eq('Display your recent photos from Flickr')
     end
   end
 
-  describe "default settings" do
-    it "should be valid" do
+  describe 'default settings' do
+    it 'should be valid' do
       expect(@sidebar).to be_valid
     end
 
@@ -28,40 +30,40 @@ describe FlickrSidebar do
       expect(@sidebar.title).to eq('Photos')
     end
 
-    it "flickr_user_id should default to empty string" do
+    it 'flickr_user_id should default to empty string' do
       expect(@sidebar.flickr_user_id).to eq('')
     end
 
-    it "photo_count should default to '6'" do
-      expect(@sidebar.photo_count).to eq('6')
+    it "photo_count should default to '16'" do
+      expect(@sidebar.photo_count).to eq('16')
     end
 
-    it "photo_size should default to 'square'" do
-      expect(@sidebar.photo_size).to eq('square')
+    it "photo_size should default to 'large_square'" do
+      expect(@sidebar.photo_size).to eq('large_square')
     end
 
-    it "show_example_content should default to false" do
+    it 'show_example_content should default to false' do
       expect(@sidebar.show_example_content).to eq(false)
     end
   end
 
-  describe "content partial" do
-    it "should have correct content partial path" do
+  describe 'content partial' do
+    it 'should have correct content partial path' do
       expect(@sidebar.content_partial).to eq('/flickr_sidebar/content')
     end
   end
 
-  describe "#photos" do
-    context "when flickr_user_id is blank and show_example_content is false" do
-      it "should return empty array" do
+  describe '#photos' do
+    context 'when flickr_user_id is blank and show_example_content is false' do
+      it 'should return empty array' do
         expect(@sidebar.photos).to eq([])
       end
     end
 
-    context "when show_example_content is true" do
+    context 'when show_example_content is true' do
       before { @sidebar.show_example_content = true }
 
-      it "should return example photos" do
+      it 'should return example photos' do
         photos = @sidebar.photos
         expect(photos).to be_an(Array)
         expect(photos.length).to be > 0
@@ -70,23 +72,23 @@ describe FlickrSidebar do
       end
     end
 
-    context "when flickr_user_id is set but API fails" do
+    context 'when flickr_user_id is set but API fails' do
       before do
         @sidebar.flickr_user_id = '12345678@N00'
         # Simulate API failure
         allow(FlickRaw).to receive(:api_key=)
-        allow_any_instance_of(FlickrSidebar).to receive(:flickr).and_raise(StandardError.new("API Error"))
+        allow_any_instance_of(FlickrSidebar).to receive(:flickr).and_raise(StandardError.new('API Error'))
       end
 
-      it "should return empty array on API error" do
+      it 'should return empty array on API error' do
         photos = @sidebar.photos
         expect(photos).to eq([])
       end
     end
   end
 
-  describe "database persistence" do
-    it "should save and reload correctly" do
+  describe 'database persistence' do
+    it 'should save and reload correctly' do
       @sidebar.title = 'My Flickr'
       @sidebar.flickr_user_id = '99999@N00'
       @sidebar.active_position = 1
@@ -99,12 +101,12 @@ describe FlickrSidebar do
     end
   end
 
-  describe "compatibility with other sidebars" do
-    it "should coexist with other sidebar types" do
+  describe 'compatibility with other sidebars' do
+    it 'should coexist with other sidebar types' do
       # Create multiple sidebar types
-      flickr = FlickrSidebar.create!(active_position: 1)
-      static = StaticSidebar.create!(active_position: 2)
-      search = SearchSidebar.create!(active_position: 3)
+      FlickrSidebar.create!(active_position: 1)
+      StaticSidebar.create!(active_position: 2)
+      SearchSidebar.create!(active_position: 3)
 
       visible = Sidebar.find_all_visible
       expect(visible.length).to eq(3)

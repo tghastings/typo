@@ -47,11 +47,11 @@ RSpec.describe 'Admin::Redirects', type: :request do
 
     context 'with valid parameters' do
       it 'creates a new redirect' do
-        expect {
+        expect do
           post '/admin/redirects/new', params: {
             redirect: { from_path: 'old-url', to_path: '/new-url' }
           }
-        }.to change(Redirect, :count).by(1)
+        end.to change(Redirect, :count).by(1)
       end
 
       it 'redirects to index after save' do
@@ -113,9 +113,9 @@ RSpec.describe 'Admin::Redirects', type: :request do
 
     it 'does not delete on GET request' do
       redirect = FactoryBot.create(:redirect)
-      expect {
+      expect do
         get "/admin/redirects/destroy/#{redirect.id}"
-      }.not_to change(Redirect, :count)
+      end.not_to change(Redirect, :count)
     end
   end
 
@@ -124,9 +124,9 @@ RSpec.describe 'Admin::Redirects', type: :request do
 
     it 'deletes the redirect' do
       redirect = FactoryBot.create(:redirect)
-      expect {
+      expect do
         post "/admin/redirects/destroy/#{redirect.id}"
-      }.to change(Redirect, :count).by(-1)
+      end.to change(Redirect, :count).by(-1)
     end
 
     it 'redirects to index' do

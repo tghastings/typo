@@ -201,9 +201,9 @@ RSpec.describe 'Accounts', type: :request do
       end
 
       it 'creates a new user with valid params' do
-        expect {
+        expect do
           post '/accounts/signup', params: { user: { login: 'newuser', email: 'newuser@test.com' } }
-        }.to change { User.count }.by(1)
+        end.to change { User.count }.by(1)
       end
 
       it 'redirects to confirm page on success' do
@@ -228,9 +228,9 @@ RSpec.describe 'Accounts', type: :request do
       end
 
       it 'does not create user with invalid params' do
-        expect {
+        expect do
           post '/accounts/signup', params: { user: { login: '', email: '' } }
-        }.not_to change { User.count }
+        end.not_to(change { User.count })
       end
 
       it 'returns successful response with invalid params (re-renders form)' do
@@ -246,9 +246,9 @@ RSpec.describe 'Accounts', type: :request do
       end
 
       it 'does not create a new user' do
-        expect {
+        expect do
           post '/accounts/signup', params: { user: { login: 'newuser', email: 'newuser@test.com' } }
-        }.not_to change { User.count }
+        end.not_to(change { User.count })
       end
     end
 
@@ -259,9 +259,9 @@ RSpec.describe 'Accounts', type: :request do
       end
 
       it 'creates a new user with valid params' do
-        expect {
+        expect do
           post '/accounts/signup', params: { user: { login: 'newuser', email: 'newuser@test.com' } }
-        }.to change { User.count }.by(1)
+        end.to change { User.count }.by(1)
       end
 
       it 'redirects to confirm page on success' do

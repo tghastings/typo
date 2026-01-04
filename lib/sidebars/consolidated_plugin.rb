@@ -1,26 +1,30 @@
-class Sidebars::ConsolidatedPlugin < Sidebars::Plugin
-  class << self
-    @abstract = true
+# frozen_string_literal: true
 
-    def fields
-      associated_class.fields
-    end
+module Sidebars
+  class ConsolidatedPlugin < Sidebars::Plugin
+    class << self
+      @abstract = true
 
-    def default_config
-      fields.inject({ }) do |acc, item|
-        acc.merge(item.key => item.default)
+      def fields
+        associated_class.fields
+      end
+
+      def default_config
+        fields.inject({}) do |acc, item|
+          acc.merge(item.key => item.default)
+        end
+      end
+
+      def description
+        associated_class.description
       end
     end
 
-    def description
-      associated_class.description
+    def index
+      @sidebar   = params['sidebar']
+      @sb_config = @sidebar.config
+      @sidebar.parse_request(params)
+      render partial: "sidebars/#{@sidebar.short_name}/content"
     end
-  end
-
-  def index
-    @sidebar   = params['sidebar']
-    @sb_config = @sidebar.config
-    @sidebar.parse_request(params)
-    render :partial => "sidebars/#{@sidebar.short_name}/content"
   end
 end

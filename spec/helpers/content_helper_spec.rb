@@ -1,4 +1,5 @@
-# coding: utf-8
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe ContentHelper do
@@ -185,7 +186,7 @@ describe ContentHelper do
       expect(result).to include('Next Article')
     end
 
-    # Note: The next_link helper has a bug where it tries to access n.title
+    # NOTE: The next_link helper has a bug where it tries to access n.title
     # before checking if n is nil. Testing the case when next exists is sufficient.
     it 'includes raquo when using default prefix' do
       result = next_link(@article1)
@@ -213,7 +214,7 @@ describe ContentHelper do
       expect(result).to include('Prev Article')
     end
 
-    # Note: The prev_link helper has a bug where it tries to access p.title
+    # NOTE: The prev_link helper has a bug where it tries to access p.title
     # before checking if p is nil. Testing the case when previous exists is sufficient.
     it 'includes laquo when using default prefix' do
       result = prev_link(@article2)

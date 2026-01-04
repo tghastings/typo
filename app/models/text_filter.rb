@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'net/http'
 # Rails 8: Remove manual require - let Rails autoloading handle it
 # require './app/models/content.rb'
@@ -8,8 +10,8 @@ class TextFilter < ActiveRecord::Base
 
   # Rails 8: Removed unused @text_helper = ContentTextHelpers.new (causes loading order issues)
 
-  def sanitize(*args,&blk)
-    self.class.sanitize(*args,&blk)
+  def sanitize(*, &)
+    self.class.sanitize(*, &)
   end
 
   def self.available_filters
@@ -17,16 +19,16 @@ class TextFilter < ActiveRecord::Base
   end
 
   def self.macro_filters
-    available_filters.select { |filter| TextFilterPlugin::Macro > filter }
+    available_filters.select { |filter| filter < TextFilterPlugin::Macro }
   end
 
   # Use string keys to avoid class identity issues during Rails development reloading
   TYPEMAP_NAMES = {
-    "TextFilterPlugin::Markup" => "markup",
-    "TextFilterPlugin::MacroPre" => "macropre",
-    "TextFilterPlugin::MacroPost" => "macropost",
-    "TextFilterPlugin::PostProcess" => "postprocess",
-    "TextFilterPlugin" => "other"
+    'TextFilterPlugin::Markup' => 'markup',
+    'TextFilterPlugin::MacroPre' => 'macropre',
+    'TextFilterPlugin::MacroPost' => 'macropost',
+    'TextFilterPlugin::PostProcess' => 'postprocess',
+    'TextFilterPlugin' => 'other'
   }.freeze
 
   def self.available_filter_types
@@ -35,15 +37,15 @@ class TextFilter < ActiveRecord::Base
 
     unless @cached_filter_types[filters]
       types = {
-        "macropre" => [],
-        "macropost" => [],
-        "markup" => [],
-        "postprocess" => [],
-        "other" => []
+        'macropre' => [],
+        'macropost' => [],
+        'markup' => [],
+        'postprocess' => [],
+        'other' => []
       }
 
       filters.each do |filter|
-        type_name = TYPEMAP_NAMES[filter.superclass.name] || "other"
+        type_name = TYPEMAP_NAMES[filter.superclass.name] || 'other'
         types[type_name].push(filter)
       end
 
@@ -52,23 +54,23 @@ class TextFilter < ActiveRecord::Base
     @cached_filter_types[filters]
   end
 
-
-
   def self.filters_map
     TextFilterPlugin.filter_map
   end
 
-  def self.filter_text(blog, text, content, filters, filterparams={})
-    map=TextFilter.filters_map
+  def self.filter_text(blog, text, content, filters, filterparams = {})
+    map = TextFilter.filters_map
 
     filters.each do |filter|
-      next if filter == nil
+      next if filter.nil?
+
       begin
         filter_class = map[filter.to_s]
         next unless filter_class
-        text = filter_class.filtertext(blog, content, text, :filterparams => filterparams)
-      rescue => err
-        logger.error "Filter #{filter} failed: #{err}"
+
+        text = filter_class.filtertext(blog, content, text, filterparams: filterparams)
+      rescue StandardError => e
+        logger.error "Filter #{filter} failed: #{e}"
       end
     end
 
@@ -82,7 +84,7 @@ class TextFilter < ActiveRecord::Base
 
   def filter_text_for_content(blog, text, content)
     self.class.filter_text(blog, text, content,
-      [:macropre, markup, :macropost, filters].flatten, params)
+                           [:macropre, markup, :macropost, filters].flatten, params)
   end
 
   def help
@@ -91,8 +93,8 @@ class TextFilter < ActiveRecord::Base
 
     help = []
     help.push(filter_map[markup])
-    filter_types['macropre'].sort_by {|f| f.short_name}.each { |f| help.push f }
-    filter_types['macropost'].sort_by {|f| f.short_name}.each { |f| help.push f }
+    filter_types['macropre'].sort_by(&:short_name).each { |f| help.push f }
+    filter_types['macropost'].sort_by(&:short_name).each { |f| help.push f }
     filters.each { |f| help.push(filter_map[f.to_s]) }
 
     help_text = help.collect do |f|
@@ -108,16 +110,16 @@ class TextFilter < ActiveRecord::Base
     help = [filter_map[markup]]
     filters.each { |f| help.push(filter_map[f.to_s]) }
 
-    help_text = help.collect do |f|
+    help.collect do |f|
       f.help_text.blank? ? '' : "#{BlueCloth.new(f.help_text).to_html}\n"
     end.join("\n")
-
-    return help_text
   end
 
-  def to_s; self.name; end
+  def to_s
+    name
+  end
 
   def to_text_filter
-     self
+    self
   end
 end

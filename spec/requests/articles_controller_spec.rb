@@ -18,7 +18,7 @@ RSpec.describe 'ArticlesController', type: :request do
 
     @profile = Profile.find_or_create_by!(label: 'admin') do |p|
       p.nicename = 'Admin'
-      p.modules = [:dashboard, :write, :articles]
+      p.modules = %i[dashboard write articles]
     end
     User.where(login: 'articles_ctrl_author').destroy_all
     @user = User.create!(
@@ -987,9 +987,7 @@ RSpec.describe 'ArticlesController', type: :request do
         get '/articles.rss'
         # Should redirect to feedburner or return success if feedburner handling differs
         expect([200, 302]).to include(response.status)
-        if response.status == 302
-          expect(response.location).to include('feedburner')
-        end
+        expect(response.location).to include('feedburner') if response.status == 302
       end
 
       it 'redirects Atom to feedburner when configured' do
@@ -997,9 +995,7 @@ RSpec.describe 'ArticlesController', type: :request do
         get '/articles.atom'
         # Should redirect to feedburner or return success if feedburner handling differs
         expect([200, 302]).to include(response.status)
-        if response.status == 302
-          expect(response.location).to include('feedburner')
-        end
+        expect(response.location).to include('feedburner') if response.status == 302
       end
 
       it 'does not redirect when user agent is FeedBurner' do
@@ -1112,7 +1108,7 @@ RSpec.describe 'ArticlesController', type: :request do
     end
 
     it 'handles article with special characters in title' do
-      article = Article.create!(
+      Article.create!(
         title: 'Article with "Quotes" & Special <Characters>',
         permalink: 'article-special-chars',
         body: 'Content with special chars',
@@ -1125,8 +1121,8 @@ RSpec.describe 'ArticlesController', type: :request do
     end
 
     it 'handles very long article body' do
-      long_body = 'A' * 10000
-      article = Article.create!(
+      long_body = 'A' * 10_000
+      Article.create!(
         title: 'Long Article',
         permalink: 'long-article',
         body: long_body,

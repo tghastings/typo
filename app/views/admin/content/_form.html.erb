@@ -36,6 +36,12 @@
         </li>
       </ul>
     </div>
+    <div class='clearfix'>
+      <label for="article_indent_paragraphs">
+        <%= check_box 'article', 'indent_paragraphs' %>
+        <%= _("Indent paragraphs") %>
+      </label>
+    </div>
 	  <div class='clearfix'>
       <%= _("Publish <strong>now</strong>") %> <a href="#" onclick="Element.toggle('publish'); return false">Change</a>
       <ul class='inputs-list'>

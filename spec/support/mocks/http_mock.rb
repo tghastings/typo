@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 module Net
-  remove_const "HTTP"
-  class Request < Struct.new(:host, :port, :query, :post_data, :headers)
+  remove_const 'HTTP'
+  Request = Struct.new(:host, :port, :query, :post_data, :headers) do
     def post(query, post, headers = {})
       self.query = query
       self.post_data = post
@@ -8,32 +10,32 @@ module Net
     end
   end
 
-  class Net::HTTP
-    def initialize(*args)
-    end
+  module Net
+    class HTTP
+      def initialize(*args); end
 
-    def self.start(host, port)
-      request = Request.new
-      request.host = host
-      request.port = port
+      def self.start(host, port)
+        request = Request.new
+        request.host = host
+        request.port = port
 
-      @pings ||= []
-      @pings << request
+        @pings ||= []
+        @pings << request
 
-      yield request
+        yield request
+      end
 
-    end
+      class << self
+        attr_reader :pings
+      end
 
-    def self.pings
-      @pings
-    end
+      def self.next_response=(mock_response)
+        @@response = mock_response
+      end
 
-    def self.next_response=(mock_response)
-      @@response = mock_response
-    end
-
-    def self.get_response(*args)
-      @@response
+      def self.get_response(*_args)
+        @@response
+      end
     end
   end
 end

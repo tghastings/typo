@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe Profile do
@@ -27,22 +29,22 @@ describe Profile do
     end
 
     it 'returns stored modules' do
-      profile = Profile.new(modules: [:content, :pages])
-      expect(profile.modules).to eq([:content, :pages])
+      profile = Profile.new(modules: %i[content pages])
+      expect(profile.modules).to eq(%i[content pages])
     end
   end
 
   describe '#modules=' do
     it 'converts string modules to symbols' do
       profile = Profile.new
-      profile.modules = ['content', 'pages', 'settings']
-      expect(profile.modules).to eq([:content, :pages, :settings])
+      profile.modules = %w[content pages settings]
+      expect(profile.modules).to eq(%i[content pages settings])
     end
 
     it 'removes blank values' do
       profile = Profile.new
       profile.modules = ['content', '', 'pages', nil]
-      expect(profile.modules).to eq([:content, :pages])
+      expect(profile.modules).to eq(%i[content pages])
     end
 
     it 'handles nil input' do

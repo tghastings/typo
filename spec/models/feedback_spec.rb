@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe Feedback do
@@ -47,12 +49,12 @@ describe Feedback do
   describe '#akismet_options' do
     it 'returns hash with comment info' do
       comment = FactoryBot.build(:comment,
-        article: article,
-        ip: '127.0.0.1',
-        author: 'Test Author',
-        email: 'test@example.com',
-        url: 'http://example.com',
-        body: 'Test comment')
+                                 article: article,
+                                 ip: '127.0.0.1',
+                                 author: 'Test Author',
+                                 email: 'test@example.com',
+                                 url: 'http://example.com',
+                                 body: 'Test comment')
 
       options = comment.akismet_options
       expect(options[:user_ip]).to eq('127.0.0.1')
@@ -66,7 +68,7 @@ describe Feedback do
   describe '#spam_fields' do
     it 'returns array of spam-checkable fields' do
       comment = FactoryBot.build(:comment, article: article)
-      expect(comment.spam_fields).to eq([:title, :body, :ip, :url])
+      expect(comment.spam_fields).to eq(%i[title body ip url])
     end
   end
 

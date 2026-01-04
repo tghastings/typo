@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 RSpec.describe 'Turbo Drive Navigation', type: :system, js: true do
   let!(:blog) { FactoryBot.create(:blog) }
-  let!(:admin_user) { FactoryBot.create(:user, profile: Profile.find_by(label: "admin")) }
+  let!(:admin_user) { FactoryBot.create(:user, profile: Profile.find_by(label: 'admin')) }
 
   before do
     login_as_admin

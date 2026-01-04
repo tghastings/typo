@@ -19,9 +19,9 @@ RSpec.describe 'Custom Sidebars Integration', type: :request do
 
       it 'can be created via set_active (drag and drop)' do
         get '/admin/sidebar'
-        expect {
+        expect do
           post '/admin/sidebar/set_active', params: { active: [short_name] }, xhr: true
-        }.to change { Sidebar.count }.by(1)
+        end.to change { Sidebar.count }.by(1)
 
         expect(Sidebar.last).to be_a(sidebar_class)
       end
@@ -219,7 +219,7 @@ RSpec.describe 'Custom Sidebars Integration', type: :request do
     it 'can all be active at once' do
       get '/admin/sidebar'
       post '/admin/sidebar/set_active', params: {
-        active: ['flickr', 'spotify', 'cod']
+        active: %w[flickr spotify cod]
       }, xhr: true
 
       expect(Sidebar.count).to eq(3)
@@ -229,7 +229,7 @@ RSpec.describe 'Custom Sidebars Integration', type: :request do
     it 'all persist after publish' do
       get '/admin/sidebar'
       post '/admin/sidebar/set_active', params: {
-        active: ['flickr', 'spotify', 'cod']
+        active: %w[flickr spotify cod]
       }, xhr: true
 
       flickr = Sidebar.find_by(type: 'FlickrSidebar')
@@ -256,7 +256,7 @@ RSpec.describe 'Custom Sidebars Integration', type: :request do
     it 'work with built-in sidebars' do
       get '/admin/sidebar'
       post '/admin/sidebar/set_active', params: {
-        active: ['flickr', 'static', 'spotify', 'search', 'cod', 'meta']
+        active: %w[flickr static spotify search cod meta]
       }, xhr: true
 
       expect(Sidebar.count).to eq(6)
@@ -274,11 +274,11 @@ RSpec.describe 'Custom Sidebars Integration', type: :request do
     it 'removing one custom sidebar keeps others' do
       get '/admin/sidebar'
       post '/admin/sidebar/set_active', params: {
-        active: ['flickr', 'spotify', 'cod']
+        active: %w[flickr spotify cod]
       }, xhr: true
 
       flickr = Sidebar.find_by(type: 'FlickrSidebar')
-      spotify = Sidebar.find_by(type: 'SpotifySidebar')
+      Sidebar.find_by(type: 'SpotifySidebar')
       cod = Sidebar.find_by(type: 'CodStatsSidebar')
 
       # Remove spotify by not including it
@@ -297,7 +297,7 @@ RSpec.describe 'Custom Sidebars Integration', type: :request do
     it 'handles invalid sidebar type gracefully' do
       get '/admin/sidebar'
       post '/admin/sidebar/set_active', params: {
-        active: ['nonexistent', 'flickr']
+        active: %w[nonexistent flickr]
       }, xhr: true
 
       # Should only create the valid one

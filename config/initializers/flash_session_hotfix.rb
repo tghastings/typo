@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Rails 7 Flash Session Hotfix
 #
 # In Rails 7, ActionDispatch::Flash::RequestMethods#commit_flash calls session.enabled?
@@ -10,13 +12,17 @@
 class Hash
   # Returns true if the hash (acting as a session) is enabled
   # In the context of a test session, we always consider it enabled
-  def enabled?
-    true
-  end unless method_defined?(:enabled?)
+  unless method_defined?(:enabled?)
+    def enabled?
+      true
+    end
+  end
 
   # Returns true if the hash (acting as a session) is loaded
   # In the context of a test session, we always consider it loaded
-  def loaded?
-    true
-  end unless method_defined?(:loaded?)
+  unless method_defined?(:loaded?)
+    def loaded?
+      true
+    end
+  end
 end

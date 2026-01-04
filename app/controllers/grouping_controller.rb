@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 class GroupingController < ContentController
-  before_action :auto_discovery_feed, :only => [:show, :index]
+  before_action :auto_discovery_feed, only: %i[show index]
   layout :theme_layout
   cache_sweeper :blog_sweeper
 
@@ -10,12 +12,10 @@ class GroupingController < ContentController
 
   class << self
     def grouping_class(klass = nil)
-      if klass
-        @grouping_class = klass
-      end
-      @grouping_class ||= \
-        self.to_s \
-        .sub(/Controller$/,'') \
+      @grouping_class = klass if klass
+      @grouping_class ||=
+        to_s
+        .sub(/Controller$/, '')
         .singularize.constantize
     end
 
@@ -27,9 +27,9 @@ class GroupingController < ContentController
   def index
     @noindex = set_noindex params[:page]
     self.groupings = grouping_class.page(params[:page]).per(100)
-    @page_title = "#{self.class.to_s.sub(/Controller$/,'')}"
-    @keywords = ""
-    @description = "#{_(self.class.to_s.sub(/Controller$/,''))} #{'for'} #{this_blog.blog_name}"
+    @page_title = self.class.to_s.sub(/Controller$/, '').to_s
+    @keywords = ''
+    @description = "#{_(self.class.to_s.sub(/Controller$/, ''))} for #{this_blog.blog_name}"
     @description << "#{_('page')} #{params[:page]}" if params[:page]
     render_index(groupings)
   end
@@ -74,33 +74,33 @@ class GroupingController < ContentController
     instance_variable_get(self.class.ivar_name)
   end
 
-  def keyword_from grouping
-    keywords = ""
+  def keyword_from(grouping)
+    keywords = ''
     keywords << grouping.keywords unless grouping.keywords.blank?
     keywords << this_blog.meta_keywords unless this_blog.meta_keywords.blank?
     keywords
   end
 
-  def show_page_title_for grouping, page
-    if self.class.to_s.sub(/Controller$/,'').singularize == 'Category'
-      @page_title   = this_blog.category_title_template.to_title(@grouping, this_blog, params)
+  def show_page_title_for(_grouping, _page)
+    if self.class.to_s.sub(/Controller$/, '').singularize == 'Category'
+      @page_title = this_blog.category_title_template.to_title(@grouping, this_blog, params)
       @description = this_blog.category_title_template.to_title(@grouping, this_blog, params)
-    elsif self.class.to_s.sub(/Controller$/,'').singularize == 'Tag'
-      @page_title   = this_blog.tag_title_template.to_title(@grouping, this_blog, params)
+    elsif self.class.to_s.sub(/Controller$/, '').singularize == 'Tag'
+      @page_title = this_blog.tag_title_template.to_title(@grouping, this_blog, params)
       @description = this_blog.tag_title_template.to_title(@grouping, this_blog, params)
     end
   end
 
   # For some reasons, the permalink_url does not take the pagination.
-  def permalink_with_page grouping, page
-    suffix = page.nil? ? "/" : "/page/#{page}/"
+  def permalink_with_page(grouping, page)
+    suffix = page.nil? ? '/' : "/page/#{page}/"
     grouping.permalink_url + suffix
   end
 
   def render_index(groupings)
     respond_to do |format|
       format.html do
-        controller_name = self.class.to_s.sub(/Controller$/,'').downcase
+        controller_name = self.class.to_s.sub(/Controller$/, '').downcase
         if template_exists?('index', controller_name, false)
           render action: 'index'
         else
@@ -116,12 +116,11 @@ class GroupingController < ContentController
     respond_to do |format|
       format.html do
         if @articles.empty?
-          redirect_to root_path, :status => 301
+          redirect_to root_path, status: 301
           return
         end
 
         render active_template
-
       end
 
       format.atom { render_feed 'atom', @articles }
@@ -130,8 +129,8 @@ class GroupingController < ContentController
   end
 
   def render_feed(format, collection)
-    @articles = collection[0,this_blog.limit_rss_display]
-    render "articles/index_#{format}_feed", :layout => false
+    @articles = collection[0, this_blog.limit_rss_display]
+    render "articles/index_#{format}_feed", layout: false
   end
 
   def render_empty
@@ -140,25 +139,23 @@ class GroupingController < ContentController
   end
 
   private
-  def set_noindex page = nil
+
+  def set_noindex(page = nil)
     # irk there must be a better way to do this
-    return 1 if (grouping_class.to_s.downcase == "tag" and this_blog.unindex_tags)
-    return 1 if (grouping_class.to_s.downcase == "category" and this_blog.unindex_categories)
-    return 1 unless page.blank?
+    return 1 if (grouping_class.to_s.downcase == 'tag') && this_blog.unindex_tags
+    return 1 if (grouping_class.to_s.downcase == 'category') && this_blog.unindex_categories
+
+    1 unless page.blank?
   end
-  
+
   def active_template
-    controller_name = self.class.to_s.sub(/Controller$/,'').downcase
+    controller_name = self.class.to_s.sub(/Controller$/, '').downcase
 
     # Check if theme-specific template exists for this ID
-    if params[:id] && template_exists?(params[:id], controller_name, false)
-      return params[:id]
-    end
+    return params[:id] if params[:id] && template_exists?(params[:id], controller_name, false)
 
     # Check if show template exists for this controller
-    if template_exists?('show', controller_name, false)
-      return 'show'
-    end
+    return 'show' if template_exists?('show', controller_name, false)
 
     # Fall back to articles/index
     'articles/index'

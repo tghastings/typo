@@ -296,7 +296,7 @@ cite {
   margin: var(--space-md) var(--space-lg);
   padding: 0;
   font-style: italic;
-  font-size: var(--font-size-sm);
+  font-size: 1.0rem;
 }
 
 #content blockquote p:last-child {
@@ -629,6 +629,11 @@ pre {
 .atomentry .content,
 .article .content {
   margin-bottom: var(--space-md);
+}
+
+/* Paragraph indentation - only when enabled per article */
+article.indent-paragraphs .content p {
+  text-indent: 1.5em;
 }
 
 /* Article footer */

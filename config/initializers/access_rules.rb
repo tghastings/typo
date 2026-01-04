@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Localization.lang = ''
 # LisiaSoft::AccessControl, permit to manage, backend, and frontend access.
 # Based on the LoginSystem of Lipisadmin
@@ -42,66 +44,66 @@
 #
 # For example, whe can decide that an Account with role :customers can see only, the module project :store.
 
-AccessControl.map :require => [ :admin, :publisher, :contributor ]  do |map|
-  map.permission "admin/base"
-  map.permission "admin/cache"
-  map.permission "admin/dashboard"
-  map.permission "admin/textfilters"
-  map.permission "admin/profiles"
+AccessControl.map require: %i[admin publisher contributor] do |map|
+  map.permission 'admin/base'
+  map.permission 'admin/cache'
+  map.permission 'admin/dashboard'
+  map.permission 'admin/textfilters'
+  map.permission 'admin/profiles'
 
   # FIXME: For previews, during production 'previews' is needed, during
   # test, 'articles' is needed. Proposed solution: move previews to
   # ArticlesController
-  map.permission "previews"
-  map.permission "articles"
+  map.permission 'previews'
+  map.permission 'articles'
 
   map.project_module :articles, nil do |project|
-    project.menu    "Articles",       { :controller => "admin/content", :action => "index" }
-    project.submenu "All Articles",   { :controller => "admin/content", :action => "index" }
-    project.submenu "New Article",    { :controller => "admin/content", :action => "new" }
-    project.submenu "Comments",       { :controller => "admin/feedback", :action => "index" }
-    project.submenu "Categories",     { :controller => "admin/categories", :action => "new" }
-    project.submenu "Tags",           { :controller => "admin/tags", :action => "index" }
-    project.submenu "Article Types",  { :controller => "admin/post_types", :action => "new" }
-    project.submenu "Redirects",      { :controller => "admin/redirects", :action => "index" }
+    project.menu    'Articles',       { controller: 'admin/content', action: 'index' }
+    project.submenu 'All Articles',   { controller: 'admin/content', action: 'index' }
+    project.submenu 'New Article',    { controller: 'admin/content', action: 'new' }
+    project.submenu 'Comments',       { controller: 'admin/feedback', action: 'index' }
+    project.submenu 'Categories',     { controller: 'admin/categories', action: 'new' }
+    project.submenu 'Tags',           { controller: 'admin/tags', action: 'index' }
+    project.submenu 'Article Types',  { controller: 'admin/post_types', action: 'new' }
+    project.submenu 'Redirects',      { controller: 'admin/redirects', action: 'index' }
   end
 
   map.project_module :pages, nil do |project|
-    project.menu "Pages",         { :controller => "admin/pages", :action => "index" }
-    project.submenu "All Pages",  { :controller => "admin/pages", :action => "index" }
-    project.submenu "New Page",   { :controller => "admin/pages", :action => "new" }
+    project.menu 'Pages',         { controller: 'admin/pages', action: 'index' }
+    project.submenu 'All Pages',  { controller: 'admin/pages', action: 'index' }
+    project.submenu 'New Page',   { controller: 'admin/pages', action: 'new' }
   end
 
   map.project_module :media, nil do |project|
-    project.menu    "Media Library",  { :controller => "admin/resources", :action => "index" }
+    project.menu    'Media Library', { controller: 'admin/resources', action: 'index' }
   end
 
   map.project_module :themes, nil do |project|
-    project.menu    "Design",             { :controller => "admin/themes", :action => "index"  }
-    project.submenu "Choose theme",       { :controller => "admin/themes", :action => "index"  }
-    project.submenu "Customize sidebar",  { :controller => "admin/sidebar", :action => "index" }
+    project.menu    'Design',             { controller: 'admin/themes', action: 'index'  }
+    project.submenu 'Choose theme',       { controller: 'admin/themes', action: 'index'  }
+    project.submenu 'Customize sidebar',  { controller: 'admin/sidebar', action: 'index' }
 
     AccessControl.search_plugins_directory.each do |plugin|
       project.submenu AccessControl.get_plugin_litteral_name(plugin),
-        { :controller => "admin/#{AccessControl.get_plugin_controller_name(plugin)}", :action => "index" }
+                      { controller: "admin/#{AccessControl.get_plugin_controller_name(plugin)}", action: 'index' }
     end
   end
 
   map.project_module :settings, nil do |project|
-    project.menu    "Settings",         { :controller => "admin/settings", :action => "index" }
-    project.menu    "General settings", { :controller => "admin/settings", :action => "index" }
-    project.submenu "Write",            { :controller => "admin/settings", :action => "write" }
-    project.submenu "Feedback",         { :controller => "admin/settings", :action => "feedback" }
-    project.submenu "Cache",            { :controller => "admin/cache", :action => "index" }
-    project.submenu "Users",            { :controller => "admin/users", :action => "index" }
-    project.submenu "Error messages",   { :controller => "admin/settings", :action => "errors" }
-    project.submenu "",                 { :controller => "admin/redirects", :action => "new"}
+    project.menu    'Settings',         { controller: 'admin/settings', action: 'index' }
+    project.menu    'General settings', { controller: 'admin/settings', action: 'index' }
+    project.submenu 'Write',            { controller: 'admin/settings', action: 'write' }
+    project.submenu 'Feedback',         { controller: 'admin/settings', action: 'feedback' }
+    project.submenu 'Cache',            { controller: 'admin/cache', action: 'index' }
+    project.submenu 'Users',            { controller: 'admin/users', action: 'index' }
+    project.submenu 'Error messages',   { controller: 'admin/settings', action: 'errors' }
+    project.submenu '',                 { controller: 'admin/redirects', action: 'new' }
   end
 
   map.project_module :seo, nil do |project|
-    project.menu    "SEO",  { :controller => "admin/seo", :action => "index" }
-    project.submenu "Global SEO settings",  { :controller => "admin/seo", :action => "index" }    
-    project.submenu "Permalinks",           { :controller => "admin/seo", :action => "permalinks" }
-    project.submenu "Titles",               { :controller => "admin/seo", :action => "titles" }
+    project.menu    'SEO',  { controller: 'admin/seo', action: 'index' }
+    project.submenu 'Global SEO settings',  { controller: 'admin/seo', action: 'index' }
+    project.submenu 'Permalinks',           { controller: 'admin/seo', action: 'permalinks' }
+    project.submenu 'Titles',               { controller: 'admin/seo', action: 'titles' }
   end
 end

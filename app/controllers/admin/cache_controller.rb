@@ -1,43 +1,42 @@
+# frozen_string_literal: true
+
 require 'find'
 
-class Admin::CacheController < Admin::BaseController
-  def index
-    @cache_size = 0
-    @cache_number = 0
+module Admin
+  class CacheController < Admin::BaseController
+    def index
+      @cache_size = 0
+      @cache_number = 0
 
-    cache_dir = TypoBlog::Application.config.action_controller.page_cache_directory
+      cache_dir = TypoBlog::Application.config.action_controller.page_cache_directory
 
-    # Ensure cache directory exists
-    if cache_dir.present?
-      FileUtils.mkdir_p(cache_dir) unless File.exist?(cache_dir)
-    end
+      # Ensure cache directory exists
+      FileUtils.mkdir_p(cache_dir) if cache_dir.present? && !File.exist?(cache_dir)
 
-    if request.post?
-      begin
-        # Clear Rails cache store
-        Rails.cache.clear
+      if request.post?
+        begin
+          # Clear Rails cache store
+          Rails.cache.clear
 
-        # Clear Typo page cache files directly
-        if cache_dir.present? && File.exist?(cache_dir) && cache_dir != "#{Rails.root}/public"
-          FileUtils.rm_rf(Dir.glob("#{cache_dir}/*"))
+          # Clear Typo page cache files directly
+          FileUtils.rm_rf(Dir.glob("#{cache_dir}/*")) if cache_dir.present? && File.exist?(cache_dir) && cache_dir != "#{Rails.root}/public"
+
+          flash.now[:notice] = _('Cache was successfully sweeped')
+        rescue StandardError => e
+          Rails.logger.error "Cache sweep error: #{e.message}"
+          flash.now[:error] = _('Oops, something wrong happened. Cache could not be cleaned') + " (#{e.message})"
         end
-
-        flash.now[:notice] = _("Cache was successfully sweeped")
-      rescue => e
-        Rails.logger.error "Cache sweep error: #{e.message}"
-        flash.now[:error] = _("Oops, something wrong happened. Cache could not be cleaned") + " (#{e.message})"
       end
-    end
 
-    # Count cache files
-    if cache_dir.present? && File.exist?(cache_dir)
+      # Count cache files
+      return unless cache_dir.present? && File.exist?(cache_dir)
+
       Find.find(cache_dir) do |path|
         if FileTest.directory?(path)
-          if File.basename(path)[0] == ?.
-            Find.prune
-          else
-            next
-          end
+          next unless File.basename(path)[0] == '.'
+
+          Find.prune
+
         else
           @cache_size += FileTest.size(path)
           @cache_number += 1
@@ -45,5 +44,4 @@ class Admin::CacheController < Admin::BaseController
       end
     end
   end
-
 end

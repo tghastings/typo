@@ -1,22 +1,22 @@
+# frozen_string_literal: true
+
 require_dependency 'spam_protection'
 require 'timeout'
 
 class Comment < Feedback
-  self.table_name = "feedback"
+  self.table_name = 'feedback'
 
   belongs_to :article, optional: true
   belongs_to :user, optional: true
   content_fields :body
   validates_presence_of :author, :body
 
-  attr_accessor :user_agent
-  attr_accessor :referrer
-  attr_accessor :permalink
+  attr_accessor :user_agent, :referrer, :permalink
 
   def notify_user_via_email(user)
-    if user.notify_via_email?
-      EmailNotify.send_comment(self, user)
-    end
+    return unless user.notify_via_email?
+
+    EmailNotify.send_comment(self, user)
   end
 
   def interested_users
@@ -38,7 +38,8 @@ class Comment < Feedback
 
   def article_allows_feedback?
     return true if article.allow_comments?
-    errors.add(:article, "Article is not open to comments")
+
+    errors.add(:article, 'Article is not open to comments')
     false
   end
 

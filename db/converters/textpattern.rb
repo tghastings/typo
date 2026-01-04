@@ -1,11 +1,12 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 # TextPattern 1.x converter for typo by Patrick Lenz <patrick@lenz.sh>
 #
 # MAKE BACKUPS OF EVERYTHING BEFORE RUNNING THIS SCRIPT!
 # THIS SCRIPT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND
 
-require File.dirname(__FILE__) + '/../../config/environment'
+require "#{File.dirname(__FILE__)}/../../config/environment"
 require 'optparse'
 
 class TXPMigrate
@@ -13,19 +14,19 @@ class TXPMigrate
 
   def initialize
     self.options = {}
-    self.parse_options
-    self.convert_categories
-    self.convert_entries
-    self.convert_prefs
+    parse_options
+    convert_categories
+    convert_entries
+    convert_prefs
   end
 
   def convert_categories
-    txp_categories = ActiveRecord::Base.connection.select_all(%{
+    txp_categories = ActiveRecord::Base.connection.select_all(%(
       SELECT name
-      FROM `#{self.options[:txp_db]}`.`#{self.options[:txp_pfx]}`txp_category
+      FROM `#{options[:txp_db]}`.`#{options[:txp_pfx]}`txp_category
       WHERE parent = 'root'
       AND type = 'article'
-    })
+    ))
 
     puts "Converting #{txp_categories.size} categories.."
 
@@ -51,24 +52,32 @@ class TXPMigrate
         (CASE textile_body WHEN '1' THEN 'textile' ELSE 'none' END) AS text_filter,
         (CASE Status WHEN '1' THEN '0' ELSE '1' END) AS published,
         Category1, Category2
-      FROM `#{self.options[:txp_db]}`..`#{self.options[:txp_pfx]}`textpattern
+      FROM `#{options[:txp_db]}`..`#{options[:txp_pfx]}`textpattern
     })
 
     puts "Converting #{txp_entries.size} entries.."
 
     txp_entries.each do |entry|
       a = Article.new
-      a.attributes = entry.reject { |k,v| k =~ /^(Category|ID)/ }
+      a.attributes = entry.reject { |k, _v| k =~ /^(Category|ID)/ }
       a.save
 
       # Assign categories
       puts "Assign primary category for entry #{entry['ID']}"
-      a.categories.push_with_attributes(Category.find_by_name(entry['Category1']), :is_primary => 1) rescue nil
+      begin
+        a.categories.push_with_attributes(Category.find_by_name(entry['Category1']), is_primary: 1)
+      rescue StandardError
+        nil
+      end
       puts "Assign secondary category for entry #{entry['ID']}"
-      a.categories.push_with_attributes(Category.find_by_name(entry['Category2']), :is_primary => 0) rescue nil
+      begin
+        a.categories.push_with_attributes(Category.find_by_name(entry['Category2']), is_primary: 0)
+      rescue StandardError
+        nil
+      end
 
       # Fetch comments
-      ActiveRecord::Base.connection.select_all(%{
+      ActiveRecord::Base.connection.select_all(%(
         SELECT
           name AS author,
           email AS email,
@@ -77,17 +86,16 @@ class TXPMigrate
           message as body_html,
           posted AS created_at,
           ip AS ip
-        FROM `#{self.options[:txp_db]}`..`#{self.options[:txp_pfx]}`txp_discuss
+        FROM `#{options[:txp_db]}`..`#{options[:txp_pfx]}`txp_discuss
         WHERE parentid = #{entry['ID']}
-      }).each do |c|
+      )).each do |c|
         a.comments.create(c)
       end
-
     end
   end
 
   def convert_prefs
-    puts "Converting prefs"
+    puts 'Converting prefs'
 
     ActiveRecord::Base.connection.select_all(%{
       SELECT
@@ -97,16 +105,14 @@ class TXPMigrate
           WHEN 'use_textile' THEN 'text_filter'
          END) AS name,
         val AS value
-      FROM `#{self.options[:txp_db]}`..`#{self.options[:txp_pfx]}`txp_prefs
+      FROM `#{options[:txp_db]}`..`#{options[:txp_pfx]}`txp_prefs
       WHERE name IN ('sitename', 'comments_on_default', 'use_textile')
     }).each do |pref|
-      if pref['name'] == "text_filter" and pref['value'].to_i > 0
-        pref['value'] = 'textile'
-      end
+      pref['value'] = 'textile' if (pref['name'] == 'text_filter') && pref['value'].to_i.positive?
 
       begin
-        Setting.find_by_name(pref['name']).update_attribute("value", pref['value'])
-      rescue
+        Setting.find_by_name(pref['name']).update_attribute('value', pref['value'])
+      rescue StandardError
         Setting.create(pref)
       end
     end
@@ -114,10 +120,10 @@ class TXPMigrate
 
   def parse_options
     OptionParser.new do |opt|
-      opt.banner = "Usage: textpattern.rb [options]"
+      opt.banner = 'Usage: textpattern.rb [options]'
 
-      opt.on('--db DBNAME', String, 'Text Pattern database name.') { |d| self.options[:txp_db] = d }
-      opt.on('--pf PREFIX', String, 'Textpattern table prefix.') { |p| self.options[:txp_pfx] = p }
+      opt.on('--db DBNAME', String, 'Text Pattern database name.') { |d| options[:txp_db] = d }
+      opt.on('--pf PREFIX', String, 'Textpattern table prefix.') { |p| options[:txp_pfx] = p }
 
       opt.on_tail('-h', '--help', 'Show this message.') do
         puts opt
@@ -127,10 +133,10 @@ class TXPMigrate
       opt.parse!(ARGV)
     end
 
-    unless self.options.include?(:txp_db)
-      puts "See textpattern.rb --help for help."
-      exit
-    end
+    return if options.include?(:txp_db)
+
+    puts 'See textpattern.rb --help for help.'
+    exit
   end
 end
 

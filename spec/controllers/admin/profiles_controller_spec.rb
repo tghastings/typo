@@ -1,28 +1,29 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe Admin::ProfilesController do
-
-  describe "#index" do
+  describe '#index' do
     it 'should render index' do
       Factory(:blog)
-      #TODO Remove this after remove FIXTURES...
+      # TODO: Remove this after remove FIXTURES...
       Profile.delete_all
-      alice = Factory(:user, :login => 'alice', :profile => Factory(:profile_admin, :label => Profile::ADMIN))
-      request.session = { :user_id => alice.id }
+      alice = Factory(:user, login: 'alice', profile: Factory(:profile_admin, label: Profile::ADMIN))
+      request.session = { user_id: alice.id }
       get :index
       expect(response).to render_template('index')
     end
   end
 
   # TODO: Make RESTful
-  describe "successful POST to index" do
-    it "redirects to profile page" do
+  describe 'successful POST to index' do
+    it 'redirects to profile page' do
       Factory(:blog)
-      #TODO Remove this after remove FIXTURES...
+      # TODO: Remove this after remove FIXTURES...
       Profile.delete_all
-      alice = Factory(:user, :login => 'alice', :profile => Factory(:profile_admin, :label => Profile::ADMIN))
-      request.session = { :user_id => alice.id }
-      post :index, :user => {:email => 'foo@bar.com'}
+      alice = Factory(:user, login: 'alice', profile: Factory(:profile_admin, label: Profile::ADMIN))
+      request.session = { user_id: alice.id }
+      post :index, user: { email: 'foo@bar.com' }
       expect(response).to render_template('index')
     end
   end

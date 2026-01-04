@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddBibliographyTextFilters < ActiveRecord::Migration[8.0]
   def up
     TextFilter.find_or_create_by!(name: 'markdown bibliography') do |tf|
@@ -9,7 +11,7 @@ class AddBibliographyTextFilters < ActiveRecord::Migration[8.0]
     TextFilter.find_or_create_by!(name: 'markdown smartypants bibliography') do |tf|
       tf.description = 'Markdown with Smartypants and Bibliography'
       tf.markup = 'markdown'
-      tf.filters = [:smartypants, :bibliography]
+      tf.filters = %i[smartypants bibliography]
     end
   end
 

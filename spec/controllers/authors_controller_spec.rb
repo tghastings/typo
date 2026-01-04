@@ -1,15 +1,17 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe AuthorsController do
   describe '#show' do
     let!(:blog) { Factory(:blog) }
     let!(:user) { Factory(:user) }
-    let!(:article) { Factory(:article, :user => user) }
-    let!(:unpublished_article) { Factory(:unpublished_article, :user => user) }
+    let!(:article) { Factory(:article, user: user) }
+    let!(:unpublished_article) { Factory(:unpublished_article, user: user) }
 
-    describe "as html" do
+    describe 'as html' do
       before do
-        get 'show', :id => user.login
+        get 'show', id: user.login
       end
 
       it 'renders the :show template' do
@@ -24,7 +26,7 @@ describe AuthorsController do
         expect(assigns(:articles)).to eq([article])
       end
 
-      describe "when rendered" do
+      describe 'when rendered' do
         render_views
 
         it 'has a link to the rss feed' do
@@ -37,61 +39,60 @@ describe AuthorsController do
       end
     end
 
-    describe "as an atom feed" do
+    describe 'as an atom feed' do
       before do
-        get 'show', :id => user.login, :format => 'atom'
+        get 'show', id: user.login, format: 'atom'
       end
 
       it 'assigns articles as published articles' do
         expect(assigns(:articles)).to eq([article])
       end
 
-      it "renders the atom template" do
+      it 'renders the atom template' do
         expect(response).to be_success
-        expect(response).to render_template("show_atom_feed")
+        expect(response).to render_template('show_atom_feed')
       end
 
-      it "does not render layout" do
+      it 'does not render layout' do
         # No layout should be rendered for feeds
       end
     end
 
-    describe "as an rss feed" do
+    describe 'as an rss feed' do
       before do
-        get 'show', :id => user.login, :format => 'rss'
+        get 'show', id: user.login, format: 'rss'
       end
 
       it 'assigns articles as published articles' do
         expect(assigns(:articles)).to eq([article])
       end
 
-      it "renders the rss template" do
+      it 'renders the rss template' do
         expect(response).to be_success
-        expect(response).to render_template("show_rss_feed")
+        expect(response).to render_template('show_rss_feed')
       end
 
-      it "does not render layout" do
+      it 'does not render layout' do
         # No layout should be rendered for feeds
       end
     end
   end
 end
 
-describe AuthorsController, "SEO options" do
+describe AuthorsController, 'SEO options' do
   render_views
 
   it 'should never have meta keywords with deactivated option' do
-    Factory(:blog, :use_meta_keyword => false)
-    Factory(:user, :login => 'henri')
-    get 'show', :id => 'henri'
+    Factory(:blog, use_meta_keyword: false)
+    Factory(:user, login: 'henri')
+    get 'show', id: 'henri'
     expect(response).not_to have_selector('head>meta[name="keywords"]')
   end
 
   it 'should never have meta keywords with deactivated option' do
-    Factory(:blog, :use_meta_keyword => true)
-    Factory(:user, :login => 'alice')
-    get 'show', :id => 'alice'
+    Factory(:blog, use_meta_keyword: true)
+    Factory(:user, login: 'alice')
+    get 'show', id: 'alice'
     expect(response).not_to have_selector('head>meta[name="keywords"]')
   end
-
 end

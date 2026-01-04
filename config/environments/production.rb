@@ -1,10 +1,12 @@
-require "active_support/core_ext/integer/time"
+# frozen_string_literal: true
+
+require 'active_support/core_ext/integer/time'
 
 TypoBlog::Application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
   # Secret key base from environment variable
-  config.secret_key_base = ENV["SECRET_KEY_BASE"]
+  config.secret_key_base = ENV.fetch('SECRET_KEY_BASE', nil)
 
   # Code is not reloaded between requests.
   config.enable_reloading = false
@@ -19,7 +21,7 @@ TypoBlog::Application.configure do
   config.action_controller.perform_caching = true
 
   # Cache assets for far-future expiry since they are all digest stamped.
-  config.public_file_server.headers = { "cache-control" => "public, max-age=#{1.year.to_i}" }
+  config.public_file_server.headers = { 'cache-control' => "public, max-age=#{1.year.to_i}" }
 
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
@@ -28,23 +30,23 @@ TypoBlog::Application.configure do
   config.active_storage.service = :local
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  config.assume_ssl = ENV["RAILS_ASSUME_SSL"] == "true"
+  config.assume_ssl = ENV['RAILS_ASSUME_SSL'] == 'true'
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  config.force_ssl = ENV["RAILS_FORCE_SSL"] == "true"
+  config.force_ssl = ENV['RAILS_FORCE_SSL'] == 'true'
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
 
   # Log to STDOUT with the current request id as a default log tag.
-  config.log_tags = [ :request_id ]
-  config.logger = ActiveSupport::TaggedLogging.logger(STDOUT)
+  config.log_tags = [:request_id]
+  config.logger = ActiveSupport::TaggedLogging.logger($stdout)
 
   # Change to "debug" to log everything (including potentially sensitive information!)
-  config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
+  config.log_level = ENV.fetch('RAILS_LOG_LEVEL', 'info')
 
   # Prevent health checks from clogging up the logs.
-  config.silence_healthcheck_path = "/up"
+  config.silence_healthcheck_path = '/up'
 
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
@@ -63,7 +65,7 @@ TypoBlog::Application.configure do
   # config.action_mailer.raise_delivery_errors = false
 
   # Set host for URL generation in mailer templates
-  config.action_mailer.default_url_options = { host: ENV.fetch("TYPO_HOST", "localhost") }
+  config.action_mailer.default_url_options = { host: ENV.fetch('TYPO_HOST', 'localhost') }
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
@@ -73,7 +75,7 @@ TypoBlog::Application.configure do
   config.active_record.dump_schema_after_migration = false
 
   # Only use :id for inspections in production.
-  config.active_record.attributes_for_inspect = [ :id ]
+  config.active_record.attributes_for_inspect = [:id]
 
   # Enable DNS rebinding protection and other `Host` header attacks.
   # config.hosts = [
@@ -88,7 +90,7 @@ TypoBlog::Application.configure do
   config.hosts = nil
 
   # Serve static files from the /public folder
-  config.public_file_server.enabled = ENV["RAILS_SERVE_STATIC_FILES"].present? || true
+  config.public_file_server.enabled = ENV['RAILS_SERVE_STATIC_FILES'].present? || true
 
   # Typo-specific settings
   config.after_initialize do

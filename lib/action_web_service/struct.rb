@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ActionWebService
   # To send structured types across the wire, derive from ActionWebService::Struct,
   # and use +member+ to declare structure members.
@@ -21,10 +23,10 @@ module ActionWebService
   class Struct
     # If a Hash is given as argument to an ActionWebService::Struct constructor,
     # it can contain initial values for the structure member.
-    def initialize(values={})
-      if values.is_a?(Hash)
-        values.map{|k,v| __send__('%s=' % k.to_s, v)}
-      end
+    def initialize(values = {})
+      return unless values.is_a?(Hash)
+
+      values.map { |k, v| __send__(format('%s=', k.to_s), v) }
     end
 
     # The member with the given name
@@ -33,9 +35,9 @@ module ActionWebService
     end
 
     # Iterates through each member
-    def each_pair(&block)
-      self.class.members.each do |name, type|
-        yield name, self.__send__(name)
+    def each_pair
+      self.class.members.each_key do |name|
+        yield name, __send__(name)
       end
     end
 
@@ -45,15 +47,15 @@ module ActionWebService
       def member(name, type)
         name = name.to_sym
         type = ActionWebService::SignatureTypes.canonical_signature_entry({ name => type }, 0)
-        write_inheritable_hash("struct_members", name => type)
-        class_eval <<-END
+        write_inheritable_hash('struct_members', name => type)
+        class_eval <<-END, __FILE__, __LINE__ + 1
           def #{name}; @#{name}; end
           def #{name}=(value); @#{name} = value; end
         END
       end
 
       def members # :nodoc:
-        read_inheritable_attribute("struct_members") || {}
+        read_inheritable_attribute('struct_members') || {}
       end
 
       def member_type(name) # :nodoc:

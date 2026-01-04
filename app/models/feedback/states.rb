@@ -1,225 +1,259 @@
-module Feedback::States
-  class Base < Stateful::State
-    # Give the default 'model' a more meaningful name
-    alias_method :content, :model
+# frozen_string_literal: true
 
-    # Callback handlers
-    def before_save_handler; true; end
-    def after_initialize_handler; true; end
+class Feedback
+  module States
+    class Base < Stateful::State
+      # Give the default 'model' a more meaningful name
+      alias content model
 
-    def post_trigger;          true; end
-    def send_notifications;    true; end
-    def report_classification; true; end
+      # Callback handlers
+      def before_save_handler
+        true
+      end
 
-    def withdraw;                    end
-    def confirm_classification;      end
+      def after_initialize_handler
+        true
+      end
 
-    def mark_as_spam
-      content.state = :just_marked_as_spam
+      def post_trigger
+        true
+      end
+
+      def send_notifications
+        true
+      end
+
+      def report_classification
+        true
+      end
+
+      def withdraw; end
+      def confirm_classification; end
+
+      def mark_as_spam
+        content.state = :just_marked_as_spam
+      end
+
+      def mark_as_ham
+        content.state = :just_marked_as_ham
+      end
     end
 
-    def mark_as_ham
-      content.state = :just_marked_as_ham
-    end
-  end
+    class Unclassified < Base
+      def after_initialize_handler
+        enter_hook
+        true
+      end
 
-  class Unclassified < Base
-    def after_initialize_handler
-      enter_hook
-      return true
-    end
+      def enter_hook
+        super
+        content[:published] = false
+        content[:status_confirmed] = false
+      end
 
-    def enter_hook
-      super
-      content[:published] = false
-      content[:status_confirmed] = false
-    end
+      def published?
+        classify_content
+        content.published?
+      end
 
-    def published?
-      classify_content
-      content.published?
-    end
+      def just_published?
+        classify_content
+        content.just_published?
+      end
 
-    def just_published?
-      classify_content
-      content.just_published?
-    end
+      def spam?
+        classify_content
+        content.spam?
+      end
 
-    def spam?
-      classify_content;
-      content.spam?
-    end
+      def classify_content
+        content.state = case content.classify
+                        when :ham then :just_presumed_ham
+                        when :spam then :presumed_spam
+                        else :presumed_spam
+                        end
+      end
 
-    def classify_content
-      content.state = case content.classify
-                      when :ham;  :just_presumed_ham
-                      when :spam; :presumed_spam
-                      else        :presumed_spam
-                      end
-    end
+      def before_save_handler
+        classify_content
+      end
 
-    def before_save_handler
-      classify_content
-    end
-
-    def to_s
-      "Unclassified"
-    end
-  end
-
-  class JustPresumedHam < Base
-    def enter_hook
-      super
-      content.just_changed_published_status = true
-      content.state = :presumed_ham unless content.user_id
-      content.state = :just_marked_as_ham if content.user_id
+      def to_s
+        'Unclassified'
+      end
     end
 
-    def to_s
-      "Just Presumed Ham"
-    end
-  end
+    class JustPresumedHam < Base
+      def enter_hook
+        super
+        content.just_changed_published_status = true
+        content.state = :presumed_ham unless content.user_id
+        content.state = :just_marked_as_ham if content.user_id
+      end
 
-  class PresumedHam < Base
-    def enter_hook
-      super
-      content[:published] = true
-      content[:status_confirmed] = false
-    end
-
-    def published?; true; end
-
-    def just_published?
-      content.just_changed_published_status?
+      def to_s
+        'Just Presumed Ham'
+      end
     end
 
-    def withdraw
-      mark_as_spam
+    class PresumedHam < Base
+      def enter_hook
+        super
+        content[:published] = true
+        content[:status_confirmed] = false
+      end
+
+      def published?
+        true
+      end
+
+      def just_published?
+        content.just_changed_published_status?
+      end
+
+      def withdraw
+        mark_as_spam
+      end
+
+      def confirm_classification
+        mark_as_ham
+      end
+
+      def mark_as_ham
+        content.state = :ham
+      end
+
+      def to_s
+        'Ham?'
+      end
+
+      def send_notifications
+        content.really_send_notifications if content.just_changed_published_status
+        true
+      end
     end
 
-    def confirm_classification
-      mark_as_ham
+    class JustMarkedAsHam < Base
+      def enter_hook
+        super
+        content.just_changed_published_status = true
+        content.state = :ham
+      end
+
+      def to_s
+        'Just Marked As Ham'
+      end
     end
 
-    def mark_as_ham
-      content.state = :ham
+    class Ham < Base
+      def enter_hook
+        super
+        content[:published] = true
+        content[:status_confirmed] = true
+      end
+
+      def published?
+        true
+      end
+
+      def status_confirmed?
+        true
+      end
+
+      def mark_as_ham; end
+
+      def just_published?
+        content.just_changed_published_status?
+      end
+
+      def withdraw
+        mark_as_spam
+      end
+
+      def report_classification
+        content.report_as_ham if content.just_changed_published_status?
+        true
+      end
+
+      def send_notifications
+        content.really_send_notifications if content.just_changed_published_status?
+        true
+      end
+
+      def to_s
+        'Ham'
+      end
     end
 
-    def to_s
-      "Ham?"
+    class PresumedSpam < Base
+      def enter_hook
+        super
+        content[:published] = false
+        content[:status_confirmed] = false
+      end
+
+      def spam?
+        true
+      end
+
+      def mark_as_ham
+        content.state = :just_marked_as_ham
+      end
+
+      def mark_as_spam
+        content.state = :spam
+      end
+
+      def withdraw
+        mark_as_spam
+      end
+
+      def confirm_classification
+        mark_as_spam
+      end
+
+      def to_s
+        'Spam?'
+      end
     end
 
-    def send_notifications
-      content.really_send_notifications if content.just_changed_published_status
-      return true
-    end
-  end
+    class JustMarkedAsSpam < Base
+      def enter_hook
+        super
+        content.just_changed_published_status = true
+        content.state = :spam
+      end
 
-  class JustMarkedAsHam < Base
-    def enter_hook
-      super
-      content.just_changed_published_status = true
-      content.state = :ham
-    end
-
-    def to_s
-      "Just Marked As Ham"
-    end
-  end
-
-  class Ham < Base
-    def enter_hook
-      super
-      content[:published] = true
-      content[:status_confirmed] = true
+      def to_s
+        'Just Marked As Spam'
+      end
     end
 
-    def published?;        true; end
-    def status_confirmed?; true; end
+    class Spam < Base
+      def enter_hook
+        super
+        content[:published] = false
+        content[:status_confirmed] = true
+      end
 
-    def mark_as_ham;             end
+      def spam?
+        true
+      end
 
-    def just_published?
-      content.just_changed_published_status?
-    end
+      def status_confirmed?
+        true
+      end
 
-    def withdraw
-      mark_as_spam
-    end
+      def mark_as_spam; end
 
-    def report_classification
-      content.report_as_ham if content.just_changed_published_status?
-      true
-    end
+      def report_classification
+        content.report_as_spam if content.just_changed_published_status?
+        true
+      end
 
-    def send_notifications
-      content.really_send_notifications if content.just_changed_published_status?
-      true
-    end
-    def to_s
-      "Ham"
-    end
-  end
-
-  class PresumedSpam < Base
-    def enter_hook
-      super
-      content[:published] = false
-      content[:status_confirmed] = false
-    end
-
-    def spam?; true; end
-
-    def mark_as_ham
-      content.state = :just_marked_as_ham
-    end
-
-    def mark_as_spam
-      content.state = :spam
-    end
-
-    def withdraw
-      mark_as_spam
-    end
-
-    def confirm_classification
-      mark_as_spam
-    end
-
-    def to_s
-      "Spam?"
-    end
-  end
-
-  class JustMarkedAsSpam < Base
-    def enter_hook
-      super
-      content.just_changed_published_status = true
-      content.state = :spam
-    end
-    def to_s
-      "Just Marked As Spam"
-    end
-  end
-
-  class Spam < Base
-    def enter_hook
-      super
-      content[:published] = false
-      content[:status_confirmed] = true
-    end
-
-    def spam?;             true; end
-    def status_confirmed?; true; end
-
-    def mark_as_spam;            end
-
-    def report_classification
-      content.report_as_spam if content.just_changed_published_status?
-      true
-    end
-    def to_s
-      "Spam"
+      def to_s
+        'Spam'
+      end
     end
   end
 end

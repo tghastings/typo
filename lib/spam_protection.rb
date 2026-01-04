@@ -1,8 +1,9 @@
-class SpamProtection
+# frozen_string_literal: true
 
-  IP_RBLS = [ 'opm.blitzed.us', 'bsb.empty.us' ]
-  HOST_RBLS = [ 'multi.surbl.org', 'bsb.empty.us' ]
-  SECOND_LEVEL = [ 'co', 'com', 'net', 'org', 'gov' ]
+class SpamProtection
+  IP_RBLS = ['opm.blitzed.us', 'bsb.empty.us'].freeze
+  HOST_RBLS = ['multi.surbl.org', 'bsb.empty.us'].freeze
+  SECOND_LEVEL = %w[co com net org gov].freeze
 
   attr_accessor :this_blog
 
@@ -16,16 +17,20 @@ class SpamProtection
 
     reason = catch(:hit) do
       case string
-        when Format::IP_ADDRESS then self.scan_ip(string)
-        when Format::HTTP_URI then self.scan_uris([string]) rescue URI::InvalidURIError
-        else self.scan_text(string)
+      when Format::IP_ADDRESS then scan_ip(string)
+      when Format::HTTP_URI then begin
+        scan_uris([string])
+      rescue StandardError
+        URI::InvalidURIError
+      end
+      else scan_text(string)
       end
     end
 
-    if reason
-      logger.info("[SP] Hit: #{reason}")
-      return true
-    end
+    return false unless reason
+
+    logger.info("[SP] Hit: #{reason}")
+    true
   end
 
   protected
@@ -36,32 +41,37 @@ class SpamProtection
   end
 
   def scan_text(string)
-    uri_list = string.scan(/(http:\/\/[^\s"]+)/m).flatten
+    uri_list = string.scan(%r{(http://[^\s"]+)}m).flatten
 
     check_uri_count(uri_list)
     scan_uris(uri_list)
 
-    return false
+    false
   end
 
   def check_uri_count(uris)
     limit = this_blog.sp_url_limit
     return if limit.to_i.zero?
-    if uris.size > limit
-      throw :hit, "Hard URL Limit hit: #{uris.size} > #{limit}"
-    end
+
+    return unless uris.size > limit
+
+    throw :hit, "Hard URL Limit hit: #{uris.size} > #{limit}"
   end
 
   def scan_uris(uris = [])
     uris.each do |uri|
-      host = URI.parse(uri).host rescue next
+      host = begin
+        URI.parse(uri).host
+      rescue StandardError
+        next
+      end
       return scan_ip(host) if host =~ Format::IP_ADDRESS
 
       host_parts = host.split('.').reverse
-      domain = Array.new
+      domain = []
 
       # Check for two level TLD
-      (SECOND_LEVEL.include?(host_parts[1]) ? 3:2).times do
+      (SECOND_LEVEL.include?(host_parts[1]) ? 3 : 2).times do
         domain.unshift(host_parts.shift)
       end
 
@@ -75,22 +85,20 @@ class SpamProtection
   def query_rbls(rbls, *subdomains)
     rbls.each do |rbl|
       subdomains.uniq.each do |d|
-        begin
-          response = IPSocket.getaddress([d, rbl].join('.'))
-          if response =~ /^127\.0\.0\./
-            throw :hit,
-              "#{rbl} positively resolved subdomain #{d} => #{response}"
-          end
-        rescue SocketError
-          # NXDOMAIN response => negative:  d is not in RBL
+        response = IPSocket.getaddress([d, rbl].join('.'))
+        if response =~ /^127\.0\.0\./
+          throw :hit,
+                "#{rbl} positively resolved subdomain #{d} => #{response}"
         end
+      rescue SocketError
+        # NXDOMAIN response => negative:  d is not in RBL
       end
     end
-    return false
+    false
   end
 
   def logger
-    @logger ||= ::Rails.logger || Logger.new(STDOUT)
+    @logger ||= ::Rails.logger || Logger.new($stdout)
   end
 end
 
@@ -98,7 +106,7 @@ module ActiveRecord
   module Validations
     module ClassMethods
       def validates_against_spamdb(*attr_names)
-        configuration = { :message => "blocked by SpamProtection" }
+        configuration = { message: 'blocked by SpamProtection' }
         configuration.update(attr_names.pop) if attr_names.last.is_a?(Hash)
 
         validates_each(attr_names, configuration) do |record, attr_name, value|

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe Admin::RedirectsController do
@@ -5,13 +7,13 @@ describe Admin::RedirectsController do
 
   before do
     Factory(:blog)
-    #TODO Delete after removing fixtures
+    # TODO: Delete after removing fixtures
     Profile.delete_all
-    henri = Factory(:user, :login => 'henri', :profile => Factory(:profile_admin, :label => Profile::ADMIN))
-    request.session = { :user_id => henri.id }
+    henri = Factory(:user, login: 'henri', profile: Factory(:profile_admin, label: Profile::ADMIN))
+    request.session = { user_id: henri.id }
   end
 
-  describe "#index" do
+  describe '#index' do
     before(:each) do
       get :index
     end
@@ -21,25 +23,25 @@ describe Admin::RedirectsController do
     end
   end
 
-  it "test_create" do
-    expect {
-      post :edit, 'redirect' => { :from_path => "some/place",
-        :to_path => "somewhere/else" }
+  it 'test_create' do
+    expect do
+      post :edit, 'redirect' => { from_path: 'some/place',
+                                  to_path: 'somewhere/else' }
       expect(response).to redirect_to(action: 'index')
-    }.to change(Redirect, :count)
+    end.to change(Redirect, :count)
   end
 
-  it "test_create with empty from path" do
-    expect {
-      post :edit, 'redirect' => { :from_path => "",
-        :to_path => "somewhere/else/else" }
+  it 'test_create with empty from path' do
+    expect do
+      post :edit, 'redirect' => { from_path: '',
+                                  to_path: 'somewhere/else/else' }
       expect(response).to redirect_to(action: 'index')
-    }.to change(Redirect, :count)
+    end.to change(Redirect, :count)
   end
-  
-  describe "#edit" do
+
+  describe '#edit' do
     before(:each) do
-      get :edit, :id => Factory(:redirect).id
+      get :edit, id: Factory(:redirect).id
     end
 
     it 'should render new template with valid redirect' do
@@ -49,12 +51,12 @@ describe Admin::RedirectsController do
     end
   end
 
-  it "test_update" do
-    post :edit, :id => Factory(:redirect).id
+  it 'test_update' do
+    post :edit, id: Factory(:redirect).id
     expect(response).to redirect_to(action: 'index')
   end
 
-  describe "test_destroy" do
+  describe 'test_destroy' do
     before(:each) do
       @test_id = Factory(:redirect).id
       expect(Redirect.find(@test_id)).not_to be_nil
@@ -62,7 +64,7 @@ describe Admin::RedirectsController do
 
     describe 'with GET' do
       before(:each) do
-        get :destroy, :id => @test_id
+        get :destroy, id: @test_id
       end
 
       it 'should render destroy template' do
@@ -73,7 +75,7 @@ describe Admin::RedirectsController do
 
     describe 'with POST' do
       before(:each) do
-        post :destroy, :id => @test_id
+        post :destroy, id: @test_id
       end
 
       it 'should redirect to index' do

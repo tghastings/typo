@@ -1,23 +1,24 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
-shared_examples_for "CommentSanitization" do
+shared_examples_for 'CommentSanitization' do
   before do
     @blog = Factory(:blog)
-    @article = mock_model(Article, :created_at => Time.now, :published_at => Time.now)
+    @article = mock_model(Article, created_at: Time.now, published_at: Time.now)
     Article.stub!(:find).and_return(@article)
     @blog.plugin_avatar = ''
     @blog.lang = 'en_US'
 
-    Comment.with_options(:body => 'test foo <script>do_evil();</script>',
-                         :author => 'Bob', :article => @article,
-                         :created_at => Time.now) do |klass|
+    Comment.with_options(body: 'test foo <script>do_evil();</script>',
+                         author: 'Bob', article: @article,
+                         created_at: Time.now) do |klass|
       @comment = klass.new(comment_options)
     end
 
     @comment.stub!(:id).and_return(1)
     assign(:comment, @comment)
   end
-
 
   ['', 'markdown', 'textile', 'smartypants', 'markdown smartypants'].each do |value|
     it "Should sanitize content rendered with the #{value} textfilter" do
@@ -28,108 +29,108 @@ shared_examples_for "CommentSanitization" do
       expect(rendered).to have_selector('.author')
 
       expect(rendered).not_to have_selector('.content script')
-      expect(rendered).not_to have_selector(".content a:not([rel=nofollow])")
+      expect(rendered).not_to have_selector('.content a:not([rel=nofollow])')
       # No links with javascript
-      expect(rendered).not_to have_selector(".content a[onclick]")
-      expect(rendered).not_to have_selector(".content a[href^=\"javascript:\"]")
+      expect(rendered).not_to have_selector('.content a[onclick]')
+      expect(rendered).not_to have_selector('.content a[href^="javascript:"]')
 
       expect(rendered).not_to have_selector('.author script')
-      expect(rendered).not_to have_selector(".author a:not([rel=nofollow])")
+      expect(rendered).not_to have_selector('.author a:not([rel=nofollow])')
       # No links with javascript
-      expect(rendered).not_to have_selector(".author a[onclick]")
-      expect(rendered).not_to have_selector(".author a[href^=\"javascript:\"]")
+      expect(rendered).not_to have_selector('.author a[onclick]')
+      expect(rendered).not_to have_selector('.author a[href^="javascript:"]')
     end
   end
 end
 
-describe "First dodgy comment" do
-  it_should_behave_like "CommentSanitization"
+describe 'First dodgy comment' do
+  it_should_behave_like 'CommentSanitization'
 
   def comment_options
-    { :body => 'test foo <script>do_evil();</script>' }
+    { body: 'test foo <script>do_evil();</script>' }
   end
 end
 
-describe "Second dodgy comment" do
-  it_should_behave_like "CommentSanitization"
+describe 'Second dodgy comment' do
+  it_should_behave_like 'CommentSanitization'
 
   def comment_options
-    { :body => 'link to [spammy goodness](http://spammer.example.com)'}
+    { body: 'link to [spammy goodness](http://spammer.example.com)' }
   end
 end
 
-describe "Dodgy comment #3" do
-  it_should_behave_like "CommentSanitization"
+describe 'Dodgy comment #3' do
+  it_should_behave_like 'CommentSanitization'
 
   def comment_options
-    { :body => 'link to <a href="spammer.com">spammy goodness</a>'}
+    { body: 'link to <a href="spammer.com">spammy goodness</a>' }
   end
 end
 
-describe "Extra Dodgy comment" do
-  it_should_behave_like "CommentSanitization"
+describe 'Extra Dodgy comment' do
+  it_should_behave_like 'CommentSanitization'
 
   def comment_options
-    { :body => '<a href="http://spam.org">spam</a>',
-      :author => '<a href="http://spamme.com>spamme</a>',
-      :email => '<a href="http://itsallspam.com/">its all spam</a>' }
+    { body: '<a href="http://spam.org">spam</a>',
+      author: '<a href="http://spamme.com>spamme</a>',
+      email: '<a href="http://itsallspam.com/">its all spam</a>' }
   end
 end
 
-describe "XSS1" do
-  it_should_behave_like "CommentSanitization"
+describe 'XSS1' do
+  it_should_behave_like 'CommentSanitization'
 
   def comment_options
-    { :body => %{Have you ever <script lang="javascript">alert("foo");</script> been hacked?} }
+    { body: %{Have you ever <script lang="javascript">alert("foo");</script> been hacked?} }
   end
 end
 
-describe "XSS2" do
-  it_should_behave_like "CommentSanitization"
+describe 'XSS2' do
+  it_should_behave_like 'CommentSanitization'
   def comment_options
-    { :body => %{<a href="#" onclick="javascript">bad link</a>}}
+    { body: %(<a href="#" onclick="javascript">bad link</a>) }
   end
 end
 
-describe "XSS2" do
-  it_should_behave_like "CommentSanitization"
+describe 'XSS2' do
+  it_should_behave_like 'CommentSanitization'
 
   def comment_options
-    { :body => %{<a href="javascript:bad">bad link</a>}}
+    { body: %(<a href="javascript:bad">bad link</a>) }
   end
 end
 
-describe "Comment with bare http URL" do
-  it_should_behave_like "CommentSanitization"
+describe 'Comment with bare http URL' do
+  it_should_behave_like 'CommentSanitization'
 
   def comment_options
-    { :body => %{http://www.example.com} }
+    { body: %(http://www.example.com) }
   end
 end
 
-describe "Comment with bare email address" do
-  it_should_behave_like "CommentSanitization"
+describe 'Comment with bare email address' do
+  it_should_behave_like 'CommentSanitization'
 
   def comment_options
-    { :body => %{foo@example.com} }
+    { body: %(foo@example.com) }
   end
 end
 
-shared_examples_for "CommentSanitizationWithDofollow" do
+shared_examples_for 'CommentSanitizationWithDofollow' do
   before do
     @blog = Factory(:blog)
-    @article = Factory(:article, :created_at => Time.now, :published_at => Time.now)
+    @article = Factory(:article, created_at: Time.now, published_at: Time.now)
     Article.stub!(:find).and_return(@article)
     @blog.plugin_avatar = ''
     @blog.lang = 'en_US'
     @blog.dofollowify = true
 
-    Comment.with_options(:body => 'test foo <script>do_evil();</script>',
-                         :author => 'Bob', :article => @article,
-                         :created_at => Time.now) do |klass|
+    Comment.with_options(body: 'test foo <script>do_evil();</script>',
+                         author: 'Bob', article: @article,
+                         created_at: Time.now) do |klass|
       @comment = klass.new(comment_options)
     end
-      
+
     @comment.stub!(:id).and_return(1)
     assign(:comment, @comment)
   end
@@ -145,89 +146,89 @@ shared_examples_for "CommentSanitizationWithDofollow" do
       expect(rendered).to have_selector('.author')
 
       expect(rendered).not_to have_selector('.content script')
-      expect(rendered).not_to have_selector(".content a[rel=nofollow]")
+      expect(rendered).not_to have_selector('.content a[rel=nofollow]')
       # No links with javascript
-      expect(rendered).not_to have_selector(".content a[onclick]")
-      expect(rendered).not_to have_selector(".content a[href^=\"javascript:\"]")
+      expect(rendered).not_to have_selector('.content a[onclick]')
+      expect(rendered).not_to have_selector('.content a[href^="javascript:"]')
 
       expect(rendered).not_to have_selector('.author script')
-      expect(rendered).not_to have_selector(".author a[rel=nofollow]")
+      expect(rendered).not_to have_selector('.author a[rel=nofollow]')
       # No links with javascript
-      expect(rendered).not_to have_selector(".author a[onclick]")
-      expect(rendered).not_to have_selector(".author a[href^=\"javascript:\"]")
+      expect(rendered).not_to have_selector('.author a[onclick]')
+      expect(rendered).not_to have_selector('.author a[href^="javascript:"]')
     end
   end
 end
 
-describe "First dodgy comment with dofollow" do
-  it_should_behave_like "CommentSanitizationWithDofollow"
+describe 'First dodgy comment with dofollow' do
+  it_should_behave_like 'CommentSanitizationWithDofollow'
 
   def comment_options
-    { :body => 'test foo <script>do_evil();</script>' }
+    { body: 'test foo <script>do_evil();</script>' }
   end
 end
 
-describe "Second dodgy comment with dofollow" do
-  it_should_behave_like "CommentSanitizationWithDofollow"
+describe 'Second dodgy comment with dofollow' do
+  it_should_behave_like 'CommentSanitizationWithDofollow'
 
   def comment_options
-    { :body => 'link to [spammy goodness](http://spammer.example.com)'}
+    { body: 'link to [spammy goodness](http://spammer.example.com)' }
   end
 end
 
-describe "Dodgy comment #3 with dofollow" do
-  it_should_behave_like "CommentSanitizationWithDofollow"
+describe 'Dodgy comment #3 with dofollow' do
+  it_should_behave_like 'CommentSanitizationWithDofollow'
 
   def comment_options
-    { :body => 'link to <a href="spammer.com">spammy goodness</a>'}
+    { body: 'link to <a href="spammer.com">spammy goodness</a>' }
   end
 end
 
-describe "Extra Dodgy comment with dofollow" do
-  it_should_behave_like "CommentSanitizationWithDofollow"
+describe 'Extra Dodgy comment with dofollow' do
+  it_should_behave_like 'CommentSanitizationWithDofollow'
 
   def comment_options
-    { :body => '<a href="http://spam.org">spam</a>',
-      :author => '<a href="http://spamme.com>spamme</a>',
-      :email => '<a href="http://itsallspam.com/">its all spam</a>' }
+    { body: '<a href="http://spam.org">spam</a>',
+      author: '<a href="http://spamme.com>spamme</a>',
+      email: '<a href="http://itsallspam.com/">its all spam</a>' }
   end
 end
 
-describe "XSS1 with dofollow" do
-  it_should_behave_like "CommentSanitizationWithDofollow"
+describe 'XSS1 with dofollow' do
+  it_should_behave_like 'CommentSanitizationWithDofollow'
 
   def comment_options
-    { :body => %{Have you ever <script lang="javascript">alert("foo");</script> been hacked?} }
+    { body: %{Have you ever <script lang="javascript">alert("foo");</script> been hacked?} }
   end
 end
 
-describe "XSS2 with dofollow" do
-  it_should_behave_like "CommentSanitizationWithDofollow"
+describe 'XSS2 with dofollow' do
+  it_should_behave_like 'CommentSanitizationWithDofollow'
   def comment_options
-    { :body => %{<a href="#" onclick="javascript">bad link</a>}}
+    { body: %(<a href="#" onclick="javascript">bad link</a>) }
   end
 end
 
-describe "XSS2 with dofollow" do
-  it_should_behave_like "CommentSanitizationWithDofollow"
+describe 'XSS2 with dofollow' do
+  it_should_behave_like 'CommentSanitizationWithDofollow'
 
   def comment_options
-    { :body => %{<a href="javascript:bad">bad link</a>}}
+    { body: %(<a href="javascript:bad">bad link</a>) }
   end
 end
 
-describe "Comment with bare http URL with dofollow" do
-  it_should_behave_like "CommentSanitizationWithDofollow"
+describe 'Comment with bare http URL with dofollow' do
+  it_should_behave_like 'CommentSanitizationWithDofollow'
 
   def comment_options
-    { :body => %{http://www.example.com} }
+    { body: %(http://www.example.com) }
   end
 end
 
-describe "Comment with bare email address with dofollow" do
-  it_should_behave_like "CommentSanitizationWithDofollow"
+describe 'Comment with bare email address with dofollow' do
+  it_should_behave_like 'CommentSanitizationWithDofollow'
 
   def comment_options
-    { :body => %{foo@example.com} }
+    { body: %(foo@example.com) }
   end
 end

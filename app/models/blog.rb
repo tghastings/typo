@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # The Blog class represents the one and only blog.  It stores most
 # configuration settings and is linked to most of the assorted content
 # classes via has_many.
@@ -11,13 +13,11 @@ class Blog < ActiveRecord::Base
 
   attr_accessor :custom_permalink
 
-  validate(:on => :create) { |blog|
-    unless Blog.count.zero?
-      blog.errors.add(:base, "There can only be one...")
-    end
-  }
+  validate(on: :create) do |blog|
+    blog.errors.add(:base, 'There can only be one...') unless Blog.none?
+  end
 
-  validates :blog_name, :presence => true
+  validates :blog_name, presence: true
 
   serialize :settings, coder: YAML, type: Hash
 
@@ -25,7 +25,7 @@ class Blog < ActiveRecord::Base
   setting :blog_name,                  :string, 'My Shiny Weblog!'
   setting :blog_subtitle,              :string, ''
   setting :geourl_location,            :string, ''
-  setting :canonical_server_url,       :string, ''  # Deprecated
+  setting :canonical_server_url,       :string, '' # Deprecated
   setting :lang,                       :string, 'en_US'
   setting :title_prefix,               :integer, 0 # Deprecated but needed for a migration
 
@@ -50,7 +50,8 @@ class Blog < ActiveRecord::Base
   setting :theme,                      :string, 'scribbish'
   setting :plugin_avatar,              :string, ''
   setting :global_pings_disable,       :boolean, false
-  setting :ping_urls,                  :string, "http://blogsearch.google.com/ping/RPC2\nhttp://rpc.technorati.com/rpc/ping\nhttp://ping.blo.gs/\nhttp://rpc.weblogs.com/RPC2"
+  setting :ping_urls,                  :string,
+          "http://blogsearch.google.com/ping/RPC2\nhttp://rpc.technorati.com/rpc/ping\nhttp://ping.blo.gs/\nhttp://rpc.weblogs.com/RPC2"
   setting :send_outbound_pings,        :boolean, true
   setting :email_from,                 :string, 'typo@example.com'
   setting :editor,                     :integer, 'visual'
@@ -66,7 +67,8 @@ class Blog < ActiveRecord::Base
   setting :google_analytics,           :string, ''
   setting :feedburner_url,             :string, ''
   setting :rss_description,            :boolean, false
-  setting :rss_description_text,       :string, "<hr /><p><small>Original article writen by %author% and published on <a href='%blog_url%'>%blog_name%</a> | <a href='%permalink_url%'>direct link to this article</a> | If you are reading this article elsewhere than <a href='%blog_url%'>%blog_name%</a>, it has been illegally reproduced and without proper authorization.</small></p>"
+  setting :rss_description_text,       :string,
+          "<hr /><p><small>Original article writen by %author% and published on <a href='%blog_url%'>%blog_name%</a> | <a href='%permalink_url%'>direct link to this article</a> | If you are reading this article elsewhere than <a href='%blog_url%'>%blog_name%</a>, it has been illegally reproduced and without proper authorization.</small></p>"
   setting :permalink_format,           :string, '/%year%/%month%/%day%/%title%'
   setting :robots,                     :string, ''
   setting :index_categories,           :boolean, true # deprecated but still needed for backward compatibility
@@ -79,42 +81,40 @@ class Blog < ActiveRecord::Base
   setting :dofollowify,                :boolean, false
   setting :use_canonical_url,          :boolean, false
   setting :use_meta_keyword,           :boolean, true
-  setting :home_title_template,        :string, "%blog_name% | %blog_subtitle%" # spec OK
-  setting :home_desc_template,         :string, "%blog_name% | %blog_subtitle% | %meta_keywords%" # OK
-  setting :article_title_template,     :string, "%title% | %blog_name%" # spec OK
-  setting :article_desc_template,      :string, "%excerpt%" #OK
-  setting :page_title_template,        :string, "%title% | %blog_name%" # OK
-  setting :page_desc_template,         :string, "%excerpt%" # OK
-  setting :paginated_title_template,   :string, "%blog_name% | %blog_subtitle% %page%" # spec OK
-  setting :paginated_desc_template,    :string, "%blog_name% | %blog_subtitle% | %meta_keywords% %page%" # OK
-  setting :category_title_template,    :string, "Category: %name% | %blog_name% %page%" # Spec
-  setting :category_desc_template,     :string, "%name% | %description% | %blog_subtitle% %page%" # Spec
-  setting :tag_title_template,         :string, "Tag: %name% | %blog_name% %page%"
-  setting :tag_desc_template,          :string, "%name% | %blog_name% | %blog_subtitle% %page%"
-  setting :author_title_template,      :string, "%author% | %blog_name%" # OK
-  setting :author_desc_template,       :string, "%author% | %blog_name% | %blog_subtitle%" # OK
-  setting :archives_title_template,    :string, "Archives for %blog_name% %date% %page%" # specs OK
-  setting :archives_desc_template,     :string, "Archives for %blog_name% %date% %page% %blog_subtitle%" # OK
-  setting :search_title_template,      :string, "Results for %search% | %blog_name% %page%" # OK
-  setting :search_desc_template,       :string, "Results for %search% | %blog_name% | %blog_subtitle% %page%" # OK
+  setting :home_title_template,        :string, '%blog_name% | %blog_subtitle%' # spec OK
+  setting :home_desc_template,         :string, '%blog_name% | %blog_subtitle% | %meta_keywords%' # OK
+  setting :article_title_template,     :string, '%title% | %blog_name%' # spec OK
+  setting :article_desc_template,      :string, '%excerpt%' # OK
+  setting :page_title_template,        :string, '%title% | %blog_name%' # OK
+  setting :page_desc_template,         :string, '%excerpt%' # OK
+  setting :paginated_title_template,   :string, '%blog_name% | %blog_subtitle% %page%' # spec OK
+  setting :paginated_desc_template,    :string, '%blog_name% | %blog_subtitle% | %meta_keywords% %page%' # OK
+  setting :category_title_template,    :string, 'Category: %name% | %blog_name% %page%' # Spec
+  setting :category_desc_template,     :string, '%name% | %description% | %blog_subtitle% %page%' # Spec
+  setting :tag_title_template,         :string, 'Tag: %name% | %blog_name% %page%'
+  setting :tag_desc_template,          :string, '%name% | %blog_name% | %blog_subtitle% %page%'
+  setting :author_title_template,      :string, '%author% | %blog_name%' # OK
+  setting :author_desc_template,       :string, '%author% | %blog_name% | %blog_subtitle%' # OK
+  setting :archives_title_template,    :string, 'Archives for %blog_name% %date% %page%' # specs OK
+  setting :archives_desc_template,     :string, 'Archives for %blog_name% %date% %page% %blog_subtitle%' # OK
+  setting :search_title_template,      :string, 'Results for %search% | %blog_name% %page%' # OK
+  setting :search_desc_template,       :string, 'Results for %search% | %blog_name% | %blog_subtitle% %page%' # OK
   setting :custom_tracking_field,      :string, ''
 
-# Error handling
-  setting :title_error_404,            :string, "Page not found"
-  setting :msg_error_404,              :string, "<p>The page you are looking for has moved or does not exist.</p>"
+  # Error handling
+  setting :title_error_404,            :string, 'Page not found'
+  setting :msg_error_404,              :string, '<p>The page you are looking for has moved or does not exist.</p>'
 
   validate :permalink_has_identifier
 
   def initialize(*args)
     # Handle ActionController::Parameters for Rails 7 compatibility
-    if args.first.is_a?(ActionController::Parameters)
-      args[0] = args.first.to_unsafe_h
-    end
+    args[0] = args.first.to_unsafe_h if args.first.is_a?(ActionController::Parameters)
     super
     # Yes, this is weird - PDC
     begin
       self.settings ||= {}
-    rescue Exception => e
+    rescue Exception
       self.settings = {}
     end
   end
@@ -123,31 +123,27 @@ class Blog < ActiveRecord::Base
   # id==1. This should be the only blog as well.
   def self.default
     order(:id).first
-  rescue
+  rescue StandardError
     logger.warn 'You have no blog installed.'
     nil
   end
 
   # In settings with :article_id
   def ping_article!(settings)
-    unless global_pings_enabled? && settings.has_key?(:url) && settings.has_key?(:article_id)
-      throw :error, "Invalid trackback or trackbacks not enabled"
-    end
-    settings[:blog_id] = self.id
+    throw :error, 'Invalid trackback or trackbacks not enabled' unless global_pings_enabled? && settings.key?(:url) && settings.key?(:article_id)
+    settings[:blog_id] = id
     article = Article.find(settings[:article_id])
-    unless article.allow_pings?
-      throw :error, "Trackback not saved"
-    end
+    throw :error, 'Trackback not saved' unless article.allow_pings?
     article.trackbacks.create!(settings)
   end
 
   def global_pings_enabled?
-    ! global_pings_disable?
+    !global_pings_disable?
   end
 
   # Check that all required blog settings have a value.
   def configured?
-    settings.has_key?('blog_name')
+    settings.key?('blog_name')
   end
 
   # The +Theme+ object for the current theme.
@@ -160,19 +156,19 @@ class Blog < ActiveRecord::Base
   def url_for(options = {}, extra_params = {})
     case options
     when String
-      if extra_params[:only_path]
-        url_generated = root_path
-      else
-        url_generated = base_url
-      end
+      url_generated = if extra_params[:only_path]
+                        root_path
+                      else
+                        base_url
+                      end
       url_generated += "/#{options}"
       url_generated += "##{extra_params[:anchor]}" if extra_params[:anchor]
       url_generated
     when Hash
-      options.reverse_merge!(:only_path => false, :controller => '',
-                             :action => 'permalink',
-                             :host => host_with_port,
-                             :script_name => root_path)
+      options.reverse_merge!(only_path: false, controller: '',
+                             action: 'permalink',
+                             host: host_with_port,
+                             script_name: root_path)
       super(options)
     else
       raise "Invalid URL in url_for: #{options.inspect}"
@@ -181,33 +177,33 @@ class Blog < ActiveRecord::Base
 
   # The URL for a static file.
   def file_url(filename)
-    url_for "files/#{filename}", :only_path => false
+    url_for "files/#{filename}", only_path: false
   end
 
   def requested_article(params)
     Article.find_by_params_hash(params)
   end
 
-  def articles_matching(query, args={})
+  def articles_matching(query, args = {})
     Article.search(query, args)
   end
 
   def rss_limit_params
     limit = limit_rss_display.to_i
-    return limit.zero? \
-      ? {} \
-      : {:limit => limit}
+    if limit.zero?
+      {}
+    else
+      { limit: limit }
+    end
   end
 
   def permalink_has_identifier
-    unless permalink_format =~ /(%title%)/
-      errors.add(:permalink_format, "You need a permalink format with an identifier : %title%")
-    end
+    errors.add(:permalink_format, 'You need a permalink format with an identifier : %title%') unless permalink_format =~ /(%title%)/
 
     # A permalink cannot end in .atom or .rss. it's reserved for the feeds
-    if permalink_format =~ /\.(atom|rss)$/
-      errors.add(:permalink_format, "Can't end in .rss or .atom. These are reserved to be used for feed URLs")
-    end
+    return unless permalink_format =~ /\.(atom|rss)$/
+
+    errors.add(:permalink_format, "Can't end in .rss or .atom. These are reserved to be used for feed URLs")
   end
 
   def root_path
@@ -230,11 +226,10 @@ class Blog < ActiveRecord::Base
 
   def split_base_url
     unless @split_base_url
-      unless base_url =~ /(https?):\/\/([^\/]*)(.*)/
-        raise "Invalid base_url: #{self.base_url}"
-      end
-      @split_base_url = { :protocol => $1, :host_with_port => $2,
-        :root_path => $3.gsub(%r{/$},'') }
+      raise "Invalid base_url: #{base_url}" unless base_url =~ %r{(https?)://([^/]*)(.*)}
+
+      @split_base_url = { protocol: ::Regexp.last_match(1), host_with_port: ::Regexp.last_match(2),
+                          root_path: ::Regexp.last_match(3).gsub(%r{/$}, '') }
     end
     @split_base_url
   end

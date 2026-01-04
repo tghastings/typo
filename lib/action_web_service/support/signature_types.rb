@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ActionWebService # :nodoc:
   # Action Web Service supports the following base types in a signature:
   #
@@ -15,18 +17,18 @@ module ActionWebService # :nodoc:
   module SignatureTypes
     def canonical_signature(signature) # :nodoc:
       return nil if signature.nil?
-      unless signature.is_a?(Array)
-        raise(ActionWebServiceError, "Expected signature to be an Array")
-      end
+      raise(ActionWebServiceError, 'Expected signature to be an Array') unless signature.is_a?(Array)
+
       i = -1
-      signature.map{ |spec| canonical_signature_entry(spec, i += 1) }
+      signature.map { |spec| canonical_signature_entry(spec, i += 1) }
     end
 
     def canonical_signature_entry(spec, i) # :nodoc:
       orig_spec = spec
       name = "param#{i}"
       if spec.is_a?(Hash)
-        name, spec = spec.keys.first, spec.values.first
+        name = spec.keys.first
+        spec = spec.values.first
       end
       type = spec
       if spec.is_a?(Array)
@@ -45,32 +47,33 @@ module ActionWebService # :nodoc:
       type_name = symbol_name(type) || class_to_type_name(type)
       type = type_name || type
       return canonical_type_name(type) if type.is_a?(Symbol)
+
       type
     end
 
     def canonical_type_name(name) # :nodoc:
       name = name.to_sym
       case name
-        when :int, :integer, :fixnum, :bignum
-          :int
-        when :string, :text
-          :string
-        when :base64, :binary
-          :base64
-        when :bool, :boolean
-          :bool
-        when :float, :double
-          :float
-        when :decimal
-          :decimal
-        when :time, :timestamp
-          :time
-        when :datetime
-          :datetime
-        when :date
-          :date
-        else
-          raise(TypeError, "#{name} is not a valid base type")
+      when :int, :integer, :fixnum, :bignum
+        :int
+      when :string, :text
+        :string
+      when :base64, :binary
+        :base64
+      when :bool, :boolean
+        :bool
+      when :float, :double
+        :float
+      when :decimal
+        :decimal
+      when :time, :timestamp
+        :time
+      when :datetime
+        :datetime
+      when :date
+        :date
+      else
+        raise(TypeError, "#{name} is not a valid base type")
       end
     end
 
@@ -81,18 +84,19 @@ module ActionWebService # :nodoc:
 
     def symbol_name(name) # :nodoc:
       return name.to_sym if name.is_a?(Symbol) || name.is_a?(String)
+
       nil
     end
 
     def class_to_type_name(klass) # :nodoc:
       klass = klass.class unless klass.is_a?(Class)
-      if derived_from?(Integer, klass) || derived_from?(Fixnum, klass) || derived_from?(Bignum, klass)
+      if derived_from?(Integer, klass) || derived_from?(Integer, klass) || derived_from?(Integer, klass)
         :int
       elsif klass == String
         :string
       elsif klass == Base64
         :base64
-      elsif klass == TrueClass || klass == FalseClass
+      elsif [TrueClass, FalseClass].include?(klass)
         :bool
       elsif derived_from?(Float, klass) || derived_from?(Numeric, klass)
         :float
@@ -102,8 +106,6 @@ module ActionWebService # :nodoc:
         :datetime
       elsif klass == Date
         :date
-      else
-        nil
       end
     end
 
@@ -127,8 +129,6 @@ module ActionWebService # :nodoc:
         Date
       when :datetime
         DateTime
-      else
-        nil
       end
     end
 
@@ -150,10 +150,7 @@ module ActionWebService # :nodoc:
   class BaseType # :nodoc:
     include SignatureTypes
 
-    attr :spec
-    attr :type
-    attr :type_class
-    attr :name
+    attr_reader :spec, :type, :type_class, :name
 
     def initialize(spec, type, name)
       @spec = spec
@@ -174,15 +171,15 @@ module ActionWebService # :nodoc:
       false
     end
 
-    def human_name(show_name=true)
-      type_type = array? ? element_type.type.to_s : self.type.to_s
-      str = array? ? (type_type + '[]') : type_type
-      show_name ? (str + " " + name.to_s) : str
+    def human_name(show_name = true)
+      type_type = array? ? element_type.type.to_s : type.to_s
+      str = array? ? "#{type_type}[]" : type_type
+      show_name ? "#{str} #{name}" : str
     end
   end
 
   class ArrayType < BaseType # :nodoc:
-    attr :element_type
+    attr_reader :element_type
 
     def initialize(spec, element_type, name)
       super(spec, Array, name)
@@ -199,11 +196,9 @@ module ActionWebService # :nodoc:
   end
 
   class StructuredType < BaseType # :nodoc:
-    def each_member
+    def each_member(&)
       if @type_class.respond_to?(:members)
-        @type_class.members.each do |name, type|
-          yield name, type
-        end
+        @type_class.members.each(&)
       elsif @type_class.respond_to?(:columns)
         i = -1
         @type_class.columns.each do |column|

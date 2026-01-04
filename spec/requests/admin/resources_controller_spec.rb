@@ -12,7 +12,7 @@ RSpec.describe 'Admin::Resources', type: :request do
   after(:each) do
     # Clean up test files
     test_files_dir = Rails.root.join('tmp', 'test_uploads')
-    FileUtils.rm_rf(test_files_dir) if File.exist?(test_files_dir)
+    FileUtils.rm_rf(test_files_dir)
     # Clean up uploaded files
     Dir.glob(Rails.root.join('public', 'files', '*')).each do |f|
       File.delete(f) if File.file?(f)
@@ -36,13 +36,13 @@ RSpec.describe 'Admin::Resources', type: :request do
       end
 
       it 'displays resource list' do
-        resource = FactoryBot.create(:resource)
+        FactoryBot.create(:resource)
         get '/admin/resources'
         expect(response).to be_successful
       end
 
       it 'assigns @resources with paginated resources ordered by created_at DESC' do
-        resource1 = FactoryBot.create(:resource, created_at: 2.days.ago)
+        FactoryBot.create(:resource, created_at: 2.days.ago)
         resource2 = FactoryBot.create(:resource, created_at: 1.day.ago)
         get '/admin/resources'
         expect(response).to be_successful
@@ -82,9 +82,9 @@ RSpec.describe 'Admin::Resources', type: :request do
 
       it 'does not delete the resource on GET' do
         resource = FactoryBot.create(:resource)
-        expect {
+        expect do
           get "/admin/resources/destroy/#{resource.id}"
-        }.not_to change { Resource.count }
+        end.not_to(change { Resource.count })
       end
 
       it 'renders the destroy confirmation template' do
@@ -115,9 +115,9 @@ RSpec.describe 'Admin::Resources', type: :request do
 
       it 'deletes the resource' do
         resource = FactoryBot.create(:resource)
-        expect {
+        expect do
           post "/admin/resources/destroy/#{resource.id}"
-        }.to change { Resource.count }.by(-1)
+        end.to change { Resource.count }.by(-1)
       end
 
       it 'redirects to index after deletion' do
@@ -144,23 +144,23 @@ RSpec.describe 'Admin::Resources', type: :request do
 
       it 'handles destroying image resources' do
         resource = FactoryBot.create(:resource, mime: 'image/jpeg')
-        expect {
+        expect do
           post "/admin/resources/destroy/#{resource.id}"
-        }.to change { Resource.count }.by(-1)
+        end.to change { Resource.count }.by(-1)
       end
 
       it 'handles destroying pdf resources' do
         resource = FactoryBot.create(:resource, mime: 'application/pdf')
-        expect {
+        expect do
           post "/admin/resources/destroy/#{resource.id}"
-        }.to change { Resource.count }.by(-1)
+        end.to change { Resource.count }.by(-1)
       end
 
       it 'handles destroying text resources' do
         resource = FactoryBot.create(:resource, mime: 'text/plain')
-        expect {
+        expect do
           post "/admin/resources/destroy/#{resource.id}"
-        }.to change { Resource.count }.by(-1)
+        end.to change { Resource.count }.by(-1)
       end
     end
   end
@@ -299,9 +299,9 @@ RSpec.describe 'Admin::Resources', type: :request do
         File.write(Rails.root.join('spec/fixtures/files/test.txt'), 'test content')
         file = Rack::Test::UploadedFile.new(Rails.root.join('spec/fixtures/files/test.txt'), 'text/plain')
 
-        expect {
+        expect do
           post '/admin/resources/upload', params: { upload: { filename: file } }
-        }.to change(Resource, :count).by(1)
+        end.to change(Resource, :count).by(1)
 
         expect(response).to redirect_to(action: 'index')
         expect(flash[:notice]).to include('File uploaded successfully')
@@ -323,9 +323,9 @@ RSpec.describe 'Admin::Resources', type: :request do
         File.write(Rails.root.join('spec/fixtures/files/test.pdf'), '%PDF-1.4 test')
         file = Rack::Test::UploadedFile.new(Rails.root.join('spec/fixtures/files/test.pdf'), 'application/pdf')
 
-        expect {
+        expect do
           post '/admin/resources/upload', params: { upload: { filename: file } }
-        }.to change(Resource, :count).by(1)
+        end.to change(Resource, :count).by(1)
 
         resource = Resource.last
         expect(resource.file).to be_attached
@@ -337,9 +337,9 @@ RSpec.describe 'Admin::Resources', type: :request do
         File.binwrite(Rails.root.join('spec/fixtures/files/test.png'), png_data)
         file = Rack::Test::UploadedFile.new(Rails.root.join('spec/fixtures/files/test.png'), 'image/png')
 
-        expect {
+        expect do
           post '/admin/resources/upload', params: { upload: { filename: file } }
-        }.to change(Resource, :count).by(1)
+        end.to change(Resource, :count).by(1)
 
         resource = Resource.last
         expect(resource.file).to be_attached
@@ -347,17 +347,17 @@ RSpec.describe 'Admin::Resources', type: :request do
       end
 
       it 'rejects request with no file' do
-        expect {
+        expect do
           post '/admin/resources/upload', params: {}
-        }.not_to change(Resource, :count)
+        end.not_to change(Resource, :count)
 
         expect(flash[:error]).to eq('No file was uploaded')
       end
 
       it 'rejects request with string instead of file' do
-        expect {
+        expect do
           post '/admin/resources/upload', params: { upload: { filename: 'not_a_file.txt' } }
-        }.not_to change(Resource, :count)
+        end.not_to change(Resource, :count)
 
         expect(flash[:error]).to eq('No file was uploaded')
       end
@@ -398,7 +398,7 @@ RSpec.describe 'Admin::Resources', type: :request do
     end
 
     it 'serves files via Active Storage blob URL' do
-      get "/admin/resources"
+      get '/admin/resources'
       expect(response).to be_successful
       # The view should include Active Storage blob paths
       expect(response.body).to include('/rails/active_storage/blobs')
@@ -422,9 +422,9 @@ RSpec.describe 'Admin::Resources', type: :request do
         content_type: 'text/plain'
       )
 
-      expect {
+      expect do
         post "/admin/resources/destroy/#{resource.id}"
-      }.to change(Resource, :count).by(-1)
+      end.to change(Resource, :count).by(-1)
 
       expect(response).to redirect_to(action: 'index')
     end
@@ -432,9 +432,9 @@ RSpec.describe 'Admin::Resources', type: :request do
     it 'handles resource without attached file' do
       resource = FactoryBot.create(:resource)
 
-      expect {
+      expect do
         post "/admin/resources/destroy/#{resource.id}"
-      }.to change(Resource, :count).by(-1)
+      end.to change(Resource, :count).by(-1)
 
       expect(response).to redirect_to(action: 'index')
     end
@@ -459,7 +459,7 @@ RSpec.describe 'Admin::Resources', type: :request do
     end
 
     it 'displays resources on first page' do
-      resources = FactoryBot.create_list(:resource, 5)
+      FactoryBot.create_list(:resource, 5)
 
       get '/admin/resources', params: { page: 1 }
       expect(response).to be_successful
@@ -481,13 +481,13 @@ RSpec.describe 'Admin::Resources', type: :request do
     end
 
     it 'shows file sizes for resources' do
-      resource = FactoryBot.create(:resource, size: 1024)
+      FactoryBot.create(:resource, size: 1024)
       get '/admin/resources'
       expect(response).to be_successful
     end
 
     it 'shows mime types for resources' do
-      resource = FactoryBot.create(:resource, mime: 'application/pdf')
+      FactoryBot.create(:resource, mime: 'application/pdf')
       get '/admin/resources'
       expect(response.body).to include('application/pdf')
     end
@@ -499,7 +499,7 @@ RSpec.describe 'Admin::Resources', type: :request do
     dir = Rails.root.join('tmp', 'test_uploads')
     FileUtils.mkdir_p(dir)
     path = File.join(dir, filename)
-    File.open(path, 'wb') { |f| f.write(content) }
+    File.binwrite(path, content)
     path
   end
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'action_web_service'
 class BackendController < ContentController
   skip_before_action :verify_authenticity_token

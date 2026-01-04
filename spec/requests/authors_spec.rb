@@ -18,7 +18,7 @@ RSpec.describe 'Authors', type: :request do
 
     @profile = Profile.find_or_create_by!(label: 'admin') do |p|
       p.nicename = 'Admin'
-      p.modules = [:dashboard, :write, :articles]
+      p.modules = %i[dashboard write articles]
     end
     User.where(login: 'author_user').destroy_all
     @author = User.create!(

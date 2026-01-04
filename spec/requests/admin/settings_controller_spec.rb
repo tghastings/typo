@@ -622,7 +622,7 @@ RSpec.describe 'Admin::Settings', type: :request do
 
       describe 'with edge case settings' do
         it 'handles updating blog name to blank (validation may apply)' do
-          original_name = @blog.blog_name
+          @blog.blog_name
           post '/admin/settings/update', params: {
             setting: { blog_name: '' },
             from: 'index'

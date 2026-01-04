@@ -97,7 +97,7 @@ RSpec.describe 'Admin::Categories', type: :request do
 
       it 'displays all categories in sidebar' do
         category1 = FactoryBot.create(:category, name: 'First Category')
-        category2 = FactoryBot.create(:category, name: 'Second Category')
+        FactoryBot.create(:category, name: 'Second Category')
         get "/admin/categories/edit/#{category1.id}"
         expect(response.body).to include('First Category')
         expect(response.body).to include('Second Category')
@@ -283,9 +283,9 @@ RSpec.describe 'Admin::Categories', type: :request do
 
       it 'does not delete the category on GET request' do
         category = FactoryBot.create(:category)
-        expect {
+        expect do
           get "/admin/categories/destroy/#{category.id}"
-        }.not_to change { Category.count }
+        end.not_to(change { Category.count })
       end
 
       it 'shows delete confirmation message' do
@@ -306,9 +306,9 @@ RSpec.describe 'Admin::Categories', type: :request do
 
     it 'deletes the category' do
       category = FactoryBot.create(:category)
-      expect {
+      expect do
         post "/admin/categories/destroy/#{category.id}"
-      }.to change { Category.count }.by(-1)
+      end.to change { Category.count }.by(-1)
     end
 
     it 'redirects to new after deletion' do
@@ -327,17 +327,17 @@ RSpec.describe 'Admin::Categories', type: :request do
     it 'deletes first category' do
       category = FactoryBot.create(:category, name: 'First')
       FactoryBot.create(:category, name: 'Second')
-      expect {
+      expect do
         post "/admin/categories/destroy/#{category.id}"
-      }.to change { Category.count }.by(-1)
+      end.to change { Category.count }.by(-1)
     end
 
     it 'deletes last category' do
       FactoryBot.create(:category, name: 'First')
       category = FactoryBot.create(:category, name: 'Last')
-      expect {
+      expect do
         post "/admin/categories/destroy/#{category.id}"
-      }.to change { Category.count }.by(-1)
+      end.to change { Category.count }.by(-1)
     end
   end
 
@@ -356,18 +356,18 @@ RSpec.describe 'Admin::Categories', type: :request do
       category = FactoryBot.create(:category, name: 'Delete Me')
       article = FactoryBot.create(:article, user: @admin)
       article.categories << category
-      expect {
+      expect do
         post "/admin/categories/destroy/#{category.id}"
-      }.to change { Category.count }.by(-1)
+      end.to change { Category.count }.by(-1)
     end
 
     it 'does not delete article when deleting category' do
       category = FactoryBot.create(:category)
       article = FactoryBot.create(:article, user: @admin)
       article.categories << category
-      expect {
+      expect do
         post "/admin/categories/destroy/#{category.id}"
-      }.not_to change { Article.count }
+      end.not_to(change { Article.count })
     end
 
     it 'removes category association when category is deleted' do
@@ -430,7 +430,7 @@ RSpec.describe 'Admin::Categories', type: :request do
 
     it 'displays categories with position info' do
       cat1 = FactoryBot.create(:category, name: 'Position One', position: 1)
-      cat2 = FactoryBot.create(:category, name: 'Position Two', position: 2)
+      FactoryBot.create(:category, name: 'Position Two', position: 2)
       get "/admin/categories/edit/#{cat1.id}"
       expect(response).to be_successful
     end

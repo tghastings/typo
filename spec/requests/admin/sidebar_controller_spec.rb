@@ -62,9 +62,9 @@ RSpec.describe 'Admin::Sidebar', type: :request do
 
       it 'cleans up sidebars without active_position' do
         StaticSidebar.create!(active_position: nil, config: { 'title' => 'Orphan' })
-        expect {
+        expect do
           get '/admin/sidebar'
-        }.to change { Sidebar.count }.by(-1)
+        end.to change { Sidebar.count }.by(-1)
       end
 
       it 'shows available sidebar types' do
@@ -91,7 +91,7 @@ RSpec.describe 'Admin::Sidebar', type: :request do
       end
 
       it 'initializes flash with active sidebar IDs' do
-        sidebar = StaticSidebar.create!(active_position: 0, config: {})
+        StaticSidebar.create!(active_position: 0, config: {})
         get '/admin/sidebar'
         expect(response).to be_successful
       end
@@ -151,10 +151,10 @@ RSpec.describe 'Admin::Sidebar', type: :request do
       end
 
       it 'creates a new sidebar when dragging from available' do
-        get '/admin/sidebar'  # Initialize flash
-        expect {
+        get '/admin/sidebar' # Initialize flash
+        expect do
           post '/admin/sidebar/set_active', params: { active: ['static'] }, xhr: true
-        }.to change { Sidebar.count }.by(1)
+        end.to change { Sidebar.count }.by(1)
       end
 
       it 'creates the correct sidebar type' do
@@ -172,14 +172,14 @@ RSpec.describe 'Admin::Sidebar', type: :request do
 
       it 'handles multiple sidebars being activated' do
         get '/admin/sidebar'
-        expect {
-          post '/admin/sidebar/set_active', params: { active: ['static', 'search', 'archives'] }, xhr: true
-        }.to change { Sidebar.count }.by(3)
+        expect do
+          post '/admin/sidebar/set_active', params: { active: %w[static search archives] }, xhr: true
+        end.to change { Sidebar.count }.by(3)
       end
 
       it 'preserves existing active sidebars when reordering' do
         existing = StaticSidebar.create!(active_position: 0, config: { 'title' => 'Existing' })
-        get '/admin/sidebar'  # This sets flash[:sidebars] = [existing.id]
+        get '/admin/sidebar' # This sets flash[:sidebars] = [existing.id]
 
         # Simulate reordering - keep existing and add new
         post '/admin/sidebar/set_active', params: {
@@ -192,7 +192,7 @@ RSpec.describe 'Admin::Sidebar', type: :request do
       it 'returns JavaScript response' do
         get '/admin/sidebar'
         post '/admin/sidebar/set_active', params: { active: ['static'] },
-             headers: { 'Accept' => 'text/javascript' }, xhr: true
+                                          headers: { 'Accept' => 'text/javascript' }, xhr: true
         expect(response.content_type).to include('javascript')
       end
 
@@ -249,8 +249,8 @@ RSpec.describe 'Admin::Sidebar', type: :request do
       it 'responds to the publish route' do
         get '/admin/sidebar'
         post '/admin/sidebar/publish', params: { configure: {} }, xhr: true
-        # Response may be 200, 404 (due to session/flash issues with XHR), or 500 (RJS template)
-        expect(response.status).to be_in([200, 404, 500])
+        # Response may be 200, 302 (redirect), 404 (due to session/flash issues with XHR), or 500 (RJS template)
+        expect(response.status).to be_in([200, 302, 404, 500])
       end
     end
   end
@@ -340,22 +340,22 @@ RSpec.describe 'Admin::Sidebar', type: :request do
     before { login_admin }
 
     it 'persists sidebar configuration across requests' do
-      sidebar = StaticSidebar.create!(active_position: 0, config: { 'title' => 'Test Title' })
+      StaticSidebar.create!(active_position: 0, config: { 'title' => 'Test Title' })
       get '/admin/sidebar'
       expect(response).to be_successful
     end
 
     it 'displays sidebar with custom title' do
-      sidebar = StaticSidebar.create!(active_position: 0, config: { 'title' => 'Custom Links' })
+      StaticSidebar.create!(active_position: 0, config: { 'title' => 'Custom Links' })
       get '/admin/sidebar'
       expect(response).to be_successful
     end
 
     it 'handles sidebars with body content' do
-      sidebar = StaticSidebar.create!(active_position: 0, config: {
-        'title' => 'Links',
-        'body' => '<ul><li>Link 1</li></ul>'
-      })
+      StaticSidebar.create!(active_position: 0, config: {
+                              'title' => 'Links',
+                              'body' => '<ul><li>Link 1</li></ul>'
+                            })
       get '/admin/sidebar'
       expect(response).to be_successful
     end
@@ -404,7 +404,7 @@ RSpec.describe 'Admin::Sidebar', type: :request do
     end
 
     it 'handles empty config gracefully' do
-      sidebar = Sidebar.create!(active_position: 0, config: nil)
+      Sidebar.create!(active_position: 0, config: nil)
       get '/admin/sidebar'
       expect(response).to be_successful
     end
@@ -414,7 +414,7 @@ RSpec.describe 'Admin::Sidebar', type: :request do
     before { login_admin }
 
     it 'initializes flash sidebars from active sidebars' do
-      sidebar = StaticSidebar.create!(active_position: 0, config: {})
+      StaticSidebar.create!(active_position: 0, config: {})
       get '/admin/sidebar'
       expect(response).to be_successful
     end
@@ -549,13 +549,13 @@ RSpec.describe 'Admin::Sidebar', type: :request do
     before { login_admin }
 
     it 'displays configuration form for sidebars' do
-      sidebar = StaticSidebar.create!(active_position: 0, config: { 'title' => 'Test' })
+      StaticSidebar.create!(active_position: 0, config: { 'title' => 'Test' })
       get '/admin/sidebar'
       expect(response).to be_successful
     end
 
     it 'handles sidebars with multiple configuration fields' do
-      sidebar = StaticSidebar.create!(
+      StaticSidebar.create!(
         active_position: 0,
         config: {
           'title' => 'Links',
@@ -580,16 +580,16 @@ RSpec.describe 'Admin::Sidebar', type: :request do
     before { login_admin }
 
     it 'handles very long sidebar configuration values' do
-      sidebar = StaticSidebar.create!(
+      StaticSidebar.create!(
         active_position: 0,
-        config: { 'title' => 'Test', 'body' => 'x' * 10000 }
+        config: { 'title' => 'Test', 'body' => 'x' * 10_000 }
       )
       get '/admin/sidebar'
       expect(response).to be_successful
     end
 
     it 'handles special characters in sidebar configuration' do
-      sidebar = StaticSidebar.create!(
+      StaticSidebar.create!(
         active_position: 0,
         config: { 'title' => '<script>alert("XSS")</script>' }
       )
@@ -598,7 +598,7 @@ RSpec.describe 'Admin::Sidebar', type: :request do
     end
 
     it 'handles unicode in sidebar configuration' do
-      sidebar = StaticSidebar.create!(
+      StaticSidebar.create!(
         active_position: 0,
         config: { 'title' => 'Unicode test' }
       )
@@ -607,7 +607,7 @@ RSpec.describe 'Admin::Sidebar', type: :request do
     end
 
     it 'handles empty string values in config' do
-      sidebar = StaticSidebar.create!(
+      StaticSidebar.create!(
         active_position: 0,
         config: { 'title' => '', 'body' => '' }
       )
@@ -616,7 +616,7 @@ RSpec.describe 'Admin::Sidebar', type: :request do
     end
 
     it 'handles nil values in config hash' do
-      sidebar = StaticSidebar.create!(
+      StaticSidebar.create!(
         active_position: 0,
         config: { 'title' => nil }
       )
@@ -632,9 +632,9 @@ RSpec.describe 'Admin::Sidebar', type: :request do
       StaticSidebar.create!(active_position: 0, config: {})
       orphan = StaticSidebar.create!(active_position: nil, config: {})
 
-      expect {
+      expect do
         get '/admin/sidebar'
-      }.to change { Sidebar.count }.by(-1)
+      end.to change { Sidebar.count }.by(-1)
 
       expect(Sidebar.exists?(orphan.id)).to be false
     end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ActionWebService # :nodoc:
   module Container # :nodoc:
     module Delegated # :nodoc:
@@ -36,49 +38,48 @@ module ActionWebService # :nodoc:
         #
         #     web_service(:person) { PersonService.new(request.env) }
         #   end
-        def web_service(name, object=nil, &block)
-          if (object && block_given?) || (object.nil? && block.nil?)
-            raise(ContainerError, "either service, or a block must be given")
-          end
+        def web_service(name, object = nil, &block)
+          raise(ContainerError, 'either service, or a block must be given') if (object && block_given?) || (object.nil? && block.nil?)
+
           name = name.to_sym
-          if block_given?
-            info = { name => { :block => block } }
-          else
-            info = { name => { :object => object } }
-          end
-          write_inheritable_hash("web_services", info)
+          info = if block_given?
+                   { name => { block: block } }
+                 else
+                   { name => { object: object } }
+                 end
+          write_inheritable_hash('web_services', info)
           call_web_service_definition_callbacks(self, name, info)
         end
 
         # Whether this service contains a service with the given +name+
         def has_web_service?(name)
-          web_services.has_key?(name.to_sym)
+          web_services.key?(name.to_sym)
         end
 
         def web_services # :nodoc:
-          read_inheritable_attribute("web_services") || {}
+          read_inheritable_attribute('web_services') || {}
         end
 
         def add_web_service_definition_callback(&block) # :nodoc:
-          write_inheritable_array("web_service_definition_callbacks", [block])
+          write_inheritable_array('web_service_definition_callbacks', [block])
         end
 
         private
-          def call_web_service_definition_callbacks(container_class, web_service_name, service_info)
-            (read_inheritable_attribute("web_service_definition_callbacks") || []).each do |block|
-              block.call(container_class, web_service_name, service_info)
-            end
+
+        def call_web_service_definition_callbacks(container_class, web_service_name, service_info)
+          (read_inheritable_attribute('web_service_definition_callbacks') || []).each do |block|
+            block.call(container_class, web_service_name, service_info)
           end
+        end
       end
 
       module InstanceMethods # :nodoc:
         def web_service_object(web_service_name)
           info = self.class.web_services[web_service_name.to_sym]
-          unless info
-            raise(ContainerError, "no such web service '#{web_service_name}'")
-          end
+          raise(ContainerError, "no such web service '#{web_service_name}'") unless info
+
           service = info[:block]
-          service ? self.instance_eval(&service) : info[:object]
+          service ? instance_eval(&service) : info[:object]
         end
       end
     end

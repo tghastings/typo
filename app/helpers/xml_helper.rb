@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module XmlHelper
   def pub_date(time)
     time.rfc822

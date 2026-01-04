@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe Admin::CacheController, type: :request do
@@ -32,5 +34,4 @@ describe Admin::CacheController, type: :request do
       end
     end
   end
-
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'digest/sha1'
 
 # Typo user.
@@ -47,9 +49,7 @@ class User < ActiveRecord::Base
 
   def initialize(*args)
     # Handle ActionController::Parameters for Rails 7 compatibility
-    if args.first.is_a?(ActionController::Parameters)
-      args[0] = args.first.to_unsafe_h
-    end
+    args[0] = args.first.to_unsafe_h if args.first.is_a?(ActionController::Parameters)
     super
     self.settings ||= {}
   end
@@ -61,7 +61,7 @@ class User < ActiveRecord::Base
   def update_connection_time
     self.last_venue = last_connection
     self.last_connection = Time.now
-    self.save
+    save
   end
 
   def remember_me
@@ -84,7 +84,7 @@ class User < ActiveRecord::Base
     save(validate: false)
   end
 
-  def permalink_url(anchor = nil, only_path = false)
+  def permalink_url(_anchor = nil, only_path = false)
     blog = Blog.default
     blog.url_for(
       controller: 'authors',
@@ -95,9 +95,10 @@ class User < ActiveRecord::Base
   end
 
   def self.authenticate?(login, pass)
-    user = self.authenticate(login, pass)
+    user = authenticate(login, pass)
     return false if user.nil?
     return true if user.login == login
+
     false
   end
 
@@ -126,15 +127,13 @@ class User < ActiveRecord::Base
     editor == 'simple'
   end
 
-  def password=(newpass)
-    @password = newpass
-  end
+  attr_writer :password
 
   def password(cleartext = nil)
     if cleartext
       @password.to_s
     else
-      @password || read_attribute("password")
+      @password || read_attribute('password')
     end
   end
 
@@ -176,7 +175,7 @@ class User < ActiveRecord::Base
 
   def crypt_password
     send_create_notification
-    write_attribute "password", password_hash(password(true))
+    write_attribute 'password', password_hash(password(true))
     @password = nil
   end
 
@@ -184,8 +183,8 @@ class User < ActiveRecord::Base
 
   def crypt_unless_empty
     if password(true).empty?
-      user = self.class.find(self.id)
-      write_attribute "password", user.password
+      user = self.class.find(id)
+      write_attribute 'password', user.password
     else
       crypt_password
     end
@@ -194,17 +193,17 @@ class User < ActiveRecord::Base
   before_validation :set_default_profile
 
   def set_default_profile
-    if User.count.zero?
-      self.profile ||= Profile.find_by(label: 'admin')
-    else
-      self.profile ||= Profile.find_by(label: 'contributor')
-    end
+    self.profile ||= if User.none?
+                       Profile.find_by(label: 'admin')
+                     else
+                       Profile.find_by(label: 'contributor')
+                     end
   end
 
   validates :login, uniqueness: { on: :create }
   validates :email, uniqueness: { on: :create }
-  validates :password, length: { within: 5..40 }, if: -> {
-    read_attribute('password').nil? || password.to_s.length > 0
+  validates :password, length: { within: 5..40 }, if: lambda {
+    read_attribute('password').nil? || password.to_s.length.positive?
   }
   validates :login, presence: true
   validates :email, presence: true
@@ -214,11 +213,9 @@ class User < ActiveRecord::Base
   private
 
   def send_create_notification
-    begin
-      email_notification = NotificationMailer.notif_user(self)
-      EmailNotify.send_message(self, email_notification)
-    rescue => err
-      logger.error "Unable to send notification of create user email: #{err.inspect}"
-    end
+    email_notification = NotificationMailer.notif_user(self)
+    EmailNotify.send_message(self, email_notification)
+  rescue StandardError => e
+    logger.error "Unable to send notification of create user email: #{e.inspect}"
   end
 end

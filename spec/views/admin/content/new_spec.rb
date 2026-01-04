@@ -1,12 +1,14 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
-describe "admin/content/new.html.erb" do
+describe 'admin/content/new.html.erb' do
   before do
-    admin = stub_model(User, :settings => {:editor => 'simple'})
+    admin = stub_model(User, settings: { editor: 'simple' })
     admin.stub(:admin?) { true }
-    admin.stub(:text_filter_name) { "" }
-    admin.stub(:profile_label) { "admin" }
-    blog = mock_model(Blog, :base_url => "http://myblog.net/")
+    admin.stub(:text_filter_name) { '' }
+    admin.stub(:profile_label) { 'admin' }
+    blog = mock_model(Blog, base_url: 'http://myblog.net/')
     article = stub_model(Article)
     article.stub(:new_record?) { true }
     article.stub(:persisted?) { false }
@@ -22,21 +24,23 @@ describe "admin/content/new.html.erb" do
     TextFilter.stub(:all) { [text_filter] }
 
     # Stub deprecated Rails 2 JavaScript helpers (link_to_remote still used in some views)
-    view.stub(:link_to_remote).and_return("")
+    view.stub(:link_to_remote).and_return('')
 
     assign :article, article
   end
 
-  it "renders with no resources or macros" do
+  it 'renders with no resources or macros' do
     assign(:images, [])
     assign(:macros, [])
     assign(:resources, [])
     render
   end
 
-  it "renders with image resources" do
+  it 'renders with image resources' do
     # FIXME: Nasty. Thumbnail creation should not be controlled by the view.
-    img = mock_model(Resource, :filename => "foo", :create_thumbnail => nil)
+    file_attachment = double('ActiveStorage::Attached::One', attached?: false)
+    img = mock_model(Resource, filename: 'foo', create_thumbnail: nil, file: file_attachment,
+                               full_filename: '/path/to/foo')
     assign(:images, [img])
     assign(:macros, [])
     assign(:resources, [])

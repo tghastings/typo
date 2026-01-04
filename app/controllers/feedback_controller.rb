@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 class FeedbackController < ApplicationController
   helper :theme
 
-  before_action :get_article, :only => [:create]
+  before_action :get_article, only: [:create]
 
   cache_sweeper :blog_sweeper
 
@@ -29,7 +31,7 @@ class FeedbackController < ApplicationController
         if params[:article_id]
           article = Article.find_by(id: params[:article_id])
           if article
-            redirect_to "#{article.permalink_url}\##{@page_title.underscore}", allow_other_host: true
+            redirect_to "#{article.permalink_url}##{@page_title.underscore}", allow_other_host: true
           else
             render plain: 'Article not found', status: 404
           end

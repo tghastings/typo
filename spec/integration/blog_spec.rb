@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe 'Blog Integration' do
@@ -121,7 +123,7 @@ describe 'Blog Integration' do
     end
 
     it 'should not authenticate with wrong password' do
-      user = User.create!(
+      User.create!(
         login: 'wrongauth',
         email: 'wrong@example.com',
         password: 'password123',
@@ -143,9 +145,9 @@ describe 'Blog Integration' do
 
     it 'should have a unique permalink' do
       Category.create!(name: 'Tech', permalink: 'tech1')
-      expect {
+      expect do
         Category.create!(name: 'Tech', permalink: 'tech1')
-      }.to raise_error(ActiveRecord::RecordInvalid)
+      end.to raise_error(ActiveRecord::RecordInvalid)
     end
   end
 

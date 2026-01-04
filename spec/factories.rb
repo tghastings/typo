@@ -1,4 +1,5 @@
-# coding: utf-8
+# frozen_string_literal: true
+
 FactoryBot.define do
   sequence :name do |n|
     "name_#{n}"
@@ -80,45 +81,45 @@ FactoryBot.define do
 
   factory :post_type do
     name { 'foobar' }
-    description { "Some description" }
+    description { 'Some description' }
   end
 
   factory :text_filter do
-    name { "markdown" }
-    description { "Markdown" }
+    name { 'markdown' }
+    description { 'Markdown' }
     markup { 'markdown' }
     filters { '--- []' }
     params { '--- {}' }
 
     factory :markdown do
-      name { "markdown" }
-      description { "Markdown" }
+      name { 'markdown' }
+      description { 'Markdown' }
       markup { 'markdown' }
     end
 
     factory :smartypants do
-      name { "smartypants" }
-      description { "SmartyPants" }
+      name { 'smartypants' }
+      description { 'SmartyPants' }
       markup { 'none' }
       filters { [:smartypants] }
     end
 
-    factory :markdown_smartypants, aliases: [:"markdown smartypants"] do
-      name { "markdown smartypants" }
-      description { "Markdown with SmartyPants" }
+    factory :markdown_smartypants, aliases: [:'markdown smartypants'] do
+      name { 'markdown smartypants' }
+      description { 'Markdown with SmartyPants' }
       markup { 'markdown' }
       filters { [:smartypants] }
     end
 
     factory :textile do
-      name { "textile" }
-      description { "Textile" }
+      name { 'textile' }
+      description { 'Textile' }
       markup { 'textile' }
     end
 
     factory :none_filter, aliases: [:none] do
-      name { "none" }
-      description { "None" }
+      name { 'none' }
+      description { 'None' }
       markup { 'none' }
     end
   end
@@ -154,11 +155,7 @@ FactoryBot.define do
     initialize_with do
       # Always get fresh blog from database
       existing = Blog.uncached { Blog.order(:id).first }
-      if existing
-        existing
-      else
-        new(attributes)
-      end
+      existing || new(attributes)
     end
 
     to_create do |blog, evaluator|
@@ -198,7 +195,7 @@ FactoryBot.define do
   factory :profile do
     label { generate(:label) }
     nicename { 'Typo contributor' }
-    modules { [:dashboard, :profile] }
+    modules { %i[dashboard profile] }
 
     initialize_with do
       requested = attributes[:label]
@@ -216,19 +213,21 @@ FactoryBot.define do
     factory :profile_admin do
       label { 'admin' }
       nicename { 'Typo administrator' }
-      modules { [:dashboard, :write, :articles, :pages, :feedback, :themes, :sidebar, :users, :seo, :media, :settings, :profile] }
+      modules do
+        %i[dashboard write articles pages feedback themes sidebar users seo media settings profile]
+      end
     end
 
     factory :profile_publisher do
       label { 'publisher' }
       nicename { 'Blog publisher' }
-      modules { [:users, :dashboard, :write, :articles, :pages, :feedback, :media] }
+      modules { %i[users dashboard write articles pages feedback media] }
     end
 
     factory :profile_contributor do
       label { 'contributor' }
       nicename { 'Blog contributor' }
-      modules { [:dashboard, :profile] }
+      modules { %i[dashboard profile] }
     end
   end
 
@@ -240,7 +239,7 @@ FactoryBot.define do
 
   factory :tag do
     name { generate(:name) }
-    display_name { |tag| tag.name }
+    display_name(&:name)
   end
 
   factory :resource do

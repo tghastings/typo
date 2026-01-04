@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Theme
   cattr_accessor :cache_theme_lookup
   @@cache_theme_lookup = false
@@ -5,45 +7,43 @@ class Theme
   attr_accessor :name, :path, :description_html
 
   def initialize(name, path)
-    @name, @path = name, path
+    @name = name
+    @path = path
   end
 
   # TODO: Remove check for old-fashioned theme layout.
-  def layout(action=:default)
+  def layout(action = :default)
     if action.to_s == 'view_page'
-      if File.exist? "#{::Rails.root.to_s}/themes/#{name}/views/layouts/pages.html.erb"
-        return "layouts/pages"
-      end
-      if File.exist? "#{::Rails.root.to_s}/themes/#{name}/layouts/pages.html.erb"
-        return "#{::Rails.root.to_s}/themes/#{name}/layouts/pages"
-      end
+      return 'layouts/pages' if File.exist? "#{::Rails.root}/themes/#{name}/views/layouts/pages.html.erb"
+      return "#{::Rails.root}/themes/#{name}/layouts/pages" if File.exist? "#{::Rails.root}/themes/#{name}/layouts/pages.html.erb"
     end
-    if File.exist? "#{::Rails.root.to_s}/themes/#{name}/views/layouts/default.html.erb"
-      return "layouts/default"
-    end
-    "#{::Rails.root.to_s}/themes/#{name}/layouts/default"
+    return 'layouts/default' if File.exist? "#{::Rails.root}/themes/#{name}/views/layouts/default.html.erb"
+
+    "#{::Rails.root}/themes/#{name}/layouts/default"
   end
 
   def description
-    File.read("#{path}/about.markdown") rescue "### #{name}"
+    File.read("#{path}/about.markdown")
+  rescue StandardError
+    "### #{name}"
   end
 
   # Find a theme, given the theme name
   def self.find(name)
-    self.new(name,theme_path(name))
+    new(name, theme_path(name))
   end
 
   def self.themes_root
-    ::Rails.root.to_s + "/themes"
+    "#{::Rails.root}/themes"
   end
 
   def self.theme_path(name)
-    themes_root + "/" + name
+    "#{themes_root}/#{name}"
   end
 
   def self.theme_from_path(path)
     name = path.scan(/[-\w]+$/i).flatten.first
-    self.new(name, path)
+    new(name, path)
   end
 
   def self.find_all

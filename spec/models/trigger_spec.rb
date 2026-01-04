@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe 'With the contents fixture' do
@@ -7,12 +9,12 @@ describe 'With the contents fixture' do
   end
 
   it '.post_action should not fire immediately for future triggers' do
-    expect {
+    expect do
       Trigger.post_action(Time.now + 2, @page, 'publish!')
       expect(Trigger.count).to eq(1)
       Trigger.fire
       expect(Trigger.count).to eq(1)
-    }.not_to raise_error
+    end.not_to raise_error
 
     # Stub Time.now to emulate sleep.
     t = Time.now
@@ -29,5 +31,4 @@ describe 'With the contents fixture' do
     Trigger.post_action(Time.now, @page, 'publish!')
     expect(Trigger.count).to eq(0)
   end
-
 end

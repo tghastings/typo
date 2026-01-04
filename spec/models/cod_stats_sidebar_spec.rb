@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe CodStatsSidebar do
@@ -5,22 +7,22 @@ describe CodStatsSidebar do
     @sidebar = CodStatsSidebar.new
   end
 
-  describe "class definition" do
-    it "should inherit from Sidebar" do
+  describe 'class definition' do
+    it 'should inherit from Sidebar' do
       expect(CodStatsSidebar.superclass).to eq(Sidebar)
     end
 
-    it "should have correct display_name" do
+    it 'should have correct display_name' do
       expect(CodStatsSidebar.display_name).to eq('Call of Duty Stats')
     end
 
-    it "should have correct description" do
+    it 'should have correct description' do
       expect(CodStatsSidebar.description).to eq('Display your Call of Duty stats from COD Tracker')
     end
   end
 
-  describe "default settings" do
-    it "should be valid" do
+  describe 'default settings' do
+    it 'should be valid' do
       expect(@sidebar).to be_valid
     end
 
@@ -28,7 +30,7 @@ describe CodStatsSidebar do
       expect(@sidebar.title).to eq('CoD Stats')
     end
 
-    it "tracker_api_key should default to empty string" do
+    it 'tracker_api_key should default to empty string' do
       expect(@sidebar.tracker_api_key).to eq('')
     end
 
@@ -36,7 +38,7 @@ describe CodStatsSidebar do
       expect(@sidebar.platform).to eq('battlenet')
     end
 
-    it "username should default to empty string" do
+    it 'username should default to empty string' do
       expect(@sidebar.username).to eq('')
     end
 
@@ -44,47 +46,47 @@ describe CodStatsSidebar do
       expect(@sidebar.game).to eq('mw2')
     end
 
-    it "show_example_content should default to false" do
+    it 'show_example_content should default to false' do
       expect(@sidebar.show_example_content).to eq(false)
     end
   end
 
-  describe "content partial" do
-    it "should have correct content partial path" do
+  describe 'content partial' do
+    it 'should have correct content partial path' do
       expect(@sidebar.content_partial).to eq('/cod_stats_sidebar/content')
     end
   end
 
-  describe "#configured?" do
-    it "should return false when credentials are blank" do
+  describe '#configured?' do
+    it 'should return false when credentials are blank' do
       expect(@sidebar.configured?).to be false
     end
 
-    it "should return true when api key and username are present" do
+    it 'should return true when api key and username are present' do
       @sidebar.tracker_api_key = 'test_key'
       @sidebar.username = 'TestPlayer'
       expect(@sidebar.configured?).to be true
     end
   end
 
-  describe "#stats" do
-    context "when not configured and show_example_content is false" do
-      it "should return nil" do
+  describe '#stats' do
+    context 'when not configured and show_example_content is false' do
+      it 'should return nil' do
         expect(@sidebar.stats).to be_nil
       end
     end
 
-    context "when show_example_content is true" do
+    context 'when show_example_content is true' do
       before { @sidebar.show_example_content = true }
 
-      it "should return example stats" do
+      it 'should return example stats' do
         data = @sidebar.stats
         expect(data).to be_a(Hash)
         expect(data['platformInfo']).to be_present
         expect(data['segments']).to be_an(Array)
       end
 
-      it "should include overview stats" do
+      it 'should include overview stats' do
         data = @sidebar.stats
         overview = data['segments'].find { |s| s['type'] == 'overview' }
         expect(overview).to be_present
@@ -94,26 +96,26 @@ describe CodStatsSidebar do
     end
   end
 
-  describe "#format_stat" do
-    it "should format millions correctly" do
+  describe '#format_stat' do
+    it 'should format millions correctly' do
       expect(@sidebar.format_stat(1_500_000)).to eq('1.5M')
     end
 
-    it "should format thousands correctly" do
+    it 'should format thousands correctly' do
       expect(@sidebar.format_stat(1_500)).to eq('1.5K')
     end
 
-    it "should return plain number for small values" do
+    it 'should return plain number for small values' do
       expect(@sidebar.format_stat(500)).to eq('500')
     end
 
-    it "should return dash for nil values" do
+    it 'should return dash for nil values' do
       expect(@sidebar.format_stat(nil)).to eq('—')
     end
   end
 
-  describe "database persistence" do
-    it "should save and reload correctly" do
+  describe 'database persistence' do
+    it 'should save and reload correctly' do
       @sidebar.title = 'My CoD Stats'
       @sidebar.tracker_api_key = 'abc123'
       @sidebar.username = 'Player1'
@@ -130,22 +132,22 @@ describe CodStatsSidebar do
     end
   end
 
-  describe "compatibility with other sidebars" do
-    it "should coexist with FlickrSidebar and SpotifySidebar" do
-      cod = CodStatsSidebar.create!(active_position: 1)
-      flickr = FlickrSidebar.create!(active_position: 2)
-      spotify = SpotifySidebar.create!(active_position: 3)
+  describe 'compatibility with other sidebars' do
+    it 'should coexist with FlickrSidebar and SpotifySidebar' do
+      CodStatsSidebar.create!(active_position: 1)
+      FlickrSidebar.create!(active_position: 2)
+      SpotifySidebar.create!(active_position: 3)
 
       visible = Sidebar.find_all_visible
       expect(visible.length).to eq(3)
       expect(visible.map(&:class)).to include(CodStatsSidebar, FlickrSidebar, SpotifySidebar)
     end
 
-    it "should coexist with built-in sidebars" do
-      cod = CodStatsSidebar.create!(active_position: 1)
-      static = StaticSidebar.create!(active_position: 2)
-      search = SearchSidebar.create!(active_position: 3)
-      meta = MetaSidebar.create!(active_position: 4)
+    it 'should coexist with built-in sidebars' do
+      CodStatsSidebar.create!(active_position: 1)
+      StaticSidebar.create!(active_position: 2)
+      SearchSidebar.create!(active_position: 3)
+      MetaSidebar.create!(active_position: 4)
 
       visible = Sidebar.find_all_visible
       expect(visible.length).to eq(4)

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Tag < ActiveRecord::Base
   has_and_belongs_to_many :articles, -> { order('created_at DESC') }
 
@@ -18,34 +20,46 @@ class Tag < ActiveRecord::Base
   end
 
   def ensure_naming_conventions
-    if self.display_name.blank?
-      self.display_name = self.name
-    end
-    self.name = self.display_name.to_url
+    self.display_name = name if display_name.blank?
+    self.name = display_name.to_url
   end
 
   before_save :ensure_naming_conventions
 
-  def self.find_all_with_article_counters(limit=20, orderby='article_counter DESC', start=0)
+  # Whitelist allowed ORDER BY clauses to prevent SQL injection
+  ALLOWED_ORDER_CLAUSES = {
+    'article_counter DESC' => 'article_counter DESC',
+    'article_counter ASC' => 'article_counter ASC',
+    'name ASC' => 'tags.name ASC',
+    'name DESC' => 'tags.name DESC',
+    'display_name ASC' => 'tags.display_name ASC',
+    'display_name DESC' => 'tags.display_name DESC'
+  }.freeze
+
+  def self.find_all_with_article_counters(limit = 20, orderby = 'article_counter DESC', start = 0)
     # Only count published articles
+    # Validate orderby against whitelist to prevent SQL injection
+    safe_orderby = ALLOWED_ORDER_CLAUSES[orderby] || 'article_counter DESC'
+
     join_table = reflect_on_association(:articles).join_table
-    self.find_by_sql([%{
+    find_by_sql([%{
       SELECT tags.id, tags.name, tags.display_name, COUNT(#{join_table}.article_id) AS article_counter
       FROM #{Tag.table_name} tags
       INNER JOIN #{join_table} ON #{join_table}.tag_id = tags.id
       INNER JOIN #{Article.table_name} articles ON #{join_table}.article_id = articles.id AND articles.published = ?
       GROUP BY tags.id, tags.name, tags.display_name
-      ORDER BY #{orderby}
+      ORDER BY #{safe_orderby}
       LIMIT ? OFFSET ?
-      }, true, limit, start]).each{|item| item.article_counter = item.article_counter.to_i }
+      }, true, limit, start]).each { |item| item.article_counter = item.article_counter.to_i }
   end
 
   def self.merge(from, to)
-    self.update_by_sql([%{UPDATE article_tags SET tag_id = #{to} WHERE tag_id = #{from} }])
+    # Use parameterized query to prevent SQL injection
+    connection.execute(sanitize_sql_array(['UPDATE articles_tags SET tag_id = ? WHERE tag_id = ?', to.to_i, from.to_i]))
   end
 
   def self.find_by_permalink(name)
-    self.find_by_name(name)
+    find_by_name(name)
   end
 
   def self.to_prefix
@@ -58,8 +72,8 @@ class Tag < ActiveRecord::Base
     where('name LIKE ?', "%#{char}%").order('name ASC')
   end
 
-  def self.collection_to_string tags
-    tags.map(&:display_name).sort.map { |name| name =~ / / ? "\"#{name}\"" : name }.join ", "
+  def self.collection_to_string(tags)
+    tags.map(&:display_name).sort.map { |name| name =~ / / ? "\"#{name}\"" : name }.join ', '
   end
 
   def published_articles
@@ -67,22 +81,21 @@ class Tag < ActiveRecord::Base
   end
 
   def permalink
-    self.name
+    name
   end
 
-  def permalink_url(anchor=nil, only_path=false)
+  def permalink_url(_anchor = nil, only_path = false)
     blog = Blog.default # remove me...
 
     blog.url_for(
-      :controller => 'tags',
-      :action => 'show',
-      :id => permalink,
-      :only_path => only_path
+      controller: 'tags',
+      action: 'show',
+      id: permalink,
+      only_path: only_path
     )
   end
 
   def to_param
     permalink
   end
-
 end

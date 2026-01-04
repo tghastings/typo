@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe Resource do
@@ -145,12 +147,12 @@ describe Resource do
   describe '#fullpath (legacy support)' do
     it 'returns the full path to the file when filename is set' do
       res = Factory.build(:resource, filename: 'a_new_file')
-      res.fullpath.should == "#{::Rails.root.to_s}/public/files/a_new_file"
+      res.fullpath.should == "#{Rails.root}/public/files/a_new_file"
     end
 
     it 'returns the full path to a different file when passed as argument' do
       res = Factory.build(:resource, filename: 'original_file')
-      res.fullpath('different_file').should == "#{::Rails.root.to_s}/public/files/different_file"
+      res.fullpath('different_file').should == "#{Rails.root}/public/files/different_file"
     end
   end
 
@@ -162,7 +164,7 @@ describe Resource do
     describe '#without_images' do
       it 'returns resources that are not images (based on mime type)' do
         other_resource = Factory(:resource, mime: 'text/css')
-        image_resource = Factory(:resource, mime: 'image/jpeg')
+        Factory(:resource, mime: 'image/jpeg')
         Resource.without_images.should == [other_resource]
       end
 
@@ -176,7 +178,7 @@ describe Resource do
 
     describe '#images' do
       it 'returns only images (based on mime type)' do
-        other_resource = Factory(:resource, mime: 'text/css')
+        Factory(:resource, mime: 'text/css')
         image_resource = Factory(:resource, mime: 'image/jpeg')
         Resource.images.should == [image_resource]
       end

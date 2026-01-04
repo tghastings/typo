@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Resource < ActiveRecord::Base
   has_one_attached :file
 
@@ -8,8 +10,8 @@ class Resource < ActiveRecord::Base
 
   scope :without_images, -> { where("mime NOT LIKE '%image%'") }
   scope :images, -> { where("mime LIKE '%image%'") }
-  scope :by_filename, -> { order("upload") }
-  scope :by_created_at, -> { order("created_at DESC") }
+  scope :by_filename, -> { order('upload') }
+  scope :by_created_at, -> { order('created_at DESC') }
 
   scope :without_images_by_filename, -> { without_images.by_filename }
   scope :images_by_created_at, -> { images.by_created_at }
@@ -17,6 +19,7 @@ class Resource < ActiveRecord::Base
   # Get the URL for the attached file
   def url
     return nil unless file.attached?
+
     Rails.application.routes.url_helpers.rails_blob_path(file, only_path: true)
   end
 
@@ -35,13 +38,13 @@ class Resource < ActiveRecord::Base
       file.variant(resize_to_limit: dimensions),
       only_path: true
     )
-  rescue
+  rescue StandardError
     url # Fallback to original if variant fails
   end
 
   # Legacy support: fullpath for old code
   def fullpath(file_name = nil)
-    "#{::Rails.root.to_s}/public/files/#{file_name.nil? ? filename : file_name}"
+    "#{::Rails.root}/public/files/#{file_name.nil? ? filename : file_name}"
   end
 
   # Legacy support: Check if file exists (for old code)

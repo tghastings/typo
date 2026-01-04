@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 class SidebarGenerator < Rails::Generator::NamedBase
   attr_reader :plugin_path
 
-  def initialize(runtime_args, runtime_options = { })
+  def initialize(runtime_args, runtime_options = {})
     super
     @plugin_path = "vendor/plugins/#{file_name}"
   end

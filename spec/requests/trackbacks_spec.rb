@@ -19,7 +19,7 @@ RSpec.describe 'Trackbacks', type: :request do
 
     @profile = Profile.find_or_create_by!(label: 'admin') do |p|
       p.nicename = 'Admin'
-      p.modules = [:dashboard, :write, :articles]
+      p.modules = %i[dashboard write articles]
     end
     User.where(login: 'trackback_author').destroy_all
     @user = User.create!(
@@ -114,7 +114,7 @@ RSpec.describe 'Trackbacks', type: :request do
       end
 
       it 'does not create trackback' do
-        expect {
+        expect do
           post '/trackbacks', params: {
             id: @article.id,
             url: 'http://external.example.com/linking-post',
@@ -122,7 +122,7 @@ RSpec.describe 'Trackbacks', type: :request do
             title: 'Linking Post Title',
             excerpt: 'This post links to your article'
           }
-        }.not_to change(Trackback, :count)
+        end.not_to change(Trackback, :count)
       end
 
       it 'returns XML response with error' do
