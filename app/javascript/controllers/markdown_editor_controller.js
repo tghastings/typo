@@ -12,7 +12,22 @@ export default class extends Controller {
 
   connect() {
     this.previewVisible = false
-    this.initializeEditor()
+    this.showWhitespace = false
+    this.waitForCodeMirrorAndInit()
+  }
+
+  waitForCodeMirrorAndInit(attempts = 0) {
+    const maxAttempts = 50 // 5 seconds max (50 * 100ms)
+
+    if (typeof CodeMirror !== "undefined") {
+      this.initializeEditor()
+    } else if (attempts < maxAttempts) {
+      // CodeMirror not loaded yet, wait and retry (Safari needs this)
+      setTimeout(() => this.waitForCodeMirrorAndInit(attempts + 1), 100)
+    } else {
+      // Fallback after timeout
+      this.initializeEditor()
+    }
   }
 
   disconnect() {
@@ -61,6 +76,8 @@ export default class extends Controller {
       autofocus: false,
       tabSize: 2,
       indentWithTabs: false,
+      inputStyle: "contenteditable", // Enables Grammarly and browser spellcheck
+      spellcheck: true, // Enable native browser spellcheck
       extraKeys: {
         "Ctrl-B": () => this.insertBold(),
         "Cmd-B": () => this.insertBold(),
@@ -78,6 +95,14 @@ export default class extends Controller {
 
     // Set editor height to fill container
     this.cm.setSize(null, "100%")
+
+    // Enable Grammarly support on the contenteditable element
+    const contentEditableEl = this.cm.getInputField()
+    if (contentEditableEl) {
+      contentEditableEl.setAttribute("data-gramm", "true")
+      contentEditableEl.setAttribute("data-gramm_editor", "true")
+      contentEditableEl.setAttribute("spellcheck", "true")
+    }
 
     // Sync changes to hidden input
     this.cm.on("change", () => {
@@ -390,6 +415,41 @@ export default class extends Controller {
     const toggleBtn = this.element.querySelector('.preview-toggle')
     if (toggleBtn) {
       toggleBtn.textContent = this.previewVisible ? "Edit" : "Preview"
+    }
+  }
+
+  toggleWhitespace() {
+    this.showWhitespace = !this.showWhitespace
+
+    if (this.cm) {
+      if (this.showWhitespace) {
+        // Add whitespace overlay
+        this.whitespaceOverlay = {
+          token: function(stream) {
+            if (stream.match(/\t/)) {
+              return "whitespace whitespace-tab"
+            } else if (stream.match(/ /)) {
+              return "whitespace whitespace-space"
+            } else {
+              stream.next()
+              return null
+            }
+          }
+        }
+        this.cm.addOverlay(this.whitespaceOverlay)
+      } else {
+        // Remove whitespace overlay
+        if (this.whitespaceOverlay) {
+          this.cm.removeOverlay(this.whitespaceOverlay)
+          this.whitespaceOverlay = null
+        }
+      }
+    }
+
+    // Update toggle button
+    const btn = this.element.querySelector('.whitespace-toggle')
+    if (btn) {
+      btn.classList.toggle('active', this.showWhitespace)
     }
   }
 

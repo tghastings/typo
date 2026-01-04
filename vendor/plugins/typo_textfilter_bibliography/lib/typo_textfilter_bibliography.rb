@@ -26,14 +26,12 @@ class Typo
           if url.start_with?('#') || url.start_with?('mailto:') || url.start_with?('javascript:')
             match
           else
-            # Get or assign reference number
-            if url_refs[url]
-              ref_num = url_refs[url][:num]
-            else
+            # Get or assign reference number (re-use same number for same URL)
+            unless url_refs[url]
               ref_counter += 1
-              ref_num = ref_counter
-              url_refs[url] = { num: ref_num, url: url }
+              url_refs[url] = { num: ref_counter, url: url }
             end
+            ref_num = url_refs[url][:num]
 
             # Return link with superscript reference
             %(<a #{full_attrs}>#{link_text}</a><sup class="bibliography-ref">[#{ref_num}]</sup>)

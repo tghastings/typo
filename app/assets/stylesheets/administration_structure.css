@@ -804,3 +804,24 @@ label.editor {
 .autosave-status-container #autosave:empty {
   display: none;
 }
+
+/* CodeMirror Show Whitespace */
+.cm-whitespace-space::before {
+  content: "·";
+  color: #aaa;
+  position: absolute;
+  pointer-events: none;
+}
+
+.cm-whitespace-tab::before {
+  content: "→";
+  color: #aaa;
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Whitespace toggle button active state */
+.markdown-toolbar .whitespace-toggle.active {
+  background-color: #0d6efd;
+  color: white;
+}

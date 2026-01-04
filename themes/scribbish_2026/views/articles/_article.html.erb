@@ -8,7 +8,7 @@
 <% end -%>
     </h2>
     <p class="author">
-      <%= _("Posted by") %> <cite><%= author_link(article) %></cite> on 
+      <%= _("Posted by") %> <cite><%= author_link(article) %> </cite>
       <abbr class="published" title="<%= article.published_at.xmlschema %>">
         <time datetime="<%= article.published_at.iso8601 %>"><%= display_date_and_time article.published_at %></time>
       </abbr>

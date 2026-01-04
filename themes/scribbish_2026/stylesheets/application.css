@@ -81,7 +81,7 @@ body {
   background: var(--color-background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  border-top: 5px solid #333;
+  border-top: 5px solid #0a0e1a;
 }
 
 img {
@@ -406,25 +406,29 @@ pre.line-numbers .line-numbers-rows,
 
 /* Copy button for code blocks */
 .code-copy-btn {
-  position: absolute;
-  top: 0.5em;
-  right: 0.5em;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  border-radius: 4px;
-  padding: 0.4em;
-  cursor: pointer;
+  position: absolute !important;
+  top: 0.5em !important;
+  right: 0.5em !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 0.4em !important;
+  cursor: pointer !important;
   opacity: 0;
   transition: opacity 0.2s, background 0.2s;
-  color: #8899aa;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
+  color: #8899aa !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 100 !important;
 }
 
 pre:hover .code-copy-btn {
-  opacity: 1;
+  opacity: 1 !important;
+}
+
+pre {
+  overflow: visible !important;
 }
 
 .code-copy-btn:hover {
@@ -1144,10 +1148,16 @@ pre:hover .code-copy-btn {
   margin: 0 0 var(--space-sm) 0;
   color: var(--color-text);
   text-align: right;
-  border-top: 1px solid var(--color-border);
-  padding-top: var(--space-sm);
-  width: 85px;
-  margin-left: auto;
+  padding-top: calc(var(--space-sm) + 5px);
+}
+
+.bibliography h3::before {
+  content: '';
+  display: block;
+  width: 25px;
+  border-top: 1px solid #999;
+  margin-right: auto;
+  margin-bottom: 5px;
 }
 
 .bibliography ol,
