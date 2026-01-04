@@ -687,7 +687,6 @@ pre {
   background: var(--color-background-alt);
   border-radius: var(--border-radius);
   margin-bottom: var(--space-md);
-  padding: var(--space-md);
 }
 
 #content .comment.preview {
