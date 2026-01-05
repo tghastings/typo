@@ -4,10 +4,11 @@ require 'spec_helper'
 
 RSpec.describe 'Admin Content', type: :request do
   let!(:blog) { create(:blog) }
-  let!(:admin) { create(:user, login: 'admin', password: 'password123', profile: create(:profile_admin)) }
+  let!(:admin_profile) { Profile.find_by(label: 'admin') || create(:profile_admin) }
+  let!(:admin) { create(:user, password: 'password123', profile: admin_profile) }
 
   def login_as_admin
-    post '/accounts/login', params: { user: { login: 'admin', password: 'password123' } }
+    post '/accounts/login', params: { user: { login: admin.login, password: 'password123' } }
   end
 
   describe 'GET /admin/content' do
@@ -176,7 +177,8 @@ RSpec.describe 'Admin Content', type: :request do
     end
 
     context 'when user is admin' do
-      let(:other_user) { create(:user, login: 'other', profile: create(:profile_contributor)) }
+      let(:contributor_profile) { Profile.find_by(label: 'contributor') || create(:profile_contributor) }
+      let(:other_user) { create(:user, profile: contributor_profile) }
       let!(:other_article) { create(:article, user: other_user) }
 
       it 'allows admin to edit any article' do
@@ -228,7 +230,8 @@ RSpec.describe 'Admin Content', type: :request do
     end
 
     context 'as admin user' do
-      let(:other_user) { create(:user, login: 'other', profile: create(:profile_contributor)) }
+      let(:contributor_profile) { Profile.find_by(label: 'contributor') || create(:profile_contributor) }
+      let(:other_user) { create(:user, profile: contributor_profile) }
       let!(:other_article) { create(:article, user: other_user) }
 
       it 'allows admin to destroy any article' do

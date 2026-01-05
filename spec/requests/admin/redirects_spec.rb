@@ -4,10 +4,11 @@ require 'spec_helper'
 
 RSpec.describe 'Admin Redirects', type: :request do
   let!(:blog) { create(:blog) }
-  let!(:admin) { create(:user, login: 'admin', password: 'password123', profile: create(:profile_admin)) }
+  let!(:admin_profile) { Profile.find_by(label: 'admin') || create(:profile_admin) }
+  let!(:admin) { create(:user, password: 'password123', profile: admin_profile) }
 
   def login_as_admin
-    post '/accounts/login', params: { user: { login: 'admin', password: 'password123' } }
+    post '/accounts/login', params: { user: { login: admin.login, password: 'password123' } }
   end
 
   describe 'GET /admin/redirects' do
