@@ -78,6 +78,16 @@ end
 puts 'Database seeded successfully!'
 puts 'Visit /setup to create your admin user and configure the blog.'
 
+# Reset PostgreSQL sequences after inserting with explicit IDs
+if ActiveRecord::Base.connection.adapter_name == 'PostgreSQL'
+  %w[blogs categories profiles text_filters].each do |table|
+    ActiveRecord::Base.connection.execute(
+      "SELECT setval('#{table}_id_seq', COALESCE((SELECT MAX(id) FROM #{table}), 0) + 1, false)"
+    )
+  end
+  puts 'PostgreSQL sequences reset'
+end
+
 # Load additional seed files from db/seeds directory
 Dir[Rails.root.join('db', 'seeds', '*.rb')].each do |file|
   puts "Loading seed file: #{File.basename(file)}"
