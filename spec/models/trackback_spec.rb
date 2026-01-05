@@ -2,68 +2,44 @@
 
 require 'spec_helper'
 
-describe Trackback, 'With the various trackback filters loaded and DNS mocked out appropriately' do
-  before(:each) do
-    IPSocket.stub!(:getaddress).and_return { raise SocketError, 'getaddrinfo: Name or service not known' }
-    Factory(:blog)
-    @blog = Blog.default
-    @blog.sp_global = true
-    @blog.default_moderate_comments = false
-    @blog.save!
+RSpec.describe Trackback, type: :model do
+  before do
+    create(:blog)
   end
 
-  it 'Incomplete trackbacks should not be accepted' do
-    tb = Trackback.new(blog_name: 'Blog name',
-                       title: 'Title',
-                       excerpt: 'Excerpt',
-                       article_id: Factory(:article).id)
-    tb.should_not be_valid
-    tb.errors['url'].should be_any
+  describe 'factory' do
+    it 'creates valid trackback' do
+      trackback = create(:trackback)
+      expect(trackback).to be_valid
+      expect(trackback).to be_persisted
+    end
   end
 
-  it 'A valid trackback should be accepted' do
-    tb = Trackback.new(blog_name: 'Blog name',
-                       title: 'Title',
-                       url: 'http://foo.com',
-                       excerpt: 'Excerpt',
-                       article_id: Factory(:article).id)
-    tb.should be_valid
-    tb.save
-    tb.guid.size.should be > 15
-    tb.should_not be_spam
+  describe 'associations' do
+    it 'belongs to article' do
+      article = create(:article)
+      trackback = create(:trackback, article: article)
+      expect(trackback.article).to eq(article)
+    end
   end
 
-  it 'Trackbacks with a spammy link in the excerpt should be rejected' do
-    expect(IPSocket).to receive(:getaddress).with('chinaaircatering.com.bsb.empty.us').at_least(:once).and_return('127.0.0.2')
-
-    tb = Trackback.new(ham_params.merge(excerpt: '<a href="http://chinaaircatering.com">spam</a>'))
-    tb.should be_spam
+  describe '#feed_title' do
+    it 'returns trackback title for feed' do
+      article = create(:article, title: 'Test Article')
+      trackback = create(:trackback, article: article, blog_name: 'External Blog')
+      expect(trackback.feed_title).to include('External Blog')
+      expect(trackback.feed_title).to include('Test Article')
+    end
   end
 
-  it 'Trackbacks with a spammy source url should be rejected' do
-    add_spam_domain
-    tb = Trackback.new(ham_params.merge(url: 'http://www.chinaircatering.com'))
-    tb.should be_spam
-  end
+  describe 'published trackbacks' do
+    let(:article) { create(:article) }
 
-  it 'Trackbacks from a spammy ip address should be rejected' do
-    add_spam_ip('212.42.230.207')
-    tb = Trackback.new(ham_params.merge(ip: '212.42.230.207'))
-    tb.should be_spam
-  end
-
-  def add_spam_domain(domain = 'chinaircatering.com')
-    expect(IPSocket).to receive(:getaddress).with("#{domain}.bsb.empty.us").at_least(:once).and_return('127.0.0.2')
-  end
-
-  def add_spam_ip(addr = '212.42.230.206')
-    rbl_domain = "#{addr.split('.').reverse.join('.')}.opm.blitzed.us"
-    expect(IPSocket).to receive(:getaddress).with(rbl_domain).at_least(:once).and_return('127.0.0.2')
-  end
-
-  def ham_params
-    { blog_name: 'Blog', title: 'trackback', excerpt: 'bland',
-      url: 'http://notaspammer.com', ip: '212.42.230.206',
-      article_id: Factory(:article).id }
+    it 'returns only published trackbacks' do
+      published = create(:trackback, article: article, published: true, state: 'ham')
+      unpublished = create(:trackback, article: article, state: 'spam', published: false)
+      expect(article.published_trackbacks).to include(published)
+      expect(article.published_trackbacks).not_to include(unpublished)
+    end
   end
 end

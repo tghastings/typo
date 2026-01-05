@@ -55,7 +55,7 @@ Rails.application.routes.draw do
 
   # Backend controller for XML-RPC (MetaWeblog, MovableType, Blogger APIs)
   match 'backend/xmlrpc', to: 'backend#xmlrpc', via: %i[get post], as: :backend_xmlrpc
-  match 'backend/:action', to: 'backend#%<action>s', via: %i[get post]
+  match 'backend/api', to: 'backend#api', via: %i[get post]
 
   # CommentsController
   resources :comments, as: 'admin_comments' do
@@ -112,6 +112,7 @@ Rails.application.routes.draw do
   get 'theme/static_view_test', format: false
 
   # Accounts controller for login/logout
+  get 'accounts', to: 'accounts#index'
   get 'accounts/login', to: 'accounts#login', as: :login
   post 'accounts/login', to: 'accounts#login'
   get 'accounts/logout', to: 'accounts#logout', as: :logout
@@ -120,7 +121,6 @@ Rails.application.routes.draw do
   get 'accounts/signup', to: 'accounts#signup', as: :signup
   post 'accounts/signup', to: 'accounts#signup'
   get 'accounts/confirm', to: 'accounts#confirm', as: :accounts_confirm
-  get 'accounts/:action', to: 'accounts#index'
 
   # Admin controllers
   namespace :admin do
@@ -150,12 +150,130 @@ Rails.application.routes.draw do
     # Cache sweep route (POST to index)
     post 'cache', to: 'cache#index'
 
-    %w[advanced cache categories comments content profiles feedback general pages
-       resources sidebar textfilters trackbacks users settings tags redirects seo post_types].each do |ctrl|
-      get "/#{ctrl}", to: "#{ctrl}#index", as: nil
-      match "/#{ctrl}/:action", controller: ctrl, via: %i[get post], as: nil
-      match "/#{ctrl}/:action/:id", controller: ctrl, via: :all, as: nil
-    end
+    # Cache controller
+    get 'cache', to: 'cache#index'
+
+    # Categories controller
+    get 'categories', to: 'categories#index'
+    get 'categories/new', to: 'categories#new'
+    post 'categories/new', to: 'categories#new'
+    get 'categories/edit/:id', to: 'categories#edit'
+    post 'categories/edit/:id', to: 'categories#edit'
+    post 'categories/destroy/:id', to: 'categories#destroy'
+
+    # Content controller
+    get 'content', to: 'content#index'
+    get 'content/new', to: 'content#new'
+    post 'content/new', to: 'content#new'
+    get 'content/edit/:id', to: 'content#edit'
+    post 'content/edit/:id', to: 'content#edit'
+    get 'content/destroy/:id', to: 'content#destroy'
+    post 'content/destroy/:id', to: 'content#destroy'
+    post 'content/autosave', to: 'content#autosave'
+    post 'content/preview_markdown', to: 'content#preview_markdown'
+    post 'content/insert_editor', to: 'content#insert_editor'
+    post 'content/auto_complete_for_article_keywords', to: 'content#auto_complete_for_article_keywords'
+    post 'content/attachment_box_add', to: 'content#attachment_box_add'
+    post 'content/category_add', to: 'content#category_add'
+
+    # Feedback controller
+    get 'feedback', to: 'feedback#index'
+    get 'feedback/article/:id', to: 'feedback#article'
+    get 'feedback/edit/:id', to: 'feedback#edit'
+    post 'feedback/edit/:id', to: 'feedback#edit'
+    post 'feedback/update/:id', to: 'feedback#update'
+    get 'feedback/destroy/:id', to: 'feedback#destroy'
+    post 'feedback/destroy/:id', to: 'feedback#destroy'
+    post 'feedback/create', to: 'feedback#create'
+    post 'feedback/change_state/:id', to: 'feedback#change_state'
+    post 'feedback/mark_as_spam/:id', to: 'feedback#mark_as_spam'
+    post 'feedback/mark_as_ham/:id', to: 'feedback#mark_as_ham'
+    post 'feedback/bulkops', to: 'feedback#bulkops'
+
+    # Pages controller
+    get 'pages', to: 'pages#index'
+    get 'pages/new', to: 'pages#new'
+    post 'pages/new', to: 'pages#new'
+    get 'pages/edit/:id', to: 'pages#edit'
+    post 'pages/edit/:id', to: 'pages#edit'
+    get 'pages/destroy/:id', to: 'pages#destroy'
+    post 'pages/destroy/:id', to: 'pages#destroy'
+
+    # Post types controller
+    get 'post_types', to: 'post_types#index'
+    get 'post_types/new', to: 'post_types#new'
+    post 'post_types/new', to: 'post_types#new'
+    get 'post_types/edit/:id', to: 'post_types#edit'
+    post 'post_types/edit/:id', to: 'post_types#edit'
+    post 'post_types/destroy/:id', to: 'post_types#destroy'
+
+    # Profiles controller
+    get 'profiles', to: 'profiles#index'
+
+    # Redirects controller
+    get 'redirects', to: 'redirects#index'
+    get 'redirects/new', to: 'redirects#new'
+    post 'redirects/new', to: 'redirects#new'
+    get 'redirects/edit/:id', to: 'redirects#edit'
+    post 'redirects/edit/:id', to: 'redirects#edit'
+    post 'redirects/destroy/:id', to: 'redirects#destroy'
+
+    # Resources controller
+    get 'resources', to: 'resources#index'
+    get 'resources/new', to: 'resources#new'
+    post 'resources/new', to: 'resources#new'
+    post 'resources/upload', to: 'resources#upload'
+    post 'resources/update', to: 'resources#update'
+    post 'resources/update/:id', to: 'resources#update'
+    get 'resources/get_thumbnails', to: 'resources#get_thumbnails'
+    get 'resources/serve/:filename', to: 'resources#serve', constraints: { filename: %r{[^/]+} }
+    get 'resources/destroy/:id', to: 'resources#destroy'
+    post 'resources/destroy/:id', to: 'resources#destroy'
+
+    # SEO controller
+    get 'seo', to: 'seo#index'
+    get 'seo/permalinks', to: 'seo#permalinks'
+    post 'seo/permalinks', to: 'seo#permalinks'
+    get 'seo/titles', to: 'seo#titles'
+    post 'seo/titles', to: 'seo#titles'
+    post 'seo/update', to: 'seo#update'
+
+    # Settings controller
+    get 'settings', to: 'settings#index'
+    post 'settings/update', to: 'settings#update'
+    get 'settings/write', to: 'settings#write'
+    post 'settings/write', to: 'settings#write'
+    get 'settings/feedback', to: 'settings#feedback'
+    post 'settings/feedback', to: 'settings#feedback'
+
+    # Sidebar controller
+    get 'sidebar', to: 'sidebar#index'
+    post 'sidebar/set_active', to: 'sidebar#set_active'
+    post 'sidebar/remove', to: 'sidebar#remove'
+    post 'sidebar/remove/:id', to: 'sidebar#remove'
+    post 'sidebar/publish', to: 'sidebar#publish'
+    get 'sidebar/show_available', to: 'sidebar#show_available'
+    get 'sidebar/available', to: 'sidebar#available'
+
+    # Tags controller
+    get 'tags', to: 'tags#index'
+    get 'tags/new', to: 'tags#new'
+    post 'tags/new', to: 'tags#new'
+    get 'tags/edit/:id', to: 'tags#edit'
+    post 'tags/edit/:id', to: 'tags#edit'
+    post 'tags/destroy/:id', to: 'tags#destroy'
+
+    # Textfilters controller
+    get 'textfilters', to: 'textfilters#index'
+    get 'textfilters/macro_help/:id', to: 'textfilters#macro_help'
+
+    # Users controller
+    get 'users', to: 'users#index'
+    get 'users/new', to: 'users#new'
+    post 'users/new', to: 'users#new'
+    get 'users/edit/:id', to: 'users#edit'
+    post 'users/edit/:id', to: 'users#edit'
+    post 'users/destroy/:id', to: 'users#destroy'
   end
 
   # Root route is defined earlier with 'as: articles' for correct pagination links

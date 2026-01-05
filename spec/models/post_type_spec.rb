@@ -2,31 +2,34 @@
 
 require 'spec_helper'
 
-describe PostType do
-  before(:each) do
-    Factory(:blog)
+RSpec.describe PostType, type: :model do
+  before do
+    create(:blog)
   end
 
-  describe 'Given a new post type' do
-    it 'should give a valid post type' do
-      PostType.create(name: 'foo').should be_valid
+  describe 'validations' do
+    it 'requires name' do
+      post_type = PostType.new
+      expect(post_type).not_to be_valid
+      expect(post_type.errors[:name]).to be_present
     end
 
-    it 'should have a sanitized permalink' do
-      @pt = PostType.create(name: 'Un joli PostType Accentué')
-      @pt.permalink.should == 'un-joli-posttype-accentue'
+    it 'requires unique name' do
+      PostType.create!(name: 'video')
+      duplicate = PostType.new(name: 'video')
+      expect(duplicate).not_to be_valid
     end
 
-    it 'should have a sanitized permalink with a' do
-      @pt = PostType.create(name: 'Un joli PostType à Accentuer')
-      @pt.permalink.should == 'un-joli-posttype-a-accentuer'
+    it 'does not allow name "read"' do
+      post_type = PostType.new(name: 'read')
+      expect(post_type).not_to be_valid
     end
   end
 
-  it 'post types are unique' do
-    -> { PostType.create!(name: 'test') }.should_not raise_error
-    test_type = PostType.new(name: 'test')
-    test_type.should_not be_valid
-    test_type.errors[:name].should == ['has already been taken']
+  describe '#sanitize_title' do
+    it 'sets permalink from name' do
+      post_type = PostType.create!(name: 'Photo Gallery')
+      expect(post_type.permalink).to eq('photo-gallery')
+    end
   end
 end

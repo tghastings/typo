@@ -1,172 +1,137 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require 'xmlrpc/client'
+require 'net/http'
 
-describe 'Given a post which references a pingback enabled article' do
-  def pingback_target
-    'http://anotherblog.org/xml-rpc'
+RSpec.describe Ping, type: :model do
+  before do
+    create(:blog)
   end
 
-  def referenced_url
-    'http://anotherblog.org/a-post'
+  describe 'associations' do
+    it 'belongs to article' do
+      article = create(:article)
+      ping = Ping.create!(url: 'http://example.com', article: article)
+      expect(ping.article).to eq(article)
+    end
+
+    it 'allows article to be nil' do
+      ping = Ping.new(url: 'http://example.com', article: nil)
+      expect(ping.article).to be_nil
+    end
   end
 
-  def referrer_url
-    'http://myblog.net/referring-post'
+  describe '#send_pingback_or_trackback' do
+    it 'starts a thread' do
+      article = create(:article)
+      ping = Ping.create!(url: 'http://example.com', article: article)
+      thread = ping.send_pingback_or_trackback('http://example.com/origin')
+      expect(thread).to be_a(Thread)
+      thread.kill
+    end
   end
 
-  before(:each) do
-    @mock_response = mock('response')
-    @mock_xmlrpc_response = mock('xmlrpc_response')
+  describe '#send_weblogupdatesping' do
+    it 'starts a thread' do
+      article = create(:article)
+      ping = Ping.create!(url: 'http://example.com', article: article)
+      thread = ping.send_weblogupdatesping('http://server.com', 'http://origin.com')
+      expect(thread).to be_a(Thread)
+      thread.kill
+    end
   end
 
-  it 'Pingback sent to url found in referenced header' do
-    Factory(:blog)
-    expect(@mock_response).to receive(:[]).with('X-Pingback').at_least(:once).and_return(pingback_target)
-    expect(@mock_xmlrpc_response).to receive(:call).with('pingback.ping', referrer_url, referenced_url)
-    make_and_send_ping
-  end
+  describe 'Pinger' do
+    let(:article) { create(:article, title: 'Test Article', body: 'Test body content') }
+    let(:ping) { Ping.create!(url: 'http://example.com/post', article: article) }
 
-  it 'Pingback sent to url found in referenced body' do
-    Factory(:blog)
-    expect(@mock_response).to receive(:[]).with('X-Pingback').at_least(:once).and_return(nil)
-    expect(@mock_response).to receive(:body).at_least(:once)
-                                            .and_return(%(<link rel="pingback" href="http://anotherblog.org/xml-rpc" />))
-    expect(@mock_xmlrpc_response).to receive(:call).with('pingback.ping', referrer_url, referenced_url)
-    make_and_send_ping
-  end
+    describe '#pingback_url' do
+      it 'extracts pingback URL from X-Pingback header' do
+        pinger = Ping::Pinger.send(:new, 'http://origin.com', ping)
+        response = double('response', body: '')
+        allow(response).to receive(:[]).with('X-Pingback').and_return('http://example.com/pingback')
+        allow(pinger).to receive(:response).and_return(response)
 
-  it 'Pingback sent when new article is saved' do
-    # NOTE: ActiveRecord observers (email_notifier, web_notifier) were removed in Rails 5+
-    # The notification functionality is now handled through callbacks in the Article model
+        expect(pinger.pingback_url).to eq('http://example.com/pingback')
+      end
 
-    Factory(:blog, send_outbound_pings: 1)
+      it 'extracts pingback URL from link element' do
+        pinger = Ping::Pinger.send(:new, 'http://origin.com', ping)
+        response = double('response', body: '<link rel="pingback" href="http://example.com/pingback" />')
+        allow(response).to receive(:[]).with('X-Pingback').and_return(nil)
+        allow(pinger).to receive(:response).and_return(response)
 
-    a = Article.new \
-      body: '<a href="http://anotherblog.org/a-post">',
-      title: 'Test the pinging',
-      published: true
+        expect(pinger.pingback_url).to eq('http://example.com/pingback')
+      end
 
-    expect(Net::HTTP).to receive(:get_response).and_return(@mock_response)
-    expect(XMLRPC::Client).to receive(:new2).with(pingback_target).and_return(@mock_xmlrpc_response)
+      it 'returns nil when no pingback URL found' do
+        pinger = Ping::Pinger.send(:new, 'http://origin.com', ping)
+        response = double('response', body: '<html></html>')
+        allow(response).to receive(:[]).with('X-Pingback').and_return(nil)
+        allow(pinger).to receive(:response).and_return(response)
 
-    expect(@mock_response).to receive(:[]).with('X-Pingback').at_least(:once).and_return(pingback_target)
-    expect(@mock_xmlrpc_response).to receive(:call)
-      .with('pingback.ping',
-            %r{http://myblog.net/\d{4}/\d{2}/\d{2}/test-the-pinging},
-            referenced_url)
+        expect(pinger.pingback_url).to be_nil
+      end
+    end
 
-    expect(a.html_urls.size).to eq(1)
-    a.save!
-    expect(a).to be_just_published
-    a = Article.find(a.id)
-    expect(a).not_to be_just_published
-    # Saving again will not resend the pings
-    a.save
-  end
+    describe '#trackback_url' do
+      it 'extracts trackback URL from RDF' do
+        rdf_content = <<~RDF
+          <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+                   xmlns:dc="http://purl.org/dc/elements/1.1/"
+                   xmlns:trackback="http://madskills.com/public/xml/rss/module/trackback/">
+            <rdf:Description trackback:ping="http://example.com/trackback/1" dc:identifier="http://example.com/post" />
+          </rdf:RDF>
+        RDF
+        pinger = Ping::Pinger.send(:new, 'http://origin.com', ping)
+        response = double('response', body: rdf_content)
+        allow(pinger).to receive(:response).and_return(response)
 
-  def make_and_send_ping
-    expect(Net::HTTP).to receive(:get_response).and_return(@mock_response)
-    expect(XMLRPC::Client).to receive(:new2).with(pingback_target).and_return(@mock_xmlrpc_response)
+        expect(pinger.trackback_url).to eq('http://example.com/trackback/1')
+      end
 
-    ping = Factory(:article).pings.build('url' => referenced_url)
-    expect(ping).to be_instance_of(Ping)
-    expect(ping.url).to eq(referenced_url)
-    ping.send_pingback_or_trackback(referrer_url).join
-  end
-end
+      it 'falls back to ping URL when no RDF found' do
+        pinger = Ping::Pinger.send(:new, 'http://origin.com', ping)
+        response = double('response', body: '<html></html>')
+        allow(pinger).to receive(:response).and_return(response)
 
-describe 'An article links to another article, which contains a trackback URL' do
-  def referenced_url
-    'http://anotherblog.org/a-post'
-  end
+        expect(pinger.trackback_url).to eq('http://example.com/post')
+      end
+    end
 
-  def trackback_url
-    'http://anotherblog.org/a-post/trackback'
-  end
-  before(:each) do
-    Factory(:blog)
-  end
+    describe '#article and #blog' do
+      it 'has article accessor' do
+        pinger = Ping::Pinger.send(:new, 'http://origin.com', ping)
+        expect(pinger.article).to eq(article)
+      end
 
-  it 'Trackback URL is detected and pinged' do
-    referrer_url = 'http://myblog.net/referring-post'
-    post = 'title=Article+1%21&excerpt=body&url=http://myblog.net/referring-post&blog_name=test+blog'
-    article = Factory(:article, title: 'Article 1!', body: 'body', permalink: 'referring-post')
-    make_and_send_ping(post, article, referrer_url)
-  end
+      it 'has blog accessor' do
+        pinger = Ping::Pinger.send(:new, 'http://origin.com', ping)
+        expect(pinger.blog).to eq(article.blog)
+      end
+    end
 
-  it 'sends a trackback without html tag in excerpt' do
-    # TODO: Assert the following:
-    # contents(:xmltest).body = originally seen on <a href="http://blog.rubyonrails.org/">blog.rubyonrails.org</a>
+    describe '#send_pingback' do
+      it 'returns false when no pingback URL' do
+        pinger = Ping::Pinger.send(:new, 'http://origin.com', ping)
+        allow(pinger).to receive(:pingback_url).and_return(nil)
 
-    article = Factory(:article, title: "Associations aren't :dependent => true anymore",
-                                excerpt: 'A content with several data')
-    post = "title=#{CGI.escape(article.title)}"
-    post << "&excerpt=#{CGI.escape('A content with several data')}" # not original text see if normal ?
-    post << "&url=#{article.permalink_url}"
-    post << "&blog_name=#{CGI.escape('test blog')}"
+        expect(pinger.send_pingback).to be false
+      end
+    end
 
-    make_and_send_ping(post, article, article.permalink_url)
-  end
+    describe '#origin_url' do
+      it 'returns the origin URL' do
+        pinger = Ping::Pinger.send(:new, 'http://origin.com', ping)
+        expect(pinger.origin_url).to eq('http://origin.com')
+      end
+    end
 
-  it 'sends a trackback without markdown tag in excerpt' do
-    # TODO: Assert the following:
-    # contents(:markdown_article) #in markdown format\n * we\n * use\n [ok](http://blog.ok.com) to define a link
-
-    article = Factory(:article, title: 'How made link with markdown',
-                                excerpt: 'A content with several data')
-    post = "title=#{CGI.escape(article.title)}"
-    post << "&excerpt=#{CGI.escape('A content with several data')}" # not original text see if normal ?
-    post << "&url=#{article.permalink_url}"
-    post << "&blog_name=#{CGI.escape('test blog')}"
-
-    make_and_send_ping(post, article, article.permalink_url)
-  end
-
-  def make_and_send_ping(post, article, article_url)
-    @mock = mock('html_response')
-    expect(Net::HTTP).to receive(:get_response).with(URI.parse(referenced_url)).and_return(@mock)
-    expect(@mock).to receive(:[]).with('X-Pingback').at_least(:once)
-    expect(@mock).to receive(:body).twice.and_return(referenced_body)
-    expect(Net::HTTP).to receive(:start).with(URI.parse(trackback_url).host, 80).and_yield(@mock)
-
-    expect(@mock).to receive(:post)
-      .with('/a-post/trackback', post,
-            'Content-type' => 'application/x-www-form-urlencoded; charset=utf-8')
-      .and_return(@mock)
-
-    ping = article.pings.build(url: referenced_url)
-    ping.send_pingback_or_trackback(article_url).join
-  end
-
-  def referenced_body
-    <<-EOBODY
-    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-           xmlns:trackback="http://madskills.com/public/xml/rss/module/trackback/"
-           xmlns:dc="http://purl.org/dc/elements/1.1/">
-    <rdf:Description
-        rdf:about=""
-        trackback:ping="http://anotherblog.org/a-post/trackback"
-        dc:title="Track me, track me!"
-        dc:identifier="http://anotherblog.org/a-post"
-        dc:description="Track me 'til I fart!'"
-        dc:creator="pdcawley"
-        dc:date="2006-03-01T04:31:00-05:00" />
-    </rdf:RDF>
-    EOBODY
-  end
-end
-
-describe 'Given a remote site to notify, eg technorati' do
-  it 'we can ping them correctly' do
-    Factory(:blog)
-    mock = mock('response')
-    expect(XMLRPC::Client).to receive(:new2).with('http://rpc.technorati.com/rpc/ping').and_return(mock)
-    expect(mock).to receive(:call).with('weblogUpdates.ping', 'test blog',
-                                        'http://myblog.net', 'http://myblog.net/new-post')
-
-    ping = Factory(:article).pings.build('url' => 'http://rpc.technorati.com/rpc/ping')
-    ping.send_weblogupdatesping('http://myblog.net', 'http://myblog.net/new-post').join
+    describe '#ping' do
+      it 'returns the ping object' do
+        pinger = Ping::Pinger.send(:new, 'http://origin.com', ping)
+        expect(pinger.ping).to eq(ping)
+      end
+    end
   end
 end

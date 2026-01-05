@@ -41,6 +41,33 @@ FactoryBot.define do
     state { 'active' }
     association :profile
     association :text_filter, factory: :textile
+
+    # Admin user for testing admin functionality
+    factory :admin_user do
+      login { 'test_admin' }
+      email { 'test_admin@example.com' }
+      name { 'Test Admin' }
+      password { 'test-password-123' }
+      association :profile, factory: :profile_admin
+    end
+
+    # Publisher user for testing publisher functionality
+    factory :publisher_user do
+      login { 'test_publisher' }
+      email { 'test_publisher@example.com' }
+      name { 'Test Publisher' }
+      password { 'test-password-123' }
+      association :profile, factory: :profile_publisher
+    end
+
+    # Contributor user for testing contributor functionality
+    factory :contributor_user do
+      login { 'test_contributor' }
+      email { 'test_contributor@example.com' }
+      name { 'Test Contributor' }
+      password { 'test-password-123' }
+      association :profile, factory: :profile_contributor
+    end
   end
 
   factory :article do

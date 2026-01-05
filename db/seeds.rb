@@ -33,6 +33,18 @@ Profile.find_or_create_by!(id: 3) do |profile|
   profile.nicename = 'Contributor'
 end
 
+# Create a test user (only in test environment for CI)
+if Rails.env.test?
+  User.find_or_create_by!(login: 'admin') do |user|
+    user.email = 'admin@example.com'
+    user.password = 'password123'
+    user.profile_id = 1
+    user.name = 'Test Admin'
+    user.state = 'active'
+  end
+  puts 'Test admin user created'
+end
+
 # Create text filters
 TextFilter.find_or_create_by!(id: 1) do |tf|
   tf.description = 'None'

@@ -1,8 +1,12 @@
 # frozen_string_literal: true
 
-# Get the first user (tom) as publisher
+# Get the first user as publisher (may not exist in fresh CI environments)
 publisher = User.first
-puts "Publisher: #{publisher.login} (id: #{publisher.id})"
+if publisher
+  puts "Publisher: #{publisher.login} (id: #{publisher.id})"
+else
+  puts "No user found - skipping publisher-related operations"
+end
 
 # Create categories
 categories = {
@@ -183,10 +187,12 @@ Article.find_each do |article|
   article.save if article.changed?
 end
 
-# Ensure all articles have the publisher set
-Article.where(user_id: nil).update_all(user_id: publisher.id)
+# Ensure all articles have the publisher set (only if a user exists)
+if publisher
+  Article.where(user_id: nil).update_all(user_id: publisher.id)
+end
 
 puts "\nDone! Created #{Category.count} categories and #{Tag.count} tags."
 puts "Articles with categories: #{Article.joins(:categories).distinct.count}"
 puts "Articles with tags: #{Article.joins(:tags).distinct.count}"
-puts "All articles published by: #{publisher.login}"
+puts "All articles published by: #{publisher&.login || 'N/A (no user exists)'}"

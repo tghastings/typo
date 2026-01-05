@@ -2,91 +2,164 @@
 
 require 'spec_helper'
 
-describe Tag do
-  before(:each) do
-    Factory(:blog)
-  end
-  it 'we can Tag.get by name' do
-    foo = Factory(:tag, name: 'foo')
-    Tag.get('foo').should == foo
+RSpec.describe Tag, type: :model do
+  before do
+    create(:blog)
   end
 
-  it 'tags are unique' do
-    -> { Tag.create!(name: 'test') }.should_not raise_error
-    test_tag = Tag.new(name: 'test')
-    test_tag.should_not be_valid
-    test_tag.errors[:name].should == ['has already been taken']
+  describe 'factory' do
+    it 'creates valid tag' do
+      tag = create(:tag)
+      expect(tag).to be_valid
+    end
   end
 
-  it 'display names with spaces can be found by dash joined name' do
-    Tag.find(:first, conditions: { name: 'Monty Python' }).should be_nil
-    tag = Tag.create(name: 'Monty Python')
-    tag.should be_valid
-    tag.name.should
-    tag.display_name.should
-    tag.should
-    Tag.get('monty-python')
-    tag.should == Tag.get('Monty Python')
+  describe 'associations' do
+    it 'has and belongs to many articles' do
+      tag = create(:tag)
+      article = create(:article)
+      article.tags << tag
+      expect(tag.articles).to include(article)
+    end
   end
 
-  it 'articles can be tagged' do
-    a = Article.create(title: 'an article')
-    foo = Factory(:tag, name: 'foo')
-    bar = Factory(:tag, name: 'bar')
-    a.tags << foo
-    a.tags << bar
-    a.reload
-    a.tags.size.should
-    a.tags.sort_by(&:id).should == [foo, bar].sort_by(&:id)
+  describe '.get' do
+    it 'finds existing tag by name' do
+      tag = create(:tag, name: 'ruby')
+      expect(Tag.get('ruby')).to eq(tag)
+    end
+
+    it 'creates new tag when not found' do
+      expect {
+        Tag.get('newtag')
+      }.to change(Tag, :count).by(1)
+    end
+
+    it 'is case insensitive' do
+      tag = create(:tag, name: 'ruby')
+      expect(Tag.get('Ruby')).to eq(tag)
+    end
   end
 
-  it 'find_all_with_article_counters finds 2 tags' do
-    a = Factory(:article, title: 'an article a')
-    b = Factory(:article, title: 'an article b')
-    c = Factory(:article, title: 'an article c')
-    Factory(:tag, name: 'foo', articles: [a, b, c])
-    Factory(:tag, name: 'bar', articles: [a, b])
-    tags = Tag.find_all_with_article_counters
-    tags.should have(2).entries
-    tags.first.name.should
-    tags.first.article_counter.should
-    tags.last.name.should
-    tags.last.article_counter.should == 2
+  describe '.find_by_permalink' do
+    it 'finds tag by permalink' do
+      tag = create(:tag, name: 'ruby')
+      expect(Tag.find_by_permalink('ruby')).to eq(tag)
+    end
+
+    it 'returns nil for non-existent tag' do
+      expect(Tag.find_by_permalink('nonexistent')).to be_nil
+    end
   end
 
-  describe 'permalink_url' do
-    subject { Tag.get('foo').permalink_url }
-    it 'should be of form /tag/<name>' do
-      is_expected.to eq('http://myblog.net/tag/foo')
+  describe '.find_by_name_or_display_name' do
+    it 'finds by name' do
+      tag = create(:tag, name: 'ruby', display_name: 'Ruby')
+      expect(Tag.find_by_name_or_display_name('ruby', 'ruby')).to eq(tag)
+    end
+
+    it 'finds by display_name' do
+      tag = create(:tag, name: 'ruby', display_name: 'Ruby Lang')
+      expect(Tag.find_by_name_or_display_name('ruby', 'Ruby Lang')).to eq(tag)
+    end
+  end
+
+  describe '#to_param' do
+    it 'returns permalink' do
+      tag = create(:tag, name: 'ruby')
+      expect(tag.to_param).to eq('ruby')
     end
   end
 
   describe '#published_articles' do
-    it 'should return only published articles' do
-      published_art = Factory(:article)
-      draft_art = Factory(:article, published_at: nil, published: false, state: 'draft')
-      art_tag = Factory(:tag, name: 'art', articles: [published_art, draft_art])
-      art_tag.published_articles.size.should == 1
+    it 'returns only published articles' do
+      tag = create(:tag)
+      published = create(:article, published: true, published_at: 1.day.ago)
+      unpublished = create(:unpublished_article)
+      published.tags << tag
+      unpublished.tags << tag
+      expect(tag.published_articles).to include(published)
+      expect(tag.published_articles).not_to include(unpublished)
     end
   end
-end
 
-describe 'with tags foo, bar and bazz' do
-  before do
-    @foo = Factory(:tag, name: 'foo')
-    @bar = Factory(:tag, name: 'bar')
-    @bazz = Factory(:tag, name: 'bazz')
+  describe '.merge' do
+    it 'updates join table to transfer articles from one tag to another' do
+      tag1 = create(:tag, name: 'ruby')
+      tag2 = create(:tag, name: 'rubycode')
+      article = create(:article)
+
+      # Add article to tag2 via direct SQL to avoid callbacks
+      ActiveRecord::Base.connection.execute(
+        "INSERT INTO articles_tags (article_id, tag_id) VALUES (#{article.id}, #{tag2.id})"
+      )
+
+      # Verify article is on tag2
+      count_before = ActiveRecord::Base.connection.select_value(
+        "SELECT COUNT(*) FROM articles_tags WHERE tag_id = #{tag2.id}"
+      )
+      expect(count_before.to_i).to eq(1)
+
+      # Merge tag2 into tag1
+      Tag.merge(tag2.id, tag1.id)
+
+      # Verify article is now on tag1
+      count_after = ActiveRecord::Base.connection.select_value(
+        "SELECT COUNT(*) FROM articles_tags WHERE tag_id = #{tag1.id}"
+      )
+      expect(count_after.to_i).to eq(1)
+
+      # Verify tag2 has no articles
+      count_tag2 = ActiveRecord::Base.connection.select_value(
+        "SELECT COUNT(*) FROM articles_tags WHERE tag_id = #{tag2.id}"
+      )
+      expect(count_tag2.to_i).to eq(0)
+    end
   end
 
-  it "find_with_char('f') should be return foo" do
-    Tag.find_with_char('f').should == [@foo]
+  describe '.find_with_char' do
+    it 'finds tags starting with character' do
+      create(:tag, name: 'ruby')
+      create(:tag, name: 'rails')
+      create(:tag, name: 'python')
+      tags = Tag.find_with_char('r')
+      expect(tags.map(&:name)).to include('ruby', 'rails')
+      expect(tags.map(&:name)).not_to include('python')
+    end
   end
 
-  it "find_with_char('v') should return empty data" do
-    Tag.find_with_char('v').should == []
+  describe '.collection_to_string' do
+    it 'converts tags to comma separated string' do
+      tag1 = create(:tag, name: 'ruby')
+      tag2 = create(:tag, name: 'rails')
+      result = Tag.collection_to_string([tag1, tag2])
+      expect(result).to include('ruby')
+      expect(result).to include('rails')
+    end
   end
 
-  it "find_with_char('ba') should return tag bar and bazz" do
-    Tag.find_with_char('ba').sort_by(&:id).should == [@bar, @bazz].sort_by(&:id)
+  describe '.find_all_with_article_counters' do
+    it 'returns tags with article counts' do
+      tag = create(:tag)
+      article = create(:article, published: true, published_at: 1.day.ago)
+      article.tags << tag
+      results = Tag.find_all_with_article_counters
+      tag_result = results.find { |t| t.id == tag.id }
+      expect(tag_result).to be_present
+    end
+  end
+
+  describe '#ensure_naming_conventions' do
+    it 'converts name to URL format on save' do
+      tag = Tag.new(display_name: 'Ruby Programming')
+      tag.save
+      expect(tag.name).to eq('ruby-programming')
+    end
+
+    it 'sets display_name from name if blank' do
+      tag = Tag.new(name: 'ruby')
+      tag.save
+      expect(tag.display_name).to eq('ruby')
+    end
   end
 end

@@ -2,17 +2,27 @@
 
 require 'spec_helper'
 
-describe 'Given an empty redirects table' do
-  before(:each) do
-    Redirect.delete_all
+RSpec.describe Redirect, type: :model do
+  before do
+    create(:blog)
   end
 
-  it 'redirects are unique' do
-    -> { Redirect.create!(from_path: 'foo/bar', to_path: '/') }.should_not raise_error
+  describe 'factory' do
+    it 'creates valid redirect' do
+      redirect = create(:redirect)
+      expect(redirect).to be_valid
+    end
+  end
 
-    redirect = Redirect.new(from_path: 'foo/bar', to_path: '/')
+  describe 'attributes' do
+    it 'has from_path' do
+      redirect = create(:redirect, from_path: 'old/path')
+      expect(redirect.from_path).to eq('old/path')
+    end
 
-    redirect.should_not be_valid
-    redirect.errors[:from_path].should == ['has already been taken']
+    it 'has to_path' do
+      redirect = create(:redirect, to_path: '/new/path')
+      expect(redirect.to_path).to eq('/new/path')
+    end
   end
 end

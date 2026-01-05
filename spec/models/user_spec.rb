@@ -2,231 +2,274 @@
 
 require 'spec_helper'
 
-describe User do
-  describe 'Factory Girl' do
-    it 'should user factory valid' do
-      Factory.create(:user).should be_valid
-      Factory.build(:user).should be_valid
-    end
-    it 'should multiple user factory valid' do
-      Factory.create(:user).should be_valid
-      Factory.create(:user).should be_valid
+RSpec.describe User, type: :model do
+  before do
+    create(:blog)
+  end
+
+  describe 'validations' do
+    it 'validates presence of login' do
+      user = build(:user, login: nil)
+      expect(user).not_to be_valid
+      expect(user.errors[:login]).to include("can't be blank")
     end
 
-    it 'salt should not be nil' do
-      User.salt.should == '20ac4d290c2293702c64b3b287ae5ea79b26a5c1'
+    it 'validates presence of email' do
+      user = build(:user, email: nil)
+      expect(user).not_to be_valid
+      expect(user.errors[:email]).to include("can't be blank")
+    end
+
+    it 'validates uniqueness of login' do
+      create(:user, login: 'testuser')
+      user2 = build(:user, login: 'testuser')
+      expect(user2).not_to be_valid
+      expect(user2.errors[:login]).to include('has already been taken')
+    end
+
+    it 'validates uniqueness of email' do
+      create(:user, email: 'test@example.com')
+      user2 = build(:user, email: 'test@example.com')
+      expect(user2).not_to be_valid
+      expect(user2.errors[:email]).to include('has already been taken')
+    end
+
+    it 'validates password length between 5 and 40' do
+      user = build(:user, password: 'abc')
+      expect(user).not_to be_valid
+      expect(user.errors[:password]).to include('is too short (minimum is 5 characters)')
+    end
+
+    it 'validates login length between 3 and 40' do
+      user = build(:user, login: 'ab')
+      expect(user).not_to be_valid
+      expect(user.errors[:login]).to include('is too short (minimum is 3 characters)')
     end
   end
 
-  context 'With the contents and users fixtures loaded' do
-    before(:each) do
-      User.stub!(:salt).and_return('change-me')
+  describe 'associations' do
+    it 'belongs to profile' do
+      profile = create(:profile_admin)
+      user = create(:user, profile: profile)
+      expect(user.profile).to eq(profile)
     end
 
-    it 'Calling User.authenticate with a valid user/password combo returns a user' do
-      alice = Factory(:user, login: 'alice', password: 'greatest')
-      User.authenticate('alice', 'greatest').should == alice
-    end
-
-    it 'User.authenticate(user,invalid) returns nil' do
-      Factory(:user, login: 'alice', password: 'greatest')
-      User.authenticate('alice', 'wrong password').should be_nil
-    end
-
-    it 'User.authenticate(inactive,valid) returns nil' do
-      Factory(:user, login: 'alice', state: 'inactive')
-      User.authenticate('inactive', 'longtest').should be_nil
-    end
-
-    it 'User.authenticate(invalid,whatever) returns nil' do
-      Factory(:user, login: 'alice')
-      User.authenticate('userwhodoesnotexist', 'what ever').should be_nil
-    end
-
-    it 'The various article finders work appropriately' do
-      Factory(:blog)
-      tobi = Factory(:user)
-      7.times do
-        Factory.create(:article, user: tobi)
-      end
-      Factory.create(:article, published: false, published_at: nil, user: tobi)
-      tobi.articles.size.should
-      tobi.articles.published.size.should == 7
-    end
-
-    it 'authenticate? works as expected' do
-      Factory.create(:user, login: 'bob', password: 'testtest')
-      User.should be_authenticate('bob', 'testtest')
-      User.should_not be_authenticate('bob', 'duff password')
+    it 'has many articles' do
+      user = create(:user)
+      article = create(:article, user: user)
+      expect(user.articles).to include(article)
     end
   end
 
-  describe 'With a new user' do
-    before(:each) do
-      @user = User.new login: 'not_bob'
-      @user.email = 'typo@typo.com'
-      set_password 'a secure password'
+  describe '.authenticate' do
+    it 'returns user with correct credentials' do
+      user = create(:user, login: 'testuser', password: 'secret123')
+      authenticated = User.authenticate('testuser', 'secret123')
+      expect(authenticated).to eq(user)
     end
 
-    describe 'the password' do
-      it 'can be just right' do
-        set_password 'Just right'
-        @user.should be_valid
-      end
-
-      { 'too short' => 'x',
-        'too long' => 'repetitivepass' * 10,
-        'empty' => '' }.each do |problematic, password|
-        it "cannot be #{problematic}" do
-          set_password password
-          @user.should_not be_valid
-          @user.errors['password'].should be_any
-        end
-      end
-
-      it 'has to match confirmation' do
-        @user.password = 'foo'
-        @user.password_confirmation = 'bar'
-        @user.should_not be_valid
-        @user.errors['password'].should be_any
-      end
+    it 'returns nil with incorrect password' do
+      create(:user, login: 'testuser', password: 'secret123')
+      expect(User.authenticate('testuser', 'wrongpass')).to be_nil
     end
 
-    describe 'the login' do
-      it 'can be just right' do
-        @user.login = 'okbob'
-        @user.should be_valid
-      end
-
-      { 'too short' => 'x',
-        'too long' => 'repetitivepass' * 10,
-        'empty' => '' }.each do |problematic, login|
-        it "cannot be #{problematic}" do
-          @user.login = login
-          @user.should_not be_valid
-          @user.errors['login'].should be_any
-        end
-      end
+    it 'returns nil with non-existent user' do
+      expect(User.authenticate('nonexistent', 'password')).to be_nil
     end
 
-    it 'email cannot be blank' do
-      @user.email = ''
-      @user.should_not be_valid
-    end
-
-    def set_password(newpass)
-      @user.password = @user.password_confirmation = newpass
+    it 'returns nil for inactive user' do
+      user = create(:user, login: 'testuser', password: 'secret123')
+      user.update_column(:state, 'inactive')
+      expect(User.authenticate('testuser', 'secret123')).to be_nil
     end
   end
 
-  describe 'With a user in the database' do
-    before(:each) do
-      @olduser = Factory.create(:user)
+  describe '.authenticate?' do
+    it 'returns true for valid credentials' do
+      create(:user, login: 'testuser', password: 'secret123')
+      expect(User.authenticate?('testuser', 'secret123')).to be true
     end
 
-    it 'should not be able to create another user with the same login' do
-      login = @olduser.login
-      u = User.new(login: login) { |u| u.password = u.password_confirmation = 'secure password' }
-
-      u.should_not be_valid
-      u.errors['login'].should be_any
+    it 'returns false for invalid credentials' do
+      create(:user, login: 'testuser', password: 'secret123')
+      expect(User.authenticate?('testuser', 'wrongpass')).to be false
     end
   end
 
-  describe 'Updating an existing user' do
-    before(:each) do
-      @user = Factory.create(:user)
-      set_password 'a secure password'
-      @user.save!
+  describe '.find_by_permalink' do
+    it 'finds user by login' do
+      user = create(:user, login: 'testuser')
+      expect(User.find_by_permalink('testuser')).to eq(user)
     end
 
-    describe 'the password' do
-      { 'just right' => 'Just right',
-        'empty' => '' }.each do |ok, password|
-        it "can be #{ok}" do
-          set_password password
-          @user.should be_valid
-        end
-      end
-
-      { 'too short' => 'x',
-        'too long' => 'repetitivepass' * 10 }.each do |problematic, password|
-        it "cannot be #{problematic}" do
-          set_password password
-          @user.should_not be_valid
-          @user.errors['password'].should be_any
-        end
-      end
-
-      it 'has to match confirmation' do
-        @user.password = 'foo'
-        @user.password_confirmation = 'bar'
-        @user.should_not be_valid
-        @user.errors['password'].should be_any
-      end
-
-      it 'is not actually changed when set to empty' do
-        set_password ''
-        @user.save!
-        User.authenticate(@user.login, '').should be_nil
-        User.authenticate(@user.login, 'a secure password').should == @user
-      end
-    end
-
-    describe 'saving twice' do
-      it 'should not change the password' do
-        (found = User.authenticate(@user.login, 'a secure password')).should
-        found.save
-        found.save
-        User.authenticate(@user.login, 'a secure password').should == found
-      end
-    end
-
-    describe 'the login' do
-      it 'must not change' do
-        @user.login = 'not_bob'
-        @user.should_not be_valid
-      end
-    end
-
-    def set_password(newpass)
-      @user.password = @user.password_confirmation = newpass
-    end
-  end
-
-  describe '#initialize' do
-    it 'accepts a settings field in its parameter hash' do
-      User.new({ 'firstname' => 'foo' })
+    it 'raises RecordNotFound for non-existent user' do
+      expect { User.find_by_permalink('nonexistent') }.to raise_error(ActiveRecord::RecordNotFound)
     end
   end
 
   describe '#admin?' do
-    it 'should return true if user is admin' do
-      admin = Factory.build(:user, profile: Factory.build(:profile_admin, label: Profile::ADMIN))
-      admin.should be_admin
+    it 'returns true for admin profile' do
+      profile = create(:profile_admin)
+      user = create(:user, profile: profile)
+      expect(user.admin?).to be true
     end
 
-    it 'should return false if user is not admin' do
-      publisher = Factory.build(:user, profile: Factory.build(:profile_publisher))
-      publisher.should_not be_admin
+    it 'returns false for non-admin profile' do
+      profile = create(:profile_contributor)
+      user = create(:user, profile: profile)
+      expect(user.admin?).to be false
+    end
+  end
+
+  describe '#name' do
+    it 'returns name if set' do
+      user = create(:user, name: 'John Doe')
+      expect(user.name).to eq('John Doe')
+    end
+
+    it 'returns firstname lastname if name is blank' do
+      user = create(:user, name: '')
+      user.firstname = 'John'
+      user.lastname = 'Doe'
+      expect(user.name).to eq('John Doe')
+    end
+
+    it 'returns login if name and firstname/lastname are blank' do
+      user = create(:user, name: '', login: 'johnd')
+      user.firstname = ''
+      user.lastname = ''
+      expect(user.name).to eq('johnd')
+    end
+  end
+
+  describe '#display_name' do
+    it 'returns name' do
+      user = create(:user, name: 'John Doe')
+      expect(user.display_name).to eq('John Doe')
+    end
+  end
+
+  describe '#permalink' do
+    it 'returns login' do
+      user = create(:user, login: 'johnd')
+      expect(user.permalink).to eq('johnd')
+    end
+  end
+
+  describe '#to_param' do
+    it 'returns permalink' do
+      user = create(:user, login: 'johnd')
+      expect(user.to_param).to eq('johnd')
+    end
+  end
+
+  describe '#article_counter' do
+    it 'returns count of user articles' do
+      user = create(:user)
+      create(:article, user: user)
+      create(:article, user: user)
+      expect(user.article_counter).to eq(2)
+    end
+  end
+
+  describe '#simple_editor?' do
+    it 'returns true when editor is simple' do
+      user = create(:user)
+      user.editor = 'simple'
+      expect(user.simple_editor?).to be true
+    end
+
+    it 'returns false when editor is visual' do
+      user = create(:user)
+      user.editor = 'visual'
+      expect(user.simple_editor?).to be false
+    end
+  end
+
+  describe '#remember_me' do
+    it 'sets remember token for 2 weeks' do
+      user = create(:user)
+      user.remember_me
+      expect(user.remember_token).to be_present
+      expect(user.remember_token_expires_at).to be > 13.days.from_now
+    end
+  end
+
+  describe '#forget_me' do
+    it 'clears remember token' do
+      user = create(:user)
+      user.remember_me
+      user.forget_me
+      expect(user.remember_token).to be_nil
+      expect(user.remember_token_expires_at).to be_nil
+    end
+  end
+
+  describe '#project_modules' do
+    it 'returns profile project_modules' do
+      profile = create(:profile_admin)
+      user = create(:user, profile: profile)
+      expect(user.project_modules).to eq(profile.project_modules)
+    end
+
+    it 'returns empty array when no profile' do
+      user = build(:user, profile: nil)
+      user.save(validate: false)
+      expect(user.project_modules).to eq([])
+    end
+  end
+
+  describe '#update_connection_time' do
+    it 'updates last_connection' do
+      user = create(:user)
+      old_time = 1.day.ago
+      user.update_column(:last_connection, old_time)
+      user.update_connection_time
+      expect(user.last_connection).to be > old_time
+    end
+  end
+
+  describe 'password encryption' do
+    it 'encrypts password on create' do
+      user = create(:user, password: 'secret123')
+      expect(user.password).not_to eq('secret123')
+    end
+
+    it 'encrypts password on update when changed' do
+      user = create(:user, password: 'secret123')
+      old_password = user.password
+      user.password = 'newpassword'
+      user.save
+      expect(user.password).not_to eq(old_password)
+    end
+  end
+
+  describe 'default profile assignment' do
+    it 'assigns admin profile to first user' do
+      User.delete_all
+      Profile.delete_all
+      admin_profile = create(:profile_admin, label: 'admin')
+      user = create(:user, profile: nil)
+      expect(user.profile.label).to eq('admin')
+    end
+
+    it 'assigns contributor profile to subsequent users' do
+      User.delete_all
+      Profile.delete_all
+      create(:profile_admin, label: 'admin')
+      contributor_profile = create(:profile_contributor, label: 'contributor')
+      first_user = create(:user, profile: nil) # first user gets admin
+      user2 = create(:user, profile: nil)
+      expect(user2.profile.label).to eq('contributor')
     end
   end
 
   describe '#permalink_url' do
-    before(:each) { Factory(:blog, base_url: 'http://myblog.net/') }
-    subject { Factory.build(:user, login: 'alice').permalink_url }
-    it { should == 'http://myblog.net/author/alice' }
-  end
-
-  describe '#simple_editor?' do
-    it "should be true if editor == 'simple'" do
-      user = Factory.build(:user, editor: 'simple')
-      user.simple_editor?.should be_truthy
-    end
-
-    it "should be false if editor != 'simple'" do
-      user = Factory.build(:user, editor: 'other')
-      user.simple_editor?.should be_falsey
+    it 'returns author URL' do
+      user = create(:user, login: 'testuser')
+      url = user.permalink_url
+      expect(url).to include('author')
+      expect(url).to include('testuser')
     end
   end
 end

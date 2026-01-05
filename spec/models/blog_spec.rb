@@ -2,124 +2,186 @@
 
 require 'spec_helper'
 
-describe Blog do
-  describe '#initialize' do
-    it 'accepts a settings field in its parameter hash' do
-      Blog.new({ 'blog_name' => 'foo' })
+RSpec.describe Blog, type: :model do
+  describe 'validations' do
+    it 'validates presence of blog_name' do
+      blog = Blog.new(base_url: 'http://example.com')
+      blog.settings = { 'blog_name' => '' }
+      blog.blog_name = ''
+      expect(blog).not_to be_valid
+      expect(blog.errors[:blog_name]).to include("can't be blank")
     end
-  end
-end
 
-describe 'A blog' do
-  before(:each) do
-    RouteCache.clear
-    @blog = Blog.new
-  end
-
-  it 'values boolify like Perl' do
-    { '0 but true' => true, '' => false,
-      'false' => false, 1 => true, 0 => false,
-      nil => false, 'f' => false }.each do |value, expected|
-      @blog.sp_global = value
-      @blog.sp_global.should == expected
+    it 'validates only one blog can exist' do
+      create(:blog)
+      blog2 = Blog.new(base_url: 'http://another.com', blog_name: 'Another Blog')
+      expect(blog2).not_to be_valid
+      expect(blog2.errors[:base]).to include('There can only be one...')
     end
-  end
 
-  ['', '/sub-uri'].each do |sub_url|
-    describe "when running in with http://myblog.net#{sub_url}" do
-      before :each do
-        @base_url = "http://myblog.net#{sub_url}"
-        @blog.base_url = @base_url
-      end
-
-      [true, false].each do |only_path|
-        describe 'blog.url_for' do
-          describe "with a hash argument and only_path = #{only_path}" do
-            subject { @blog.url_for(controller: 'categories', action: 'show', id: 1, only_path: only_path) }
-            it { should == "#{only_path ? sub_url : @base_url}/category/1" }
-          end
-
-          describe "with a string argument and only_path = #{only_path}" do
-            subject { @blog.url_for('category/1', only_path: only_path) }
-            it { should == "#{only_path ? sub_url : @base_url}/category/1" }
-          end
-        end
-      end
+    it 'validates permalink_format contains %title%' do
+      blog = create(:blog)
+      blog.permalink_format = '/%year%/%month%/'
+      expect(blog).not_to be_valid
+      expect(blog.errors[:permalink_format]).to include('You need a permalink format with an identifier : %title%')
     end
-  end
-end
 
-describe 'The first blog' do
-  before(:each) do
-    @blog = Factory.create :blog
-  end
+    it 'validates permalink_format does not end in .atom' do
+      blog = create(:blog)
+      blog.permalink_format = '/%title%.atom'
+      expect(blog).not_to be_valid
+      expect(blog.errors[:permalink_format]).to include("Can't end in .rss or .atom. These are reserved to be used for feed URLs")
+    end
 
-  it 'should be the only blog allowed' do
-    Blog.new.should_not be_valid
-  end
-end
-
-describe 'The default blog' do
-  it 'should pick up updates after a cache clear' do
-    Factory(:blog)
-    b = Blog.default
-    b.blog_name = 'some other name'
-    b.save
-    c = Blog.default
-    c.blog_name.should == 'some other name'
-  end
-end
-
-describe 'Given no blogs, a new default blog' do
-  before :each do
-    Blog.delete_all
-    @blog = Blog.new
-  end
-
-  it 'should be valid after filling the title' do
-    @blog.blog_name = 'something not empty'
-    @blog.should be_valid
-  end
-
-  it 'should be valid without filling the title' do
-    @blog.blog_name.should
-    @blog.should be_valid
-  end
-
-  it 'should not be valid after setting an empty title' do
-    @blog.blog_name = ''
-    @blog.should_not be_valid
-  end
-end
-
-describe 'Valid permalink in blog' do
-  before :each do
-    Blog.delete_all
-    @blog = Blog.new
-  end
-
-  def set_permalink(permalink)
-    @blog.permalink_format = permalink
-  end
-
-  ['foo', 'year', 'day', 'month', 'title', '%title', 'title%', '/year/month/day/title',
-   '%year%', '%day%', '%month%', '%title%.html.atom', '%title%.html.rss'].each do |permalink_type|
-    it "not valid with #{permalink_type}" do
-      set_permalink permalink_type
-      @blog.should_not be_valid
+    it 'validates permalink_format does not end in .rss' do
+      blog = create(:blog)
+      blog.permalink_format = '/%title%.rss'
+      expect(blog).not_to be_valid
     end
   end
 
-  ['%title%', '%title%.html', '/hello/all/%year%/%title%', 'atom/%title%.html',
-   'ok/rss/%title%.html'].each do |permalink_type|
-    it "should be valid with only #{permalink_type}" do
-      set_permalink permalink_type
-      @blog.should be_valid
+  describe '.default' do
+    it 'returns the first blog by id' do
+      blog = create(:blog)
+      expect(Blog.default).to eq(blog)
+    end
+
+    it 'returns nil when no blogs exist' do
+      Blog.delete_all
+      expect(Blog.default).to be_nil
     end
   end
 
-  it 'should not be valid without %title% in' do
-    @blog.permalink_format = '/toto/%year%/%month/%day%'
-    @blog.should_not be_valid
+  describe '#configured?' do
+    it 'returns true when blog_name is set in settings' do
+      blog = create(:blog)
+      expect(blog.configured?).to be true
+    end
+
+    it 'returns false when blog_name is not in settings' do
+      Blog.delete_all
+      blog = Blog.new(base_url: 'http://example.com')
+      blog.settings = {}
+      blog.save(validate: false)
+      expect(blog.configured?).to be false
+    end
+  end
+
+  describe '#global_pings_enabled?' do
+    it 'returns true when global_pings_disable is false' do
+      blog = create(:blog)
+      blog.global_pings_disable = false
+      expect(blog.global_pings_enabled?).to be true
+    end
+
+    it 'returns false when global_pings_disable is true' do
+      blog = create(:blog)
+      blog.global_pings_disable = true
+      expect(blog.global_pings_enabled?).to be false
+    end
+  end
+
+  describe '#url_for' do
+    let(:blog) { create(:blog, base_url: 'http://myblog.net') }
+
+    it 'generates URL from string path' do
+      expect(blog.url_for('articles')).to eq('http://myblog.net/articles')
+    end
+
+    it 'generates URL with anchor' do
+      expect(blog.url_for('articles', anchor: 'comments')).to eq('http://myblog.net/articles#comments')
+    end
+
+    it 'generates path only when only_path is true' do
+      expect(blog.url_for('articles', only_path: true)).to eq('/articles')
+    end
+  end
+
+  describe '#file_url' do
+    it 'generates URL for static files' do
+      blog = create(:blog, base_url: 'http://myblog.net')
+      expect(blog.file_url('image.jpg')).to eq('http://myblog.net/files/image.jpg')
+    end
+  end
+
+  describe '#root_path' do
+    it 'returns empty string for base_url without path' do
+      blog = create(:blog, base_url: 'http://myblog.net')
+      expect(blog.root_path).to eq('')
+    end
+
+    it 'returns path for base_url with subpath' do
+      blog = create(:blog, base_url: 'http://myblog.net/blog')
+      expect(blog.root_path).to eq('/blog')
+    end
+  end
+
+  describe '#rss_limit_params' do
+    it 'returns limit hash when limit_rss_display is set' do
+      blog = create(:blog, limit_rss_display: 15)
+      expect(blog.rss_limit_params).to eq({ limit: 15 })
+    end
+
+    it 'returns empty hash when limit_rss_display is zero' do
+      blog = create(:blog, limit_rss_display: 0)
+      expect(blog.rss_limit_params).to eq({})
+    end
+  end
+
+  describe 'settings' do
+    let(:blog) { create(:blog) }
+
+    it 'has default blog_name' do
+      Blog.delete_all
+      new_blog = Blog.new(base_url: 'http://example.com')
+      expect(new_blog.blog_name).to eq('My Shiny Weblog!')
+    end
+
+    it 'can set and get blog_subtitle' do
+      blog.blog_subtitle = 'A great blog'
+      blog.save
+      expect(blog.reload.blog_subtitle).to eq('A great blog')
+    end
+
+    it 'has default limit_article_display of 10' do
+      Blog.delete_all
+      new_blog = Blog.new(base_url: 'http://example.com')
+      expect(new_blog.limit_article_display).to eq(10)
+    end
+
+    it 'has default theme of scribbish' do
+      Blog.delete_all
+      new_blog = Blog.new(base_url: 'http://example.com')
+      expect(new_blog.theme).to eq('scribbish')
+    end
+
+    it 'has default allow_comments of true' do
+      Blog.delete_all
+      new_blog = Blog.new(base_url: 'http://example.com')
+      expect(new_blog.default_allow_comments).to be true
+    end
+  end
+
+  describe '#requested_article' do
+    it 'finds article by params hash' do
+      blog = create(:blog)
+      article = create(:article, published_at: Time.zone.local(2024, 1, 15))
+      params = {
+        year: '2024',
+        month: '01',
+        day: '15',
+        title: article.permalink
+      }
+      expect(blog.requested_article(params)).to eq(article)
+    end
+  end
+
+  describe '#articles_matching' do
+    it 'searches articles by query' do
+      blog = create(:blog)
+      article = create(:article, body: 'This is about Ruby programming')
+      results = blog.articles_matching('Ruby')
+      expect(results).to include(article)
+    end
   end
 end

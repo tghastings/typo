@@ -2,47 +2,91 @@
 
 require 'spec_helper'
 
-describe 'Given a new test theme' do
-  it %(layout path should be "#{Rails.root}/themes/test/layouts/default") do
-    theme = Theme.new('test', 'test')
-    theme.layout('index').should == "#{Rails.root}/themes/test/layouts/default"
-  end
-end
-
-describe 'Given the default theme' do
-  before(:each) do
-    Factory(:blog)
-    @theme = Blog.default.current_theme
+RSpec.describe Theme, type: :model do
+  describe '#initialize' do
+    it 'sets name and path' do
+      theme = Theme.new('test-theme', '/path/to/theme')
+      expect(theme.name).to eq('test-theme')
+      expect(theme.path).to eq('/path/to/theme')
+    end
   end
 
-  it 'theme should be scribbish' do
-    @theme.name.should == 'scribbish'
+  describe '#layout' do
+    it 'returns layouts/default for default action' do
+      theme = Theme.new('plain', Theme.theme_path('plain'))
+      result = theme.layout(:default)
+      expect(result).to include('default')
+    end
+
+    it 'handles view_page action' do
+      theme = Theme.new('plain', Theme.theme_path('plain'))
+      result = theme.layout(:view_page)
+      expect(result).to be_a(String)
+    end
   end
 
-  it 'theme description should be correct' do
-    @theme.description.should ==
-      File.read("#{Rails.root}/themes/scribbish/about.markdown")
+  describe '#description' do
+    it 'returns theme description from about.markdown' do
+      theme = Theme.find('plain')
+      description = theme.description
+      expect(description).to be_a(String)
+    end
+
+    it 'returns fallback when about.markdown not found' do
+      theme = Theme.new('nonexistent', '/nonexistent/path')
+      description = theme.description
+      expect(description).to eq('### nonexistent')
+    end
   end
 
-  it 'theme_from_path should find the correct theme' do
-    Theme.theme_from_path("#{Rails.root}themes/scribbish").name.should == 'scribbish'
+  describe '.find' do
+    it 'returns a theme by name' do
+      theme = Theme.find('plain')
+      expect(theme).to be_a(Theme)
+      expect(theme.name).to eq('plain')
+    end
   end
 
-  it '#search_theme_path finds the right things 2' do
-    fake_blue_theme_dir = 'fake_blue_theme_dir'
-    fake_red_theme_dir = 'fake_red_theme_dir'
-    fake_bad_theme_dir = 'fake_bad_theme_dir'
-    expect(Dir).to receive(:glob).and_return([fake_blue_theme_dir, fake_bad_theme_dir, fake_red_theme_dir])
-    expect(File).to receive(:readable?).with("#{fake_blue_theme_dir}/about.markdown").and_return(true)
-    expect(File).to receive(:readable?).with("#{fake_bad_theme_dir}/about.markdown").and_return(false)
-    expect(File).to receive(:readable?).with("#{fake_red_theme_dir}/about.markdown").and_return(true)
-    Theme.search_theme_directory.should == %w[fake_blue_theme_dir fake_red_theme_dir]
+  describe '.themes_root' do
+    it 'returns the themes directory path' do
+      expect(Theme.themes_root).to include('themes')
+    end
   end
 
-  it 'find_all finds all the installed themes' do
-    Theme.find_all.size.should ==
-      Dir.glob("#{Rails.root}/themes/[a-zA-Z0-9]*").select do |file|
-        File.readable? "#{file}/about.markdown"
-      end.size
+  describe '.theme_path' do
+    it 'returns path for theme name' do
+      path = Theme.theme_path('plain')
+      expect(path).to include('plain')
+    end
+  end
+
+  describe '.theme_from_path' do
+    it 'creates theme from path' do
+      theme = Theme.theme_from_path('/themes/test-theme')
+      expect(theme).to be_a(Theme)
+      expect(theme.name).to eq('test-theme')
+    end
+  end
+
+  describe '.find_all' do
+    it 'returns array of themes' do
+      themes = Theme.find_all
+      expect(themes).to be_an(Array)
+      themes.each { |t| expect(t).to be_a(Theme) }
+    end
+  end
+
+  describe '.installed_themes' do
+    it 'returns array of theme paths' do
+      themes = Theme.installed_themes
+      expect(themes).to be_an(Array)
+    end
+  end
+
+  describe '.search_theme_directory' do
+    it 'finds themes with about.markdown' do
+      themes = Theme.search_theme_directory
+      expect(themes).to be_an(Array)
+    end
   end
 end

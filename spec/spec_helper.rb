@@ -15,6 +15,7 @@ require 'rspec/collection_matchers'
 require 'factory_bot'
 require 'rexml/document'
 require 'capybara/rspec'
+require 'database_cleaner/active_record'
 
 # Reset and load factories to avoid duplicate registration
 FactoryBot.definition_file_paths = [File.join(Rails.root, 'spec', 'factories')]
@@ -105,36 +106,48 @@ Dir[Rails.root.join('spec/support/**/*.rb')].reject { |f| f.include?('/mocks/') 
 
 RSpec.configure do |config|
   config.mock_with :rspec
-  config.use_transactional_fixtures = true
+  config.use_transactional_fixtures = false # Use DatabaseCleaner instead
   config.include FactoryBot::Syntax::Methods
   config.render_views
 
-  # Load HTTP mocks for unit/integration tests
+  # DatabaseCleaner configuration
   config.before(:suite) do
+    # Clean out seed data before running tests
+    DatabaseCleaner.clean_with(:truncation)
+
+    # Load HTTP mocks for unit/integration tests
     unless ENV['SKIP_HTTP_MOCKS']
-      # Always load mocks - system tests check for Chrome availability anyway
       Dir[Rails.root.join('spec/support/mocks/*.rb')].each { |f| require f }
     end
   end
 
-  # Text filters are seeded by db/seeds.rb, no need to create them here
+  config.before(:each) do
+    DatabaseCleaner.strategy = :transaction
+  end
+
+  config.before(:each, type: :request) do
+    DatabaseCleaner.strategy = :truncation
+  end
+
+  config.before(:each) do
+    DatabaseCleaner.start
+  end
+
+  config.after(:each) do
+    DatabaseCleaner.clean
+  end
 
   config.before(:each) do
     Localization.lang = :default
 
-    # Ensure essential database records exist to prevent test pollution
-    # Create default text filters if they don't exist
+    # Ensure essential database records exist for each test
     FactoryBot.create(:textile) unless TextFilter.find_by(name: 'textile')
     FactoryBot.create(:markdown) unless TextFilter.find_by(name: 'markdown')
     FactoryBot.create(:none_filter) unless TextFilter.find_by(name: 'none')
 
-    # Ensure default profiles exist
     FactoryBot.create(:profile_admin) unless Profile.find_by(label: 'admin')
     FactoryBot.create(:profile_publisher) unless Profile.find_by(label: 'publisher')
     FactoryBot.create(:profile_contributor) unless Profile.find_by(label: 'contributor')
-
-    # Ensure a Blog record exists
-    FactoryBot.create(:blog) unless Blog.first
   end
 
   # Disable deprecated should syntax warnings
