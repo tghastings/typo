@@ -285,6 +285,15 @@ cite {
   padding: 0 0 0 1.5rem;
 }
 
+/* Nested list styling - use letters for second level, roman for third */
+#content ol ol {
+  list-style-type: lower-alpha;
+}
+
+#content ol ol ol {
+  list-style-type: lower-roman;
+}
+
 #content li {
   margin-bottom: var(--space-sm);
   padding-left: 0.5rem;
