@@ -7,11 +7,7 @@ module Admin
     def index
       load_settings
       if File.exist? "#{::Rails.root}/public/robots.txt"
-        @setting.robots = ''
-        file = File.readlines("#{::Rails.root}/public/robots.txt")
-        file.each do |line|
-          @setting.robots << line
-        end
+        @setting.robots = File.read("#{::Rails.root}/public/robots.txt")
       else
         build_robots
       end

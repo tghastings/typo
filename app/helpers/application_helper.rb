@@ -135,7 +135,7 @@ module ApplicationHelper
         end
       end.join.html_safe
 
-      contents = ''
+      contents = +''
       contents << content_tag(options[:header_tag] || :h2, header_message) unless header_message.blank?
       contents << content_tag(:p, message) unless message.blank?
       contents << content_tag(:ul, error_messages)
@@ -444,12 +444,11 @@ module ApplicationHelper
     meta_tag 'keywords', @keywords unless @keywords.blank?
   end
 
-  def show_menu_for_post_type(_posttype, before = '<li>', after = '</li>')
-    list = Article.where('post_type = ?', post_type)
-    html = ''
-
+  def show_menu_for_post_type(posttype, before = '<li>', after = '</li>')
+    list = Article.where('post_type = ?', posttype)
     return if list.empty?
 
+    html = +''
     list.each do |item|
       html << before
       html << link_to_permalink(item, item.title)

@@ -2,7 +2,7 @@
 
 module AccountsHelper
   def display_accounts_link
-    html = ''
+    html = +''
     if this_blog.allow_signup == 1
       html << link_to("<small>#{_('Create an account')}</small>".html_safe,
                       action: 'signup')
