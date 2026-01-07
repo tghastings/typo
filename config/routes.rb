@@ -175,6 +175,8 @@ Rails.application.routes.draw do
     post 'content/auto_complete_for_article_keywords', to: 'content#auto_complete_for_article_keywords'
     post 'content/attachment_box_add', to: 'content#attachment_box_add'
     post 'content/category_add', to: 'content#category_add'
+    match 'content/resource_add', to: 'content#resource_add', via: [:get, :post]
+    match 'content/resource_remove', to: 'content#resource_remove', via: [:get, :post]
 
     # Feedback controller
     get 'feedback', to: 'feedback#index'

@@ -345,4 +345,129 @@ RSpec.describe 'Admin Content', type: :request do
       expect(response).to have_http_status(:success)
     end
   end
+
+  describe 'resource_add action' do
+    before { login_as_admin }
+
+    let!(:article) { create(:article, user: admin) }
+    let!(:resource) { create(:resource) }
+
+    describe 'GET /admin/content/resource_add' do
+      it 'returns success' do
+        get '/admin/content/resource_add', params: { id: article.id, resource_id: resource.id }
+        expect(response).to have_http_status(:success)
+      end
+
+      it 'adds resource to article' do
+        expect {
+          get '/admin/content/resource_add', params: { id: article.id, resource_id: resource.id }
+        }.to change { article.reload.resources.count }.by(1)
+      end
+
+      it 'associates the correct resource' do
+        get '/admin/content/resource_add', params: { id: article.id, resource_id: resource.id }
+        expect(article.reload.resources).to include(resource)
+      end
+
+      it 'renders show_resources partial' do
+        get '/admin/content/resource_add', params: { id: article.id, resource_id: resource.id }
+        expect(response.body).to include(resource.filename)
+      end
+    end
+
+    describe 'POST /admin/content/resource_add' do
+      it 'returns success' do
+        post '/admin/content/resource_add', params: { id: article.id, resource_id: resource.id }
+        expect(response).to have_http_status(:success)
+      end
+
+      it 'adds resource to article' do
+        expect {
+          post '/admin/content/resource_add', params: { id: article.id, resource_id: resource.id }
+        }.to change { article.reload.resources.count }.by(1)
+      end
+
+      it 'does not duplicate resource if already attached' do
+        article.resources << resource
+        expect {
+          post '/admin/content/resource_add', params: { id: article.id, resource_id: resource.id }
+        }.not_to change { article.reload.resources.count }
+      end
+    end
+
+    context 'when not logged in' do
+      it 'redirects to login' do
+        reset!  # Clear session
+        get '/admin/content/resource_add', params: { id: article.id, resource_id: resource.id }
+        expect(response).to redirect_to('/accounts/login')
+      end
+    end
+  end
+
+  describe 'resource_remove action' do
+    before { login_as_admin }
+
+    let!(:article) { create(:article, user: admin) }
+    let!(:resource) { create(:resource) }
+
+    before do
+      article.resources << resource
+    end
+
+    describe 'GET /admin/content/resource_remove' do
+      it 'returns success' do
+        get '/admin/content/resource_remove', params: { id: article.id, resource_id: resource.id }
+        expect(response).to have_http_status(:success)
+      end
+
+      it 'removes resource from article' do
+        expect {
+          get '/admin/content/resource_remove', params: { id: article.id, resource_id: resource.id }
+        }.to change { article.reload.resources.count }.by(-1)
+      end
+
+      it 'disassociates the correct resource' do
+        get '/admin/content/resource_remove', params: { id: article.id, resource_id: resource.id }
+        expect(article.reload.resources).not_to include(resource)
+      end
+
+      it 'does not delete the resource itself' do
+        expect {
+          get '/admin/content/resource_remove', params: { id: article.id, resource_id: resource.id }
+        }.not_to change(Resource, :count)
+      end
+    end
+
+    describe 'POST /admin/content/resource_remove' do
+      it 'returns success' do
+        post '/admin/content/resource_remove', params: { id: article.id, resource_id: resource.id }
+        expect(response).to have_http_status(:success)
+      end
+
+      it 'removes resource from article' do
+        expect {
+          post '/admin/content/resource_remove', params: { id: article.id, resource_id: resource.id }
+        }.to change { article.reload.resources.count }.by(-1)
+      end
+    end
+
+    context 'when resource is not attached' do
+      let!(:unattached_resource) { create(:resource) }
+
+      it 'handles gracefully' do
+        expect {
+          get '/admin/content/resource_remove', params: { id: article.id, resource_id: unattached_resource.id }
+        }.not_to change { article.reload.resources.count }
+        expect(response).to have_http_status(:success)
+      end
+    end
+
+    context 'when not logged in' do
+      it 'redirects to login' do
+        reset!  # Clear session
+        get '/admin/content/resource_remove', params: { id: article.id, resource_id: resource.id }
+        expect(response).to redirect_to('/accounts/login')
+      end
+    end
+  end
 end
