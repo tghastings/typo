@@ -37,7 +37,7 @@ RSpec.describe 'Articles', type: :request do
     end
 
     context 'without published articles' do
-      before { create(:article, published: false) }  # Need at least one article for some checks
+      before { create(:article, published: false) } # Need at least one article for some checks
 
       it 'returns success or redirects' do
         get '/'
@@ -61,7 +61,6 @@ RSpec.describe 'Articles', type: :request do
         expect(response).to have_http_status(:success)
       end
     end
-
   end
 
   describe 'GET /:year/:month/:day/:title' do

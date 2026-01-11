@@ -93,9 +93,8 @@ class HtmlBeautifierMiddleware
       result << (('  ' * indent_level) + line)
 
       # Check for opening tag that needs indent increase
-      unless line =~ /^<(html|head|body|header|footer|main|aside|nav|section|article|div|ul|ol|dl|table|thead|tbody|tfoot|form|fieldset|figure)(\s|>)/i
-        next
-      end
+      block_tags = /^<(html|head|body|header|footer|main|aside|nav|section|article|div|ul|ol|dl|table|thead|tbody|tfoot|form|fieldset|figure)(\s|>)/i
+      next unless line =~ block_tags
 
       indent_level += 1 unless line =~ %r{</\w+>$} || line =~ %r{/>$}
     end

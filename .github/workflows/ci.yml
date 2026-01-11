@@ -23,7 +23,7 @@ jobs:
         run: gem install rubocop rubocop-rails rubocop-rspec
 
       - name: Run RuboCop
-        run: rubocop --format github || true  # Don't fail on lint errors initially
+        run: rubocop --format github
 
   security:
     name: Security Scan

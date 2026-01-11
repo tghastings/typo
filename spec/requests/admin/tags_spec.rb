@@ -54,9 +54,9 @@ RSpec.describe 'Admin Tags', type: :request do
     let!(:tag) { create(:tag) }
 
     it 'deletes tag' do
-      expect {
+      expect do
         post "/admin/tags/destroy/#{tag.id}"
-      }.to change(Tag, :count).by(-1)
+      end.to change(Tag, :count).by(-1)
     end
   end
 end

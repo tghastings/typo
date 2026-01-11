@@ -50,9 +50,9 @@ RSpec.describe 'Admin Pages', type: :request do
       end
 
       it 'creates page' do
-        expect {
+        expect do
           post '/admin/pages/new', params: valid_params
-        }.to change(Page, :count).by(1)
+        end.to change(Page, :count).by(1)
       end
     end
   end
@@ -85,9 +85,9 @@ RSpec.describe 'Admin Pages', type: :request do
     let!(:page) { create(:page, user: admin) }
 
     it 'deletes page' do
-      expect {
+      expect do
         post "/admin/pages/destroy/#{page.id}"
-      }.to change(Page, :count).by(-1)
+      end.to change(Page, :count).by(-1)
     end
   end
 end

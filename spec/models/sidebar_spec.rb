@@ -171,7 +171,7 @@ RSpec.describe Sidebar, type: :model do
       end
 
       it 'creates select field when choices provided' do
-        field = Sidebar::Field.build(:test, 'default', choices: [['a', 'A']])
+        field = Sidebar::Field.build(:test, 'default', choices: [%w[a A]])
         expect(field).to be_a(Sidebar::Field::SelectField)
       end
 

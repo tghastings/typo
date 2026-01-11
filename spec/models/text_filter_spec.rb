@@ -23,7 +23,7 @@ RSpec.describe TextFilter, type: :model do
 
   describe '.filter_text_by_name' do
     it 'filters text using the named filter' do
-      filter = create(:markdown)
+      create(:markdown)
       blog = Blog.first
       result = TextFilter.filter_text_by_name(blog, '**bold**', 'markdown')
       expect(result).to be_a(String)

@@ -30,9 +30,9 @@ RSpec.describe Tag, type: :model do
     end
 
     it 'creates new tag when not found' do
-      expect {
+      expect do
         Tag.get('newtag')
-      }.to change(Tag, :count).by(1)
+      end.to change(Tag, :count).by(1)
     end
 
     it 'is case insensitive' do

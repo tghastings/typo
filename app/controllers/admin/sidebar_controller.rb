@@ -13,8 +13,8 @@ module Admin
         logger.error e
         # Avoiding the view to crash
         @active = []
-        flash[:error] =
-          _('It seems something went wrong. Maybe some of your sidebars are actually missing and you should either reinstall them or remove them manually')
+        flash[:error] = _('It seems something went wrong. Maybe some of your sidebars ' \
+                          'are actually missing and you should either reinstall them or remove them manually')
       end
     end
 
@@ -118,8 +118,8 @@ module Admin
           logger.error e
           # Avoiding the view to crash
           @active = []
-          flash[:error] =
-            _('It seems something went wrong. Maybe some of your sidebars are actually missing and you should either reinstall them or remove them manually')
+          flash[:error] = _('It seems something went wrong. Maybe some of your sidebars ' \
+                            'are actually missing and you should either reinstall them or remove them manually')
         end
       end
       flash[:sidebars]

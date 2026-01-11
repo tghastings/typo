@@ -50,9 +50,9 @@ RSpec.describe 'Admin Resources', type: :request do
       let(:file) { Rack::Test::UploadedFile.new(StringIO.new('test content'), 'text/plain', original_filename: 'testfile.txt') }
 
       it 'uploads file successfully' do
-        expect {
+        expect do
           post '/admin/resources/upload', params: { upload: { filename: file } }
-        }.to change(Resource, :count).by(1)
+        end.to change(Resource, :count).by(1)
       end
 
       it 'redirects to index' do
@@ -137,9 +137,9 @@ RSpec.describe 'Admin Resources', type: :request do
     let!(:resource) { create(:resource, filename: 'delete-me.jpg') }
 
     it 'deletes resource' do
-      expect {
+      expect do
         post "/admin/resources/destroy/#{resource.id}"
-      }.to change(Resource, :count).by(-1)
+      end.to change(Resource, :count).by(-1)
     end
 
     it 'redirects to index' do

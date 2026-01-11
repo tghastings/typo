@@ -11,7 +11,10 @@ class Content < ActiveRecord::Base
   has_many :redirects, through: :redirections, dependent: :destroy
 
   def notify_users=(collection)
-    return notify_users.clear if collection.empty?
+    if collection.empty?
+      notify_users.clear
+      return
+    end
 
     self.class.transaction do
       notifications.clear
@@ -49,8 +52,19 @@ class Content < ActiveRecord::Base
   scope :no_draft, -> { where.not(state: 'draft').order('published_at DESC') }
   scope :searchstring, lambda { |search_string|
     tokens = search_string.split.collect { |c| "%#{c.downcase}%" }
-    conditions = (['(LOWER(body) LIKE ? OR LOWER(extended) LIKE ? OR LOWER(title) LIKE ?)'] * tokens.size).join(' AND ')
-    where(["state = ? AND #{conditions}", 'published', *tokens.collect { |token| [token] * 3 }.flatten])
+    return none if tokens.empty?
+
+    # Build query using Arel for safe dynamic conditions
+    table = arel_table
+    token_conditions = tokens.map do |token|
+      table[:body].lower.matches(token)
+                  .or(table[:extended].lower.matches(token))
+                  .or(table[:title].lower.matches(token))
+    end
+
+    # Combine all token conditions with AND
+    combined = token_conditions.reduce { |acc, cond| acc.and(cond) }
+    where(state: 'published').where(combined)
   }
   scope :already_published, -> { where('published = ? AND published_at < ?', true, Time.now).order(default_order) }
 
@@ -94,7 +108,10 @@ class Content < ActiveRecord::Base
 
   class << self
     def content_fields(*attribs)
+      # rubocop:disable Style/DocumentDynamicEvalDefinition
+      # Defines: def content_fields; [:body, :extended]; end
       class_eval "def content_fields; #{attribs.inspect}; end", __FILE__, __LINE__
+      # rubocop:enable Style/DocumentDynamicEvalDefinition
     end
 
     def find_published(_what = :all, _options = {})

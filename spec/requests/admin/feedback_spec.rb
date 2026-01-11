@@ -26,7 +26,6 @@ RSpec.describe 'Admin Feedback', type: :request do
       expect(response.body).to include('John')
     end
 
-
     context 'with pagination' do
       it 'handles page param' do
         get '/admin/feedback', params: { page: 1 }
@@ -101,9 +100,9 @@ RSpec.describe 'Admin Feedback', type: :request do
     let!(:comment) { create(:comment, article: article) }
 
     it 'deletes feedback' do
-      expect {
+      expect do
         post "/admin/feedback/destroy/#{comment.id}"
-      }.to change(Comment, :count).by(-1)
+      end.to change(Comment, :count).by(-1)
     end
 
     it 'redirects to article feedback' do
@@ -128,12 +127,12 @@ RSpec.describe 'Admin Feedback', type: :request do
     before { login_as_admin }
 
     it 'creates a comment on article' do
-      expect {
+      expect do
         post '/admin/feedback/create', params: {
           article_id: article.id,
           comment: { author: 'Admin', body: 'Admin comment', email: 'admin@test.com' }
         }
-      }.to change(Comment, :count).by(1)
+      end.to change(Comment, :count).by(1)
     end
 
     it 'redirects to article feedback' do
@@ -246,12 +245,12 @@ RSpec.describe 'Admin Feedback', type: :request do
     let!(:comment2) { create(:comment, article: article) }
 
     it 'deletes checked items' do
-      expect {
+      expect do
         post '/admin/feedback/bulkops', params: {
           feedback_check: { comment1.id.to_s => '1', comment2.id.to_s => '1' },
           bulkop_top: 'Delete Checked Items'
         }
-      }.to change(Comment, :count).by(-2)
+      end.to change(Comment, :count).by(-2)
     end
 
     it 'marks checked items as spam' do
@@ -280,13 +279,13 @@ RSpec.describe 'Admin Feedback', type: :request do
     end
 
     it 'uses bottom bulkop when top is empty' do
-      expect {
+      expect do
         post '/admin/feedback/bulkops', params: {
           feedback_check: { comment1.id.to_s => '1' },
           bulkop_top: '',
           bulkop_bottom: 'Delete Checked Items'
         }
-      }.to change(Comment, :count).by(-1)
+      end.to change(Comment, :count).by(-1)
     end
 
     it 'deletes all spam' do

@@ -105,9 +105,9 @@ RSpec.describe 'Admin Content', type: :request do
       end
 
       it 'creates article' do
-        expect {
+        expect do
           post '/admin/content/new', params: valid_params
-        }.to change(Article, :count).by(1)
+        end.to change(Article, :count).by(1)
       end
 
       it 'redirects to content list' do
@@ -123,11 +123,11 @@ RSpec.describe 'Admin Content', type: :request do
 
     context 'with draft param' do
       it 'creates article' do
-        expect {
+        expect do
           post '/admin/content/new', params: {
             article: { title: 'Draft Article', body: 'Content', draft: '1' }
           }
-        }.to change(Article, :count).by(1)
+        end.to change(Article, :count).by(1)
       end
     end
 
@@ -154,9 +154,9 @@ RSpec.describe 'Admin Content', type: :request do
 
     context 'with invalid params' do
       it 'does not create article without title' do
-        expect {
+        expect do
           post '/admin/content/new', params: { article: { title: '', body: 'Content' } }
-        }.not_to change(Article, :count)
+        end.not_to change(Article, :count)
       end
     end
   end
@@ -248,9 +248,9 @@ RSpec.describe 'Admin Content', type: :request do
     let!(:article) { create(:article, user: admin) }
 
     it 'deletes article' do
-      expect {
+      expect do
         post "/admin/content/destroy/#{article.id}"
-      }.to change(Article, :count).by(-1)
+      end.to change(Article, :count).by(-1)
     end
 
     it 'redirects to content list' do
@@ -359,9 +359,9 @@ RSpec.describe 'Admin Content', type: :request do
       end
 
       it 'adds resource to article' do
-        expect {
+        expect do
           get '/admin/content/resource_add', params: { id: article.id, resource_id: resource.id }
-        }.to change { article.reload.resources.count }.by(1)
+        end.to change { article.reload.resources.count }.by(1)
       end
 
       it 'associates the correct resource' do
@@ -382,16 +382,16 @@ RSpec.describe 'Admin Content', type: :request do
       end
 
       it 'adds resource to article' do
-        expect {
+        expect do
           post '/admin/content/resource_add', params: { id: article.id, resource_id: resource.id }
-        }.to change { article.reload.resources.count }.by(1)
+        end.to change { article.reload.resources.count }.by(1)
       end
 
       it 'does not duplicate resource if already attached' do
         article.resources << resource
-        expect {
+        expect do
           post '/admin/content/resource_add', params: { id: article.id, resource_id: resource.id }
-        }.not_to change { article.reload.resources.count }
+        end.not_to(change { article.reload.resources.count })
       end
     end
 
@@ -421,9 +421,9 @@ RSpec.describe 'Admin Content', type: :request do
       end
 
       it 'removes resource from article' do
-        expect {
+        expect do
           get '/admin/content/resource_remove', params: { id: article.id, resource_id: resource.id }
-        }.to change { article.reload.resources.count }.by(-1)
+        end.to change { article.reload.resources.count }.by(-1)
       end
 
       it 'disassociates the correct resource' do
@@ -432,9 +432,9 @@ RSpec.describe 'Admin Content', type: :request do
       end
 
       it 'does not delete the resource itself' do
-        expect {
+        expect do
           get '/admin/content/resource_remove', params: { id: article.id, resource_id: resource.id }
-        }.not_to change(Resource, :count)
+        end.not_to change(Resource, :count)
       end
     end
 
@@ -445,9 +445,9 @@ RSpec.describe 'Admin Content', type: :request do
       end
 
       it 'removes resource from article' do
-        expect {
+        expect do
           post '/admin/content/resource_remove', params: { id: article.id, resource_id: resource.id }
-        }.to change { article.reload.resources.count }.by(-1)
+        end.to change { article.reload.resources.count }.by(-1)
       end
     end
 
@@ -455,9 +455,9 @@ RSpec.describe 'Admin Content', type: :request do
       let!(:unattached_resource) { create(:resource) }
 
       it 'handles gracefully' do
-        expect {
+        expect do
           get '/admin/content/resource_remove', params: { id: article.id, resource_id: unattached_resource.id }
-        }.not_to change { article.reload.resources.count }
+        end.not_to(change { article.reload.resources.count })
         expect(response).to have_http_status(:success)
       end
     end

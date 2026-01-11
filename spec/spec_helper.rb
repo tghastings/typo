@@ -116,9 +116,7 @@ RSpec.configure do |config|
     DatabaseCleaner.clean_with(:truncation)
 
     # Load HTTP mocks for unit/integration tests
-    unless ENV['SKIP_HTTP_MOCKS']
-      Dir[Rails.root.join('spec/support/mocks/*.rb')].each { |f| require f }
-    end
+    Dir[Rails.root.join('spec/support/mocks/*.rb')].each { |f| require f } unless ENV['SKIP_HTTP_MOCKS']
   end
 
   config.before(:each) do

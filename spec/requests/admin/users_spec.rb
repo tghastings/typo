@@ -52,9 +52,9 @@ RSpec.describe 'Admin Users', type: :request do
       end
 
       it 'creates user' do
-        expect {
+        expect do
           post '/admin/users/new', params: valid_params
-        }.to change(User, :count).by(1)
+        end.to change(User, :count).by(1)
       end
     end
   end
@@ -83,9 +83,9 @@ RSpec.describe 'Admin Users', type: :request do
     let!(:other_user) { create(:user) }
 
     it 'deletes user' do
-      expect {
+      expect do
         post "/admin/users/destroy/#{other_user.id}"
-      }.to change(User, :count).by(-1)
+      end.to change(User, :count).by(-1)
     end
   end
 end

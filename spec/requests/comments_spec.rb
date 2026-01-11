@@ -19,9 +19,9 @@ RSpec.describe 'Comments', type: :request do
     end
 
     it 'creates a new comment' do
-      expect {
+      expect do
         post '/comments', params: valid_params
-      }.to change(Comment, :count).by(1)
+      end.to change(Comment, :count).by(1)
     end
 
     it 'redirects to article' do
@@ -41,9 +41,9 @@ RSpec.describe 'Comments', type: :request do
       end
 
       it 'does not create comment' do
-        expect {
+        expect do
           post '/comments', params: invalid_params
-        }.not_to change(Comment, :count)
+        end.not_to change(Comment, :count)
       end
     end
 
@@ -53,9 +53,9 @@ RSpec.describe 'Comments', type: :request do
       end
 
       it 'does not create comment' do
-        expect {
+        expect do
           post '/comments', params: valid_params
-        }.not_to change(Comment, :count)
+        end.not_to change(Comment, :count)
       end
     end
   end
@@ -97,9 +97,9 @@ RSpec.describe 'Comments', type: :request do
     end
 
     it 'creates comment via XHR' do
-      expect {
+      expect do
         post '/comments', params: valid_params, xhr: true
-      }.to change(Comment, :count).by(1)
+      end.to change(Comment, :count).by(1)
     end
 
     it 'returns success' do

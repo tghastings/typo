@@ -63,9 +63,9 @@ RSpec.describe Category, type: :model do
     end
 
     it 'raises RecordNotFound for non-existent category' do
-      expect {
+      expect do
         Category.find_by_permalink('nonexistent')
-      }.to raise_error(ActiveRecord::RecordNotFound)
+      end.to raise_error(ActiveRecord::RecordNotFound)
     end
   end
 

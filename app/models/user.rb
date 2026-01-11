@@ -163,7 +163,7 @@ class User < ActiveRecord::Base
 
   protected
 
-  def self.password_hash(pass)
+  def self.password_hash(pass) # rubocop:disable Lint/IneffectiveAccessModifier
     Digest::SHA1.hexdigest("#{salt}--#{pass}--")
   end
 

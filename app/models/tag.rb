@@ -41,16 +41,31 @@ class Tag < ActiveRecord::Base
     # Validate orderby against whitelist to prevent SQL injection
     safe_orderby = ALLOWED_ORDER_CLAUSES[orderby] || 'article_counter DESC'
 
-    join_table = reflect_on_association(:articles).join_table
-    find_by_sql([%{
-      SELECT tags.id, tags.name, tags.display_name, COUNT(#{join_table}.article_id) AS article_counter
-      FROM #{Tag.table_name} tags
-      INNER JOIN #{join_table} ON #{join_table}.tag_id = tags.id
-      INNER JOIN #{Article.table_name} articles ON #{join_table}.article_id = articles.id AND articles.published = ?
-      GROUP BY tags.id, tags.name, tags.display_name
-      ORDER BY #{safe_orderby}
-      LIMIT ? OFFSET ?
-      }, true, limit, start]).each { |item| item.article_counter = item.article_counter.to_i }
+    # Use Arel for safe query building
+    tags_table = Tag.arel_table
+    articles_table = Article.arel_table
+    join_table_name = reflect_on_association(:articles).join_table
+    join_arel = Arel::Table.new(join_table_name)
+
+    # Build the query using Arel
+    query = tags_table
+            .project(
+              tags_table[:id],
+              tags_table[:name],
+              tags_table[:display_name],
+              join_arel[:article_id].count.as('article_counter')
+            )
+            .join(join_arel).on(join_arel[:tag_id].eq(tags_table[:id]))
+            .join(articles_table).on(
+              join_arel[:article_id].eq(articles_table[:id])
+              .and(articles_table[:published].eq(true))
+            )
+            .group(tags_table[:id], tags_table[:name], tags_table[:display_name])
+            .order(Arel.sql(safe_orderby))
+            .take(limit)
+            .skip(start)
+
+    find_by_sql(query.to_sql).each { |item| item.article_counter = item.article_counter.to_i }
   end
 
   def self.merge(from, to)

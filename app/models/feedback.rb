@@ -90,6 +90,7 @@ class Feedback < Content
       return :spam if blog.default_moderate_comments
       return :ham unless blog.sp_global
     rescue NoMethodError
+      nil # blog may not be configured yet
     end
 
     # Yeah, three state logic is evil...

@@ -22,7 +22,11 @@ module Migrator
 
   def self.max_schema_version
     # Return the highest migration version number (timestamp)
-    available_migrations.last&.scan(/(\d+)_/)&.flatten&.first.to_i
+    last_migration = available_migrations.last
+    return 0 unless last_migration
+
+    matches = last_migration.scan(/(\d+)_/).flatten
+    matches.first.to_i
   end
 
   def self.pending_migrations

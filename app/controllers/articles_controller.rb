@@ -299,7 +299,7 @@ class ArticlesController < ContentController
         result = item.gsub(/^#{before_format}(.*)#{after_format}$/, '\1')
         article_params[format_string.to_sym] = result
       else
-        return unless spec == item
+        next unless spec == item
       end
     end
     begin

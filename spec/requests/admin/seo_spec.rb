@@ -11,7 +11,6 @@ RSpec.describe 'Admin SEO', type: :request do
     post '/accounts/login', params: { user: { login: admin.login, password: 'password123' } }
   end
 
-
   describe 'GET /admin/seo/permalinks' do
     before { login_as_admin }
 

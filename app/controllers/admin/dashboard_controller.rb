@@ -39,8 +39,13 @@ module Admin
     end
 
     def popular
+      comment_counts_subquery = <<~SQL.squish
+        contents, (SELECT feedback.article_id AS article_id, COUNT(feedback.id) as count
+        FROM feedback WHERE feedback.state IN ('presumed_ham', 'ham')
+        GROUP BY feedback.article_id ORDER BY count DESC LIMIT 9) AS comment_counts
+      SQL
       @bestof = Article.select('contents.*, comment_counts.count AS comment_count')
-                       .from("contents, (SELECT feedback.article_id AS article_id, COUNT(feedback.id) as count FROM feedback WHERE feedback.state IN ('presumed_ham', 'ham') GROUP BY feedback.article_id ORDER BY count DESC LIMIT 9) AS comment_counts")
+                       .from(comment_counts_subquery)
                        .where('comment_counts.article_id = contents.id AND published = ?', true)
                        .order('comment_counts.count DESC')
                        .limit(5)
@@ -92,7 +97,7 @@ module Admin
       @typo_links = nil
     end
 
-    RssItem = Struct.new(:link, :title, :description, :description_link, :date, :author) do
+    RssItem = Struct.new(:link, :title, :description, :description_link, :date, :author) do # rubocop:disable Lint/UselessConstantScoping
       def to_s
         title
       end

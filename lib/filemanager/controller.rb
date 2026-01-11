@@ -85,12 +85,15 @@ module Filemanager
       new_filename = sanitize_filename(decode(params[:new_name]))
       return error if old_filename.blank? || new_filename.blank?
 
-      old_name = @current_path + File::SEPARATOR + old_filename
-      new_name = @current_path + File::SEPARATOR + new_filename
+      # Build and validate paths - expand to canonical form for security
+      old_path = File.expand_path(File.join(@current_path, old_filename))
+      new_path = File.expand_path(File.join(@current_path, new_filename))
+      resource_root = File.expand_path(FM_RESOURCES_PATH)
 
-      return error unless safe_path?(old_name) && safe_path?(new_name)
+      # Verify both paths are within allowed directory
+      return error unless old_path.start_with?(resource_root) && new_path.start_with?(resource_root)
 
-      File.rename(old_name, new_name)
+      File.rename(old_path, new_path)
       success
     end
 
@@ -108,10 +111,14 @@ module Filemanager
       filename = sanitize_filename(decode(params[:new_name]))
       return error if filename.blank?
 
-      path = @current_path + File::SEPARATOR + filename
-      return error unless safe_path?(path)
+      # Build and validate path - expand to canonical form for security
+      file_path = File.expand_path(File.join(@current_path, filename))
+      resource_root = File.expand_path(FM_RESOURCES_PATH)
 
-      File.new(path, 'w')
+      # Verify path is within allowed directory
+      return error unless file_path.start_with?(resource_root)
+
+      File.new(file_path, 'w')
       success
     end
 
@@ -226,11 +233,14 @@ module Filemanager
     def method_missing(method_id, *)
       method_id_s = method_id.to_s
       if method_id_s[0, 3] == 'is_' && method_id_s[-1, 1] == '?'
+        # rubocop:disable Style/DocumentDynamicEvalDefinition
+        # Defines: def is_image?(*args); FM_IMAGE_TYPES.include?(@path_suffix); end
         instance_eval %{
 	                        def #{method_id}(*args)
 	                          FM_#{method_id_s[3..-2].upcase}_TYPES.include?(@path_suffix)
 	                        end
 	                      }, __FILE__, __LINE__ - 4
+        # rubocop:enable Style/DocumentDynamicEvalDefinition
         send(method_id, *)
       else
         super

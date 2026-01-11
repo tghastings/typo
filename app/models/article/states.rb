@@ -41,7 +41,6 @@ class Article
 
       def published=(boolean)
         content.state = :just_published if boolean
-        boolean
       end
 
       def published_at=(new_time)

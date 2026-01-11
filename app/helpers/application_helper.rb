@@ -60,7 +60,9 @@ module ApplicationHelper
     if update
       update.is_a?(Hash) ? update[:success] : update
     end
-    "var link = document.createElement('a'); link.href = '#{url}'; link.setAttribute('data-remote', 'true'); link.setAttribute('data-type', 'script'); link.setAttribute('data-method', '#{method}'); Rails.fire(link, 'click');"
+    "var link = document.createElement('a'); link.href = '#{url}'; " \
+      "link.setAttribute('data-remote', 'true'); link.setAttribute('data-type', 'script'); " \
+      "link.setAttribute('data-method', '#{method}'); Rails.fire(link, 'click');"
   end
 
   # Backward compatibility for link_to_remote (removed in Rails 4+)
@@ -167,7 +169,8 @@ module ApplicationHelper
   # The '5 comments' link from the bottom of articles
   def comments_link(article)
     comment_count = article.published_comments.size
-    # FIXME: Why using own pluralize metchod when the Localize._ provides the same funciotnality, but better? (by simply calling _('%d comments', comment_count) and using the en translation: l.store "%d comments", ["No nomments", "1 comment", "%d comments"])
+    # FIXME: Why use own pluralize when Localize._ provides the same functionality?
+    # (by calling _('%d comments', comment_count) with translation: "%d comments" => ["No comments", "1 comment", "%d comments"])
     link_to_permalink(article,
                       pluralize(comment_count, _('no comments'), _('1 comment'), _('%d comments', comment_count)), 'comments')
   end
@@ -208,7 +211,10 @@ module ApplicationHelper
   end
 
   def toggle_effect(domid, true_effect, true_opts, false_effect, false_opts)
-    "$('#{domid}').style.display == 'none' ? new #{false_effect}('#{domid}', {#{false_opts}}) : new #{true_effect}('#{domid}', {#{true_opts}}); return false;"
+    hidden_check = "$('#{domid}').style.display == 'none'"
+    false_action = "new #{false_effect}('#{domid}', {#{false_opts}})"
+    true_action = "new #{true_effect}('#{domid}', {#{true_opts}})"
+    "#{hidden_check} ? #{false_action} : #{true_action}; return false;"
   end
 
   def markup_help_popup(markup, text)

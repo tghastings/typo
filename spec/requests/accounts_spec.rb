@@ -4,7 +4,7 @@ require 'spec_helper'
 
 RSpec.describe 'Accounts', type: :request do
   let!(:blog) { create(:blog) }
-  let!(:existing_user) { create(:user) }  # Need at least one user for most tests
+  let!(:existing_user) { create(:user) } # Need at least one user for most tests
 
   describe 'POST /accounts/login' do
     let!(:user) { create(:user, login: 'admin', password: 'password123') }
@@ -96,9 +96,9 @@ RSpec.describe 'Accounts', type: :request do
       end
 
       it 'creates a new user' do
-        expect {
+        expect do
           post '/accounts/signup', params: valid_params
-        }.to change(User, :count).by(1)
+        end.to change(User, :count).by(1)
       end
     end
 

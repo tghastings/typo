@@ -18,10 +18,19 @@ module Admin
 
     def preview
       theme_name = sanitize_theme_name(params[:theme])
-      preview_path = "#{Theme.themes_root}/#{theme_name}/preview.png"
 
-      # Ensure path is within themes directory
-      unless valid_theme_path?(preview_path) && File.exist?(preview_path)
+      # Validate theme exists in our known themes list first
+      unless valid_theme?(theme_name)
+        head :not_found
+        return
+      end
+
+      # Build path safely using File.join and expand to canonical form
+      themes_root = File.expand_path(Theme.themes_root)
+      preview_path = File.expand_path(File.join(themes_root, theme_name, 'preview.png'))
+
+      # Double-check path is within themes directory (defense in depth)
+      unless preview_path.start_with?(themes_root) && File.exist?(preview_path)
         head :not_found
         return
       end

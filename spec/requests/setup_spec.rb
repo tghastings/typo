@@ -44,15 +44,15 @@ RSpec.describe 'Setup', type: :request do
       end
 
       it 'creates blog' do
-        expect {
+        expect do
           post '/setup', params: valid_params
-        }.to change(Blog, :count).by(1)
+        end.to change(Blog, :count).by(1)
       end
 
       it 'creates admin user' do
-        expect {
+        expect do
           post '/setup', params: valid_params
-        }.to change(User, :count).by(1)
+        end.to change(User, :count).by(1)
       end
 
       it 'redirects to confirm' do

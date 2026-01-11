@@ -51,7 +51,7 @@ RSpec.describe Resource, type: :model do
 
     describe '.by_created_at' do
       it 'orders by created_at descending' do
-        old = create(:resource, created_at: 2.days.ago)
+        create(:resource, created_at: 2.days.ago)
         new = create(:resource, created_at: 1.day.ago)
         expect(Resource.by_created_at.first).to eq(new)
       end

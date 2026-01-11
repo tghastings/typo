@@ -3,6 +3,12 @@
 .pdf-slideshow-container {
   max-width: 760px;
   margin: 2.5rem auto;
+  min-height: 500px;
+}
+
+/* When inline height is set, it overrides; otherwise use responsive min-height */
+.pdf-slideshow-container:not([style*="height"]) {
+  min-height: 500px;
 }
 
 /* Title - inside the frame */
@@ -130,6 +136,10 @@
 @media (max-width: 640px) {
   .pdf-slideshow-container {
     margin: 1.5rem 0;
+    min-height: auto;
+  }
+  .pdf-slideshow-container:not([style*="height"]) {
+    min-height: auto;
   }
   .pdf-slideshow-frame {
     padding: 16px;

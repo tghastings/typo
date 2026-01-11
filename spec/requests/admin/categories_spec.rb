@@ -39,9 +39,9 @@ RSpec.describe 'Admin Categories', type: :request do
     before { login_as_admin }
 
     it 'creates category' do
-      expect {
+      expect do
         post '/admin/categories/new', params: { category: { name: 'New Category' } }
-      }.to change(Category, :count).by(1)
+      end.to change(Category, :count).by(1)
     end
 
     it 'redirects to new page after create' do
@@ -78,9 +78,9 @@ RSpec.describe 'Admin Categories', type: :request do
     let!(:category) { create(:category) }
 
     it 'deletes category' do
-      expect {
+      expect do
         post "/admin/categories/destroy/#{category.id}"
-      }.to change(Category, :count).by(-1)
+      end.to change(Category, :count).by(-1)
     end
   end
 end

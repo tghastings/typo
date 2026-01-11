@@ -33,9 +33,9 @@ RSpec.describe 'Admin Redirects', type: :request do
     before { login_as_admin }
 
     it 'creates redirect' do
-      expect {
+      expect do
         post '/admin/redirects/new', params: { redirect: { from_path: '/old', to_path: '/new' } }
-      }.to change(Redirect, :count).by(1)
+      end.to change(Redirect, :count).by(1)
     end
   end
 
@@ -67,9 +67,9 @@ RSpec.describe 'Admin Redirects', type: :request do
     let!(:redirect) { create(:redirect) }
 
     it 'deletes redirect' do
-      expect {
+      expect do
         post "/admin/redirects/destroy/#{redirect.id}"
-      }.to change(Redirect, :count).by(-1)
+      end.to change(Redirect, :count).by(-1)
     end
   end
 end

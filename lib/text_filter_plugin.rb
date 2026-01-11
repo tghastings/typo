@@ -9,6 +9,7 @@ class TextFilterPlugin
 
   @@filter_map = {}
   def self.inherited(sub)
+    super
     return unless sub.to_s =~ /^Plugin/ || sub.to_s =~ /^Typo::Textfilter/
 
     name = sub.short_name

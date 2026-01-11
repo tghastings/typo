@@ -294,9 +294,9 @@ RSpec.describe Article, type: :model do
     end
 
     it 'raises RecordNotFound for non-existent article' do
-      expect {
+      expect do
         Article.find_by_permalink(year: '2024', month: '01', day: '15', title: 'nonexistent')
-      }.to raise_error(ActiveRecord::RecordNotFound)
+      end.to raise_error(ActiveRecord::RecordNotFound)
     end
   end
 

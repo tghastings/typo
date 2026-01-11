@@ -318,9 +318,8 @@ class Article < Content
   def keywords_to_tags
     Article.transaction do
       tags.clear
-      tags << keywords.to_s.scan(/((['"]).*?\2|[.\w]+)/).collect do |x|
-        x.first.tr("\"'", '')
-      end.uniq.map { |tagword| Tag.get(tagword) }
+      tag_words = keywords.to_s.scan(/((['"]).*?\2|[.\w]+)/).collect { |x| x.first.tr("\"'", '') }
+      tags << tag_words.uniq.map { |tagword| Tag.get(tagword) }
     end
   end
 
@@ -413,7 +412,7 @@ class Article < Content
     self.notify_users = users.uniq
   end
 
-  def self.time_delta(year = nil, month = nil, day = nil)
+  def self.time_delta(year = nil, month = nil, day = nil) # rubocop:disable Lint/IneffectiveAccessModifier
     return nil if year.nil? && month.nil? && day.nil?
 
     from = Time.utc(year, month || 1, day || 1)

@@ -21,7 +21,7 @@ RSpec.describe 'Tags', type: :request do
 
     context 'without articles' do
       it 'redirects when tag has no articles' do
-        tag = create(:tag, name: 'empty')
+        create(:tag, name: 'empty')
         get '/tag/empty'
         expect(response).to redirect_to('/')
       end

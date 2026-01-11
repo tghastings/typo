@@ -23,7 +23,7 @@ The slideshow supports keyboard navigation:
 * **src** (required): The PDF filename in `/files/` or a full URL to an external PDF.
 * **title**: Optional title displayed above the slideshow.
 * **width**: Custom width in pixels (default: 100% of container).
-* **height**: Custom height in pixels (default: 500px).
+* **height**: Custom height in pixels (default: responsive).
 * **autoplay**: Set to "true" to auto-advance slides.
 * **interval**: Autoplay interval in milliseconds (default: 5000).
 * **start**: Starting slide number (default: 1).
@@ -59,7 +59,7 @@ External PDF:
         # Extract optional attributes with HTML escaping
         title = escape_html(attrib['title'])
         width = attrib['width']
-        height = attrib['height'] || '500'
+        height = attrib['height']
         autoplay = attrib['autoplay'] == 'true'
         interval = attrib['interval'] || '5000'
         start_page = attrib['start'] || '1'

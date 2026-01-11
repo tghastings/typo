@@ -22,9 +22,9 @@ RSpec.describe Trigger, type: :model do
   describe '.post_action' do
     it 'creates a trigger' do
       article = create(:article)
-      expect {
+      expect do
         Trigger.post_action(1.hour.from_now, article, 'publish!')
-      }.to change(Trigger, :count).by(1)
+      end.to change(Trigger, :count).by(1)
     end
   end
 

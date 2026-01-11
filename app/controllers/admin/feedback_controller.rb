@@ -186,7 +186,7 @@ module Admin
         items.each do |i|
           i.invalidates_cache? or next
           flush_cache
-          return
+          break
         end
       when 'Mark Checked Items as Ham'
         update_feedback(items, :mark_as_ham!)

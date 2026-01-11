@@ -64,6 +64,12 @@ Lint/RescueException:
 # Line length - be more permissive
 Layout/LineLength:
   Max: 150
+  Exclude:
+    - 'lang/**/*'
+    - 'lib/action_web_service/**/*'
+    - 'spec/support/mocks/**/*'
+    - 'doc/**/*'
+    - 'config/initializers/**/*'
 
 # Naming conventions - existing code has different conventions
 Naming/MethodName:
@@ -119,3 +125,60 @@ Security/Eval:
 
 Security/Open:
   Enabled: false
+
+# action_web_service is legacy code
+Style/DocumentDynamicEvalDefinition:
+  Exclude:
+    - 'lib/action_web_service/**/*'
+    - 'lib/stateful.rb'
+    - 'lib/text_filter_plugin.rb'
+
+Lint/MissingSuper:
+  Exclude:
+    - 'app/apis/**/*'
+    - 'lib/action_web_service/**/*'
+
+Lint/IneffectiveAccessModifier:
+  Exclude:
+    - 'lib/action_web_service/**/*'
+
+Lint/BinaryOperatorWithIdenticalOperands:
+  Exclude:
+    - 'lib/action_web_service/**/*'
+
+# Gemspec in doc folder is for reference only
+Gemspec/RequiredRubyVersion:
+  Exclude:
+    - 'doc/**/*'
+
+# Format string tokens in lang files use %s intentionally for gettext compatibility
+Style/FormatStringToken:
+  Exclude:
+    - 'lang/**/*'
+    - 'lib/action_web_service/**/*'
+    - 'app/helpers/admin/base_helper.rb'
+
+Style/FormatString:
+  Exclude:
+    - 'lang/**/*'
+    - 'lib/action_web_service/**/*'
+
+# Duplicate method in legacy backpack API
+Lint/DuplicateMethods:
+  Exclude:
+    - 'lib/backpack_api.rb'
+
+# Legacy feature step definitions use debugger helpers
+Lint/Debugger:
+  Exclude:
+    - 'features/**/*'
+
+# Empty block in rake task is intentional
+Lint/EmptyBlock:
+  Exclude:
+    - 'lib/tasks/**/*'
+
+# Legacy transforms constant
+Naming/ConstantName:
+  Exclude:
+    - 'lib/transforms.rb'

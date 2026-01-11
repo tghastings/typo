@@ -168,8 +168,11 @@ module Admin
               turbo_stream.update('autosave', partial: 'admin/content/autosave_status', locals: { article: @article }),
               turbo_stream.update('article_id_field', view_context.hidden_field_tag('article[id]', @article.id)),
               turbo_stream.update('preview_link',
-                                  view_context.link_to(_('Preview'), url_for(controller: '/articles', action: 'preview', id: @article.id), target: 'new',
-                                                                                                                                           class: 'btn info')),
+                                  view_context.link_to(
+                                    _('Preview'),
+                                    url_for(controller: '/articles', action: 'preview', id: @article.id),
+                                    target: 'new', class: 'btn info'
+                                  )),
               turbo_stream.update('destroy_link', view_context.link_to_destroy_draft(@article))
             ]
           end

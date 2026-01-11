@@ -5,7 +5,7 @@ publisher = User.first
 if publisher
   puts "Publisher: #{publisher.login} (id: #{publisher.id})"
 else
-  puts "No user found - skipping publisher-related operations"
+  puts 'No user found - skipping publisher-related operations'
 end
 
 # Create categories
@@ -188,9 +188,7 @@ Article.find_each do |article|
 end
 
 # Ensure all articles have the publisher set (only if a user exists)
-if publisher
-  Article.where(user_id: nil).update_all(user_id: publisher.id)
-end
+Article.where(user_id: nil).update_all(user_id: publisher.id) if publisher
 
 puts "\nDone! Created #{Category.count} categories and #{Tag.count} tags."
 puts "Articles with categories: #{Article.joins(:categories).distinct.count}"

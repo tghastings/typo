@@ -13,7 +13,7 @@ feed.entry item, id: "urn:uuid:#{item.guid}", url: item.permalink_url do |entry|
       nil
     end
     entry.name name
-    entry.email email if !email.blank? && !email.blank? && this_blog.link_to_author
+    entry.email email if email.present? && this_blog.link_to_author
   end
 
   entry.title item.title, 'type' => 'html'

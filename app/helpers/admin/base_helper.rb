@@ -107,8 +107,10 @@ module Admin
       rescue StandardError
         'content'
       end
-      link_to(_('delete'),
-              "/admin/#{ctrl}/destroy/#{record.id}", data: { confirm: _('Are you sure?') }, method: :post, class: 'btn danger', title: _('Delete content'))
+      link_to(
+        _('delete'), "/admin/#{ctrl}/destroy/#{record.id}",
+        data: { confirm: _('Are you sure?') }, method: :post, class: 'btn danger', title: _('Delete content')
+      )
     end
 
     def text_filter_options
@@ -154,9 +156,9 @@ module Admin
     end
 
     def class_articles
-      if (controller.controller_name =~ /content|tags|categories|feedback|post_type/) && (controller.action_name =~ /list|index|show|article|destroy|new|edit/)
-        return class_selected_tab
-      end
+      content_controllers = /content|tags|categories|feedback|post_type/
+      content_actions = /list|index|show|article|destroy|new|edit/
+      return class_selected_tab if controller.controller_name =~ content_controllers && controller.action_name =~ content_actions
 
       class_tab
     end
@@ -222,8 +224,8 @@ module Admin
     def render_void_table(size, cols)
       return unless size.zero?
 
-      ("<tr>\n<td colspan=#{cols}>" + _("There are no %s yet. Why don't you start and create one?",
-                                        _(controller.controller_name)) + "</td>\n</tr>\n").html_safe
+      message = _("There are no %s yet. Why don't you start and create one?", _(controller.controller_name))
+      "<tr>\n<td colspan=#{cols}>#{message}</td>\n</tr>\n".html_safe
     end
 
     def cancel_or_save(message = _('Save'))

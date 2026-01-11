@@ -53,8 +53,8 @@ class Typo
         lines = ['', '<div class="bibliography">', '<h3>References</h3>', '<ol class="bibliography-list">']
 
         entries.each do |ref|
-          domain = extract_domain(ref[:url])
-          lines << %(<li value="#{ref[:num]}"><a href="#{ref[:url]}" class="bibliography-link" target="_blank" rel="noopener">#{domain}</a></li>)
+          display_url = clean_url_for_display(ref[:url])
+          lines << %(<li value="#{ref[:num]}"><a href="#{ref[:url]}" class="bibliography-link" target="_blank" rel="noopener">#{display_url}</a></li>)
         end
 
         lines << '</ol>'
@@ -62,11 +62,20 @@ class Typo
         lines.join("\n")
       end
 
-      def self.extract_domain(url)
+      def self.clean_url_for_display(url)
         uri = URI.parse(url)
-        host = uri.host || url
-        # Remove www. prefix for cleaner display
-        host.sub(/\Awww\./, '')
+        host = uri.host&.sub(/\Awww\./, '') || url
+        path = uri.path.to_s
+
+        # Remove Amazon ref tracking from path
+        path = path.sub(%r{/ref=.*}, '')
+
+        # Return just domain + path (no query params or fragments)
+        if path.present? && path != '/'
+          "#{host}#{path}"
+        else
+          host
+        end
       rescue URI::InvalidURIError
         url
       end

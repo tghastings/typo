@@ -248,7 +248,7 @@ RSpec.describe User, type: :model do
     it 'assigns admin profile to first user' do
       User.delete_all
       Profile.delete_all
-      admin_profile = create(:profile_admin, label: 'admin')
+      create(:profile_admin, label: 'admin')
       user = create(:user, profile: nil)
       expect(user.profile.label).to eq('admin')
     end
@@ -257,8 +257,8 @@ RSpec.describe User, type: :model do
       User.delete_all
       Profile.delete_all
       create(:profile_admin, label: 'admin')
-      contributor_profile = create(:profile_contributor, label: 'contributor')
-      first_user = create(:user, profile: nil) # first user gets admin
+      create(:profile_contributor, label: 'contributor')
+      create(:user, profile: nil) # first user gets admin
       user2 = create(:user, profile: nil)
       expect(user2.profile.label).to eq('contributor')
     end

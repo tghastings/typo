@@ -33,9 +33,9 @@ RSpec.describe 'Admin Post Types', type: :request do
     before { login_as_admin }
 
     it 'creates post type' do
-      expect {
+      expect do
         post '/admin/post_types/new', params: { post_type: { name: 'video', description: 'Video posts' } }
-      }.to change(PostType, :count).by(1)
+      end.to change(PostType, :count).by(1)
     end
   end
 end
