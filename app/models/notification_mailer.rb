@@ -36,6 +36,16 @@ class NotificationMailer < ActionMailer::Base
     mail(to: @recipients, from: @from, subject: "Notification from #{@blog.blog_name}", headers: @headers)
   end
 
+  def password_reset(user, reset_url)
+    @user = user
+    @reset_url = reset_url
+    @blog = Blog.default
+    @recipients = user.email
+    @from = Blog.default.email_from
+    @headers = { 'X-Mailer' => "Typo #{TYPO_VERSION}" }
+    mail(to: @recipients, from: @from, subject: "[#{@blog.blog_name}] Password Reset Request", headers: @headers)
+  end
+
   private
 
   def setup(user, content)

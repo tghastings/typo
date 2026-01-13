@@ -144,4 +144,81 @@ RSpec.describe 'Accounts', type: :request do
       expect(response).to have_http_status(:success)
     end
   end
+
+  describe 'Password reset flow' do
+    let!(:user) { create(:user, login: 'resetuser', email: 'reset@example.com', password: 'oldpassword') }
+
+    describe 'POST /accounts/recover_password' do
+      it 'generates a password reset token for valid user' do
+        post '/accounts/recover_password', params: { user: { login: 'resetuser' } }
+        user.reload
+        expect(user.reset_password_token).to be_present
+        expect(user.reset_password_sent_at).to be_present
+      end
+
+      it 'always redirects to login to prevent user enumeration' do
+        post '/accounts/recover_password', params: { user: { login: 'nonexistent' } }
+        expect(response).to redirect_to('/accounts/login')
+      end
+    end
+
+    describe 'GET /accounts/reset_password' do
+      before do
+        user.generate_password_reset_token!
+      end
+
+      it 'renders reset form with valid token' do
+        get '/accounts/reset_password', params: { token: user.reset_password_token }
+        expect(response).to have_http_status(:success)
+      end
+
+      it 'redirects with invalid token' do
+        get '/accounts/reset_password', params: { token: 'invalidtoken' }
+        expect(response).to redirect_to('/accounts/recover_password')
+      end
+
+      it 'redirects with expired token' do
+        user.update_column(:reset_password_sent_at, 3.hours.ago)
+        get '/accounts/reset_password', params: { token: user.reset_password_token }
+        expect(response).to redirect_to('/accounts/recover_password')
+      end
+    end
+
+    describe 'POST /accounts/reset_password' do
+      before do
+        user.generate_password_reset_token!
+      end
+
+      it 'resets password with valid token and matching passwords' do
+        post '/accounts/reset_password', params: {
+          token: user.reset_password_token,
+          user: { password: 'newpassword123', password_confirmation: 'newpassword123' }
+        }
+        expect(response).to redirect_to('/accounts/login')
+        user.reload
+        expect(user.reset_password_token).to be_nil
+        expect(User.authenticate('resetuser', 'newpassword123')).to eq(user)
+      end
+
+      it 'fails with mismatched passwords' do
+        post '/accounts/reset_password', params: {
+          token: user.reset_password_token,
+          user: { password: 'newpassword123', password_confirmation: 'differentpassword' }
+        }
+        expect(response).to have_http_status(:success)
+        user.reload
+        expect(user.reset_password_token).to be_present
+      end
+
+      it 'fails with blank password' do
+        post '/accounts/reset_password', params: {
+          token: user.reset_password_token,
+          user: { password: '', password_confirmation: '' }
+        }
+        expect(response).to have_http_status(:success)
+        user.reload
+        expect(user.reset_password_token).to be_present
+      end
+    end
+  end
 end

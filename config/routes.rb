@@ -118,6 +118,8 @@ Rails.application.routes.draw do
   get 'accounts/logout', to: 'accounts#logout', as: :logout
   get 'accounts/recover_password', to: 'accounts#recover_password'
   post 'accounts/recover_password', to: 'accounts#recover_password'
+  get 'accounts/reset_password', to: 'accounts#reset_password', as: :reset_password
+  post 'accounts/reset_password', to: 'accounts#reset_password'
   get 'accounts/signup', to: 'accounts#signup', as: :signup
   post 'accounts/signup', to: 'accounts#signup'
   get 'accounts/confirm', to: 'accounts#confirm', as: :accounts_confirm

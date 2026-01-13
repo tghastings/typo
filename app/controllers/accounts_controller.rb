@@ -76,12 +76,51 @@ class AccountsController < ApplicationController
     @user = User.where('login = ? or email = ?', params[:user][:login], params[:user][:login]).first
 
     if @user
-      @user.password = generate_password
-      @user.save
-      flash[:notice] = _('An email has been successfully sent to your address with your new password')
+      @user.generate_password_reset_token!
+      reset_url = url_for(controller: 'accounts', action: 'reset_password', token: @user.reset_password_token,
+                          only_path: false)
+      begin
+        email = NotificationMailer.password_reset(@user, reset_url)
+        EmailNotify.send_message(@user, email)
+      rescue StandardError => e
+        Rails.logger.error "Unable to send password reset email: #{e.inspect}"
+      end
+    end
+
+    # Always show success message to prevent user enumeration
+    flash[:notice] = _('If an account exists with that username or email, you will receive password reset instructions.')
+    redirect_to action: 'login'
+  end
+
+  def reset_password
+    @page_title = "#{this_blog.blog_name} - #{_('Reset your password')}"
+    @user = User.find_by(reset_password_token: params[:token])
+
+    if @user.nil? || !@user.password_reset_token_valid?
+      flash[:error] = _('Invalid or expired password reset link. Please request a new one.')
+      redirect_to action: 'recover_password'
+      return
+    end
+
+    return unless request.post?
+
+    if params[:user][:password].blank?
+      flash.now[:error] = _('Password cannot be blank')
+      return
+    end
+
+    if params[:user][:password] != params[:user][:password_confirmation]
+      flash.now[:error] = _('Password and confirmation do not match')
+      return
+    end
+
+    @user.password = params[:user][:password]
+    if @user.save
+      @user.clear_password_reset_token!
+      flash[:notice] = _('Your password has been reset successfully. Please log in.')
       redirect_to action: 'login'
     else
-      flash[:error] = _('Oops, something wrong just happened')
+      flash.now[:error] = @user.errors.full_messages.join(', ')
     end
   end
 

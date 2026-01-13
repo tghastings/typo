@@ -157,6 +157,18 @@ RSpec.describe 'Articles', type: :request do
     end
   end
 
+  describe 'GET /:year/:month (monthly archive)' do
+    before do
+      create(:article, title: 'January Post', published: true, published_at: Time.zone.parse('2022-01-15 12:00:00'))
+    end
+
+    it 'returns monthly archive page' do
+      get '/2022/01'
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include('January Post')
+    end
+  end
+
   describe 'GET /live_search' do
     before do
       create(:article, title: 'Searchable Post', body: 'findme', published: true)

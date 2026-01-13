@@ -89,7 +89,7 @@ class String
   def parse_date(string, params)
     return '' unless params[:year]
 
-    format = ''
+    format = +''
     format << '%A %d ' if params[:day]
     format << '%B ' if params[:month]
     format << '%Y' if params[:year]
